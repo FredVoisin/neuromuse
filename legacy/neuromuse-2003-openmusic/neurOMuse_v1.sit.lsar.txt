@@ -1,0 +1,554 @@
+neurOMuse_v1.sit: StuffIt 5
+neurOMuse_v1/: 
+  Name:                neurOMuse_v1
+  Is a directory:      Yes
+  Last modified:       2003-09-26 10:28:59 +0200
+  Created:             2003-09-26 10:28:01 +0200
+  Mac OS Finder flags: 0x0000
+  Index in file:       0
+  StuffItFlags:        64
+neurOMuse_v1/.DS_Store: 
+  Name:                     neurOMuse_v1/.DS_Store
+  Size:                     6,15 KB (6 148 bytes)
+  Compressed size:          156 bytes
+  Compression type:         Arsenic
+  Last modified:            2003-09-26 10:28:59 +0200
+  Created:                  2003-09-26 10:28:59 +0200
+  Mac OS type code:         ???? (0x00000000)
+  Mac OS creator code:      ???? (0x00000000)
+  Mac OS Finder flags:      0x4000
+  Index in file:            1
+  Start of data:            351
+  Length of data:           156
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/: 
+  Name:                neurOMuse_v1/>for OM lib folder
+  Is a directory:      Yes
+  Last modified:       2003-09-26 10:29:32 +0200
+  Created:             2003-09-26 10:28:27 +0200
+  Mac OS Finder flags: 0x0000
+  Index in file:       2
+  StuffItFlags:        64
+neurOMuse_v1/>for OM lib folder/neurOMuse/: 
+  Name:                neurOMuse_v1/>for OM lib folder/neurOMuse
+  Is a directory:      Yes
+  Last modified:       2003-09-26 10:29:32 +0200
+  Created:             2003-09-14 14:41:02 +0200
+  Mac OS Finder flags: 0x0000
+  Index in file:       3
+  StuffItFlags:        64
+neurOMuse_v1/>for OM lib folder/neurOMuse/.DS_Store: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/.DS_Store
+  Size:                     6,15 KB (6 148 bytes)
+  Compressed size:          156 bytes
+  Compression type:         Arsenic
+  Last modified:            2003-09-26 10:29:32 +0200
+  Created:                  2003-09-26 10:29:32 +0200
+  Mac OS type code:         ???? (0x00000000)
+  Mac OS creator code:      ???? (0x00000000)
+  Mac OS Finder flags:      0x4000
+  Index in file:            4
+  Start of data:            891
+  Length of data:           156
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/CLPF.rsrc: 
+  Name:                      neurOMuse_v1/>for OM lib folder/neurOMuse/CLPF.rsrc
+  Size:                      4,69 KB (4 694 bytes)
+  Compressed size:           1,42 KB (1 417 bytes)
+  Compression type:          Arsenic
+  Is a Mac OS resource fork: Yes
+  Last modified:             2003-09-21 02:35:03 +0200
+  Created:                   1998-10-06 20:15:02 +0200
+  Mac OS type code:          rsrc (0x72737263)
+  Mac OS creator code:       RSED (0x52534544)
+  Mac OS Finder flags:       0x0100
+  Index in file:             5
+  Start of data:             1154
+  Length of data:            1417
+  StuffItCRC16:              0x0000
+  StuffItCompressionMethod:  15
+  StuffItFlags:              0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/: 
+  Name:                neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources
+  Is a directory:      Yes
+  Last modified:       2003-09-26 10:18:05 +0200
+  Created:             1997-05-07 13:24:01 +0200
+  Mac OS Finder flags: 0x03e0
+  Index in file:       6
+  StuffItFlags:        64
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/dynamic-views.cfsl: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/dynamic-views.cfsl
+  Size:                     7,32 KB (7 319 bytes)
+  Compressed size:          2,50 KB (2 497 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-17 03:14:38 +0200
+  Created:                  2003-09-17 03:14:38 +0200
+  Mac OS type code:         PFSL (0x5046534c)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            7
+  Start of data:            2822
+  Length of data:           2497
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/dynamic-views.lisp: 
+  Name:                      neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/dynamic-views.lisp
+  Size:                      461 bytes
+  Compressed size:           121 bytes
+  Compression type:          Arsenic
+  Is a Mac OS resource fork: Yes
+  Last modified:             2003-09-17 02:55:54 +0200
+  Created:                   1904-01-01 00:09:21 +0009
+  Mac OS type code:          ???? (0x00000000)
+  Mac OS creator code:       ???? (0x00000000)
+  Mac OS Finder flags:       0x0100
+  Index in file:             8
+  Start of data:             5435
+  Length of data:            121
+  StuffItCRC16:              0x0000
+  StuffItCompressionMethod:  15
+  StuffItFlags:              0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/dynamic-views.lisp: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/dynamic-views.lisp
+  Size:                     10,7 KB (10 694 bytes)
+  Compressed size:          2,53 KB (2 530 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-17 02:55:54 +0200
+  Created:                  1904-01-01 00:09:21 +0009
+  Mac OS type code:         ???? (0x00000000)
+  Mac OS creator code:      ???? (0x00000000)
+  Mac OS Finder flags:      0x0100
+  Index in file:            9
+  Start of data:            5556
+  Length of data:           2530
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-thermometer.cfsl: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-thermometer.cfsl
+  Size:                     30,6 KB (30 553 bytes)
+  Compressed size:          8,37 KB (8 371 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-25 19:57:50 +0200
+  Created:                  2003-09-25 19:57:50 +0200
+  Mac OS type code:         PFSL (0x5046534c)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            10
+  Start of data:            8193
+  Length of data:           8371
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-thermometer.lisp: 
+  Name:                      neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-thermometer.lisp
+  Size:                      441 bytes
+  Compressed size:           119 bytes
+  Compression type:          Arsenic
+  Is a Mac OS resource fork: Yes
+  Last modified:             2003-09-23 18:44:53 +0200
+  Created:                   1904-01-01 00:09:21 +0009
+  Mac OS type code:          ???? (0x00000000)
+  Mac OS creator code:       ???? (0x00000000)
+  Mac OS Finder flags:       0x0100
+  Index in file:             11
+  Start of data:             16685
+  Length of data:            119
+  StuffItCRC16:              0x0000
+  StuffItCompressionMethod:  15
+  StuffItFlags:              0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-thermometer.lisp: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-thermometer.lisp
+  Size:                     20,4 KB (20 358 bytes)
+  Compressed size:          4,96 KB (4 963 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-23 18:44:53 +0200
+  Created:                  1904-01-01 00:09:21 +0009
+  Mac OS type code:         ???? (0x00000000)
+  Mac OS creator code:      ???? (0x00000000)
+  Mac OS Finder flags:      0x0100
+  Index in file:            12
+  Start of data:            16804
+  Length of data:           4963
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-windows.cfsl: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-windows.cfsl
+  Size:                     153 KB (152 697 bytes)
+  Compressed size:          29,2 KB (29 151 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-19 04:43:28 +0200
+  Created:                  2003-09-19 04:43:28 +0200
+  Mac OS type code:         PFSL (0x5046534c)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            13
+  Start of data:            21870
+  Length of data:           29151
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-windows.lisp: 
+  Name:                      neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-windows.lisp
+  Size:                      543 bytes
+  Compressed size:           190 bytes
+  Compression type:          Arsenic
+  Is a Mac OS resource fork: Yes
+  Last modified:             2003-09-19 04:32:00 +0200
+  Created:                   2003-04-24 17:37:06 +0200
+  Mac OS type code:          TEXT (0x54455854)
+  Mac OS creator code:       CCL2 (0x43434c32)
+  Mac OS Finder flags:       0x0100
+  Index in file:             14
+  Start of data:             51138
+  Length of data:            190
+  StuffItCRC16:              0x0000
+  StuffItCompressionMethod:  15
+  StuffItFlags:              0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-windows.lisp: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neurOM-windows.lisp
+  Size:                     66,5 KB (66 549 bytes)
+  Compressed size:          9,92 KB (9 916 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-19 04:32:00 +0200
+  Created:                  2003-04-24 17:37:06 +0200
+  Mac OS type code:         TEXT (0x54455854)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            15
+  Start of data:            51328
+  Length of data:           9916
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#03.cfsl: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#03.cfsl
+  Size:                     303 KB (302 672 bytes)
+  Compressed size:          53,2 KB (53 178 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-19 06:35:31 +0200
+  Created:                  2003-09-19 06:35:31 +0200
+  Mac OS type code:         PFSL (0x5046534c)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            16
+  Start of data:            61345
+  Length of data:           53178
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#03.lisp: 
+  Name:                      neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#03.lisp
+  Size:                      476 bytes
+  Compressed size:           146 bytes
+  Compression type:          Arsenic
+  Is a Mac OS resource fork: Yes
+  Last modified:             2003-09-19 06:30:20 +0200
+  Created:                   2003-02-18 22:30:19 +0100
+  Mac OS type code:          TEXT (0x54455854)
+  Mac OS creator code:       CCL2 (0x43434c32)
+  Mac OS Finder flags:       0x0100
+  Index in file:             17
+  Start of data:             114638
+  Length of data:            146
+  StuffItCRC16:              0x0000
+  StuffItCompressionMethod:  15
+  StuffItFlags:              0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#03.lisp: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#03.lisp
+  Size:                     118 KB (118 025 bytes)
+  Compressed size:          17,7 KB (17 699 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-19 06:30:20 +0200
+  Created:                  2003-02-18 22:30:19 +0100
+  Mac OS type code:         TEXT (0x54455854)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            18
+  Start of data:            114784
+  Length of data:           17699
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#04.cfsl: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#04.cfsl
+  Size:                     303 KB (303 492 bytes)
+  Compressed size:          53,2 KB (53 168 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-26 10:02:09 +0200
+  Created:                  2003-09-26 10:02:09 +0200
+  Mac OS type code:         PFSL (0x5046534c)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0000
+  Index in file:            19
+  Start of data:            132584
+  Length of data:           53168
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#04.lisp: 
+  Name:                      neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#04.lisp
+  Size:                      456 bytes
+  Compressed size:           133 bytes
+  Compression type:          Arsenic
+  Is a Mac OS resource fork: Yes
+  Last modified:             2003-09-25 22:19:49 +0200
+  Created:                   2003-09-25 20:20:21 +0200
+  Mac OS type code:          TEXT (0x54455854)
+  Mac OS creator code:       CCL2 (0x43434c32)
+  Mac OS Finder flags:       0x0100
+  Index in file:             20
+  Start of data:             185867
+  Length of data:            133
+  StuffItCRC16:              0x0000
+  StuffItCompressionMethod:  15
+  StuffItFlags:              0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#04.lisp: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse#04.lisp
+  Size:                     118 KB (118 054 bytes)
+  Compressed size:          17,7 KB (17 700 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-25 22:19:49 +0200
+  Created:                  2003-09-25 20:20:21 +0200
+  Mac OS type code:         TEXT (0x54455854)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            21
+  Start of data:            186000
+  Length of data:           17700
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse-to-OM.cfsl: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse-to-OM.cfsl
+  Size:                     37,1 KB (37 144 bytes)
+  Compressed size:          8,18 KB (8 184 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-26 10:18:05 +0200
+  Created:                  2003-09-26 10:18:05 +0200
+  Mac OS type code:         PFSL (0x5046534c)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            22
+  Start of data:            203804
+  Length of data:           8184
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse-to-OM.lisp: 
+  Name:                      neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse-to-OM.lisp
+  Size:                      461 bytes
+  Compressed size:           129 bytes
+  Compression type:          Arsenic
+  Is a Mac OS resource fork: Yes
+  Last modified:             2003-09-26 10:17:12 +0200
+  Created:                   2003-09-17 02:57:25 +0200
+  Mac OS type code:          TEXT (0x54455854)
+  Mac OS creator code:       CCL2 (0x43434c32)
+  Mac OS Finder flags:       0x0100
+  Index in file:             23
+  Start of data:             212106
+  Length of data:            129
+  StuffItCRC16:              0x0000
+  StuffItCompressionMethod:  15
+  StuffItFlags:              0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse-to-OM.lisp: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/neuromuse-to-OM.lisp
+  Size:                     10,8 KB (10 759 bytes)
+  Compressed size:          2,62 KB (2 625 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-26 10:17:12 +0200
+  Created:                  2003-09-17 02:57:25 +0200
+  Mac OS type code:         TEXT (0x54455854)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            24
+  Start of data:            212235
+  Length of data:           2625
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/scrolling-windows.lisp: 
+  Name:                      neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/scrolling-windows.lisp
+  Size:                      616 bytes
+  Compressed size:           373 bytes
+  Compression type:          Arsenic
+  Is a Mac OS resource fork: Yes
+  Last modified:             1997-02-09 17:28:03 +0100
+  Created:                   1990-07-13 12:47:41 +0200
+  Mac OS type code:          TEXT (0x54455854)
+  Mac OS creator code:       CCL2 (0x43434c32)
+  Mac OS Finder flags:       0x0100
+  Index in file:             25
+  Start of data:             214980
+  Length of data:            373
+  StuffItCRC16:              0x0000
+  StuffItCompressionMethod:  15
+  StuffItFlags:              0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/scrolling-windows.lisp: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse sources/scrolling-windows.lisp
+  Size:                     3,40 KB (3 405 bytes)
+  Compressed size:          1,09 KB (1 095 bytes)
+  Compression type:         Arsenic
+  Last modified:            1997-02-09 17:28:03 +0100
+  Created:                  1990-07-13 12:47:41 +0200
+  Mac OS type code:         TEXT (0x54455854)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            26
+  Start of data:            215353
+  Length of data:           1095
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse.lisp: 
+  Name:                      neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse.lisp
+  Size:                      622 bytes
+  Compressed size:           318 bytes
+  Compression type:          Arsenic
+  Is a Mac OS resource fork: Yes
+  Last modified:             2003-09-26 10:11:47 +0200
+  Created:                   1997-05-07 13:19:53 +0200
+  Mac OS type code:          TEXT (0x54455854)
+  Mac OS creator code:       CCL2 (0x43434c32)
+  Mac OS Finder flags:       0x0100
+  Index in file:             27
+  Start of data:             216560
+  Length of data:            318
+  StuffItCRC16:              0x0000
+  StuffItCompressionMethod:  15
+  StuffItFlags:              0
+neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse.lisp: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse/neurOMuse.lisp
+  Size:                     4,14 KB (4 144 bytes)
+  Compressed size:          1,28 KB (1 281 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-26 10:11:47 +0200
+  Created:                  1997-05-07 13:19:53 +0200
+  Mac OS type code:         TEXT (0x54455854)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            28
+  Start of data:            216878
+  Length of data:           1281
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse exemples/: 
+  Name:                neurOMuse_v1/>for OM lib folder/neurOMuse exemples
+  Is a directory:      Yes
+  Last modified:       2003-09-19 07:48:01 +0200
+  Created:             2003-09-19 02:29:59 +0200
+  Mac OS Finder flags: 0x0000
+  Index in file:       29
+  StuffItFlags:        64
+neurOMuse_v1/>for OM lib folder/neurOMuse exemples/read-me !: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse exemples/read-me !
+  Size:                     643 bytes
+  Compressed size:          348 bytes
+  Compression type:         Arsenic
+  Last modified:            2003-09-19 07:48:01 +0200
+  Created:                  2003-09-19 07:48:01 +0200
+  Mac OS type code:         PATC (0x50415443)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            30
+  Start of data:            218402
+  Length of data:           348
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures/: 
+  Name:                neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures
+  Is a directory:      Yes
+  Last modified:       2003-09-26 10:25:37 +0200
+  Created:             2003-09-19 01:47:04 +0200
+  Mac OS Finder flags: 0x0000
+  Index in file:       31
+  StuffItFlags:        64
+neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures/1-architectures: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures/1-architectures
+  Size:                     3,20 KB (3 199 bytes)
+  Compressed size:          946 bytes
+  Compression type:         Arsenic
+  Last modified:            2003-09-19 07:48:07 +0200
+  Created:                  2003-09-19 07:48:07 +0200
+  Mac OS type code:         PATC (0x50415443)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            32
+  Start of data:            218999
+  Length of data:           946
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures/2-editing nets: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures/2-editing nets
+  Size:                     3,18 KB (3 183 bytes)
+  Compressed size:          833 bytes
+  Compression type:         Arsenic
+  Last modified:            2003-09-26 10:11:58 +0200
+  Created:                  2003-09-26 10:11:58 +0200
+  Mac OS type code:         PATC (0x50415443)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            33
+  Start of data:            220043
+  Length of data:           833
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures/3-multi-layered perceptron: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures/3-multi-layered perceptron
+  Size:                     14,8 KB (14 775 bytes)
+  Compressed size:          3,15 KB (3 148 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-25 21:22:41 +0200
+  Created:                  2003-09-25 21:22:40 +0200
+  Mac OS type code:         PATC (0x50415443)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            34
+  Start of data:            220986
+  Length of data:           3148
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures/4-recurrent mlp alla jordan: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures/4-recurrent mlp alla jordan
+  Size:                     4,05 KB (4 049 bytes)
+  Compressed size:          1,07 KB (1 071 bytes)
+  Compression type:         Arsenic
+  Last modified:            2003-09-26 10:25:37 +0200
+  Created:                  2003-09-26 10:25:37 +0200
+  Mac OS type code:         PATC (0x50415443)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            35
+  Start of data:            224245
+  Length of data:           1071
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
+neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures/5-auto-associative memory: 
+  Name:                     neurOMuse_v1/>for OM lib folder/neurOMuse exemples/some architectures/5-auto-associative memory
+  Size:                     2,17 KB (2 169 bytes)
+  Compressed size:          743 bytes
+  Compression type:         Arsenic
+  Last modified:            2003-09-19 08:04:40 +0200
+  Created:                  2003-09-19 08:04:40 +0200
+  Mac OS type code:         PATC (0x50415443)
+  Mac OS creator code:      CCL2 (0x43434c32)
+  Mac OS Finder flags:      0x0100
+  Index in file:            36
+  Start of data:            225425
+  Length of data:           743
+  StuffItCRC16:             0x0000
+  StuffItCompressionMethod: 15
+  StuffItFlags:             0
