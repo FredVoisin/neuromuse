@@ -4,28 +4,11 @@
 ;; (C) Frederic Voisin 2000-2008
 ;; <fredvoisin@neuromuse.org>, <www.neuromuse.org>
 
-;This program is free software; you can redistribute it and/or modify
-;it under the terms of the GNU General Public License as published by
-;the Free Software Foundation; either version 2 of the License, or
-;(at your option) any later version.
-
-;This program is distributed in the hope that it will be useful,
-;but WITHOUT ANY WARRANTY; without even the implied warranty of
-;MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;GNU General Public License for more details.
-
-;You should have received a copy of the GNU General Public License
-;along with this program; if not, write to the Free Software
-;Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-;The GNU Public Licence can be found in the file COPYING
-;------------------------------------------------------------------
 ;; neuromuse, main
 
 (in-package :cl-user)
 
 (defvar *lisp-version* (lisp-implementation-type))
-;(setf neuromuse-dir "/home/fred/lisp/neuro/neuromuse-lisp/neuromuse/")
 #+sbcl (require 'sb-bsd-sockets)
 ;; #+sbcl (require 'sb-thread)
 ;; #+(or sbcl cmucl) (load (concatenate 'string neuromuse-dir "bordeaux-mp/bordeaux-mp.lisp") ) ;; obsolete									    
@@ -297,12 +280,12 @@ Dans le cas d'une liste, l'ID est celui du premier element de la liste."))
 ;; #-(or sbcl mcl) (format t "Threads not yet implemented in this Lisp environnement !~%")
 
 ;;;; neuromuse suite...
-;(load "maths&misc.lisp")
-;(load "mlp.lisp")
-;(load "som.lisp") 
-;(load "udp.lisp")
-;(load "rosom.lisp)
-;(format t "Ready !~&")
+(load "maths&misc.lisp")
+(load "mlp.lisp")
+(load "som.lisp")
+(load "udp.lisp")
+(load "rosom.lisp)
+(format t "Ready !~&")
 
 ;;;; for testing ****************
 
