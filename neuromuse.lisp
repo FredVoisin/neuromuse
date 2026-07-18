@@ -284,7 +284,7 @@ Dans le cas d'une liste, l'ID est celui du premier element de la liste."))
 (load "mlp.lisp")
 (load "som.lisp")
 (load "udp.lisp")
-(load "rosom.lisp)
+(load "rosom.lisp")
 (format t "Ready !~&")
 
 ;;;; for testing ****************
