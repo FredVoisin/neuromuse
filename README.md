@@ -319,7 +319,7 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
     <tr>
       <td align="center" width="100%">
         <img src="img/avatit+arms.jpg" alt="Avatit controlling a robot arm on an ARM CPU, Ircam" width="480"><br>
-        <sub><i>Neuromuse (avatit) still alive underground at Ircam since 2012, controlling a robot arm on an
+        <sub><i>Neuromuse (avatit) still alive underground at Ircam in 2015, controlling a robot arm on an
         ARM CPU (photo 2025).</i></sub>
       </td>
     </tr>
