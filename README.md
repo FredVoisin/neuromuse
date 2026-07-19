@@ -52,6 +52,8 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
 
 ## Gallery
 
+### Early experiments (~2000–2004)
+
 <p align="center">
   <table>
     <tr>
@@ -67,6 +69,94 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
         <img src="img/avatit_pd2004.png" alt="The two SOMs of the Avatit agent, Pure Data 2004" width="360"><br>
         <sub><i>The two self-organizing maps (content and context) of an agent named "Avatit", written in
         Lisp, rendered in Pd, 2004.</i></sub>
+      </td>
+    </tr>
+  </table>
+</p>
+
+### Taire / L'écarlate (2000–2001)
+
+<p align="center">
+  <table>
+    <tr>
+      <td align="center" width="25%">
+        <img src="img/taire_figure1.jpg" alt="Declarative/sequential vs. neuromimetic architecture" width="220"><br>
+        <sub><i>Declarative/sequential vs. neuromimetic architecture, from the "Taire" paper.</i></sub>
+      </td>
+      <td align="center" width="25%">
+        <img src="img/taire_figure2.jpg" alt="MLP topology, Taire paper" width="220"><br>
+        <sub><i>MLP topology used for "Taire".</i></sub>
+      </td>
+      <td align="center" width="25%">
+        <img src="img/taire_figure3.jpg" alt="MLP topology with synaptic weight scale, Taire paper" width="220"><br>
+        <sub><i>Same topology, with a synaptic weight color scale.</i></sub>
+      </td>
+      <td align="center" width="25%">
+        <img src="img/taire_figure5small.jpg" alt="Backpropagation data flow diagram, Taire paper" width="220"><br>
+        <sub><i>Backpropagation data flow through an MLP, from the "Taire" paper.</i></sub>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="25%">
+        <img src="img/ecarlate-sin.jpg" alt="Recurrent MLP used for L'Ecarlate" width="220"><br>
+        <sub><i>Recurrent MLP used for "L'écarlate": dance-derived input recurrently mapped to sound
+        synthesis parameters (freq, amp, dur).</i></sub>
+      </td>
+      <td align="center" width="25%">
+        <img src="img/lecarlate-performance.jpg" alt="L'écarlate performance" width="220"><br>
+        <sub><i>"L'écarlate" performance, by Toeplitz and Gourfink, Ircam, June 2001.</i></sub>
+      </td>
+      <td align="center" width="25%">
+        <img src="img/lol-saisies.gif" alt="LOL capture interface" width="220"><br>
+        <sub><i>LOL (Laban Orienté Lisp) capture interface: movement parameters by body part.</i></sub>
+      </td>
+      <td align="center" width="25%">
+        <img src="img/LOL-neurones_1.gif" alt="LOL movement data, original vs reconstructed" width="220"><br>
+        <sub><i>LOL movement data: original vs. reconstructed pattern (Moment 1).</i></sub>
+      </td>
+    </tr>
+  </table>
+</p>
+
+### Symphonie des machines (2006)
+
+<p align="center">
+  <table>
+    <tr>
+      <td align="center" width="33%">
+        <img src="img/cluster-infineon-sun_sym1-32.jpg" alt="Sun servers of the Infineon compute cluster" width="280"><br>
+        <sub><i>Sun servers of the Infineon-donated compute cluster used for "Symphonie des machines".</i></sub>
+      </td>
+      <td align="center" width="33%">
+        <img src="img/cluster-infineon-sym-p4_fred.jpg" alt="The cluster's row of PCs" width="280"><br>
+        <sub><i>The cluster's row of PC nodes.</i></sub>
+      </td>
+      <td align="center" width="33%">
+        <img src="img/grappe-infineon-etherape.jpg" alt="EtherApe network map of the cluster" width="280"><br>
+        <sub><i>EtherApe network map of the cluster's topology.</i></sub>
+      </td>
+    </tr>
+  </table>
+</p>
+
+### Last Manoeuvres in the Dark (2008)
+
+<p align="center">
+  <table>
+    <tr>
+      <td align="center" width="33%">
+        <img src="img/m4lmd-000.jpg" alt="Darth Vader helmet sculptures, neural activation decoder array" width="280"><br>
+        <sub><i>The neural activation decoder: rows of Darth Vader helmet sculptures, Palais de Tokyo,
+        Paris, 2008.</i></sub>
+      </td>
+      <td align="center" width="33%">
+        <img src="img/m4lmd-002.jpg" alt="Cabling rig for the helmet array" width="280"><br>
+        <sub><i>Cabling rig distributing signal to the helmet array.</i></sub>
+      </td>
+      <td align="center" width="33%">
+        <img src="img/m4lmd-005.jpg" alt="System diagram, Last Manoeuvres in the Dark" width="280"><br>
+        <sub><i>System diagram: music information retrieval, SOM-based stylistic analysis, multi-agent/neural
+        control, and the neural activation decoder.</i></sub>
       </td>
     </tr>
   </table>
