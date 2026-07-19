@@ -1,42 +1,35 @@
-;; neuromuse version 2.0 beta 2
-;; LISP code to simulate artificial neural networks
+;;;; neuromuse version 2.2
+;;;; LISP code to simulate artificial neural networks
+;;;; (C) Frederic Voisin 2000-2021
+;;;; <fred@fredvoisin.com>, <www.neuromuse.net>
+;;;;
+;;;; neuromuse.lisp
+;;;; main
 
-;; (C) Frederic Voisin 2000-2008
-;; <fredvoisin@neuromuse.org>, <www.neuromuse.org>
-
-;; neuromuse, main
-
-(in-package :cl-user)
+(in-package :neuromuse)
 
 (defvar *lisp-version* (lisp-implementation-type))
-#+sbcl (require 'sb-bsd-sockets)
-;; #+sbcl (require 'sb-thread)
-;; #+(or sbcl cmucl) (load (concatenate 'string neuromuse-dir "bordeaux-mp/bordeaux-mp.lisp") ) ;; obsolete									    
-;; #+sbcl  (load (concatenate 'string neuromuse-dir "bordeaux-mp/bordeaux-mp.lisp") )
 
-;; (setq *gc-verbose* nil)
-
-(format t "Loading neuromuse v.2b2 for ~S on ~S with cpu ~S...~%"
+(format t "Neuromuse v. 2.2 for ~S on ~S with cpu ~S !~%"
 	(if *lisp-version* *lisp-version* 'unknown)
 	(machine-instance) (machine-version))
 
-(format t "Auteur :  Frederic Voisin, Paris - Nice, 2000 - 2006~&")
+;(format t "Loading:~%")
+;(format t "neuromuse-main.lisp...~%")
 
-#+mcl (defvar *current-directory* (current-directory))
+(format t "Auteur :  Frederic Voisin, 2000-2021~&")
 
-(defun get-time ()
-  (multiple-value-bind (second minute hour date month year
-                               day-of-week daylight-saving-time-p time-zone)
-                       (get-decoded-time)
-    (declare (ignore day-of-week daylight-saving-time-p))
-    (list year month date hour minute second time-zone)))
+;; #+sbcl (require 'sb-thread)
 
-(defun print-time (&optional (stream t))
-  (let ((time (get-time)))
-    (format stream "~& -- ~S ~S ~S, ~S h ~S mn --~&~&"
-	    (nth 2 time) (nth 1 time) (car time) (nth 3 time) (nth 4 time))))
-
-(print-time)
+(defun package-internal-symbols (package)
+  (let ((rslt nil))
+    (do-symbols (s package)
+      (when (eq (second
+		 (multiple-value-list
+		  (find-symbol (symbol-name s) package)))
+		:internal)
+	(push s rslt)))
+    rslt))
 
 (defun make-new-symbol (name &optional content)
   (let ((sym (intern (string (if (boundp (read-from-string (string name)))
@@ -45,7 +38,10 @@
     (setf (symbol-value sym) content)
     sym))
 
-;;regrouper la les arguments des fonctions learn, backpro...
+;; work in progress : to apply separately control values of a neural net to neuron instances
+;; when the net of a ann will be a list of neurons in place of a list of list of synaptic values
+;; (since a list of synaptic values is a neuron !) - future project, for instance to play with
+;; inhibited neurons after learn.
 (defclass neuron ()
   ((name
     :initform nil :initarg :name :accessor name)
@@ -62,7 +58,9 @@
    (slope
      :initform 1.0 :initarg :slope :accessor slope)  ;; = premier arg de fun si nec
    (temp
-     :initform 0.0 :initarg :temp :accessor temp)
+    :initform 0.0 :initarg :temp :accessor temp)
+   (net-temp
+    :initform 0.0 :initarg :net-temp :accessor net-temp :type float)
    (bias
     :initform 0.0 :initarg :bias :accessor bias)
    (fact
@@ -72,11 +70,10 @@
    (output
      :initform nil :initarg :output :accessor output)
    (distance
-     :initform 1 :initarg :distance :accessor distance)
-    ))
+     :initform 1 :initarg :distance :accessor distance)))
 
 (defmethod initialize-instance :after ((self neuron) &key name)
-  (let ((neuron (if name 
+  (let ((neuron (if name
 		    (make-new-symbol name)
 		    (make-new-symbol 'n))))
     (setf (slot-value self 'name) neuron
@@ -103,7 +100,7 @@
    (net
     :initform '() :initarg :net :accessor net :type list)
    (creation-date
-    :initform nil :initarg :creation-date :accessor creation-date :type number)
+    :initform nil :initarg :creation-date :accessor creation-date)
    (modification-date
     :initform '() :initarg :modification-date :accessor modification-date :type list)
    (epoch
@@ -119,15 +116,17 @@
    (history-error
     :initform  '() :initarg :history-error :accessor history-error :type list)
    (current-error
-    :initform 1000 :initarg :current-error :accessor current-error :type number)
+    :initform 9999 :initarg :current-error :accessor current-error :type number)
    (last-error
-    :initform 1000 :initarg :last-error :accessor last-error :type number)
+    :initform 9999 :initarg :last-error :accessor last-error :type number)
    (last-stop
     :initform '(0 nil) :initarg :last-stop :accessor last-stop :type list)
    (history
     :initform '() :initarg :history :accessor history)
    (temp
     :initform 0.0 :initarg :temp :accessor temp :type float)
+   (net-temp
+    :initform 0.0 :initarg :net-temp :accessor net-temp :type float)
    (learn-fact
     :initform 0.0 :initarg :learn-fact :accessor learn-fact :type float)
    (attention
@@ -135,13 +134,12 @@
    (properties
     :initform 'nil :initarg :properties :accessor properties :type list)
    (verbose
-    :initform '() :initarg :verbose :accessor verbose)
-   ))
+    :initform '() :initarg :verbose :accessor verbose)))
 
 ;; topology = (size &rest space-args)
 
 (defmethod initialize-instance :after ((self ann) &key name)
-  (let ((ann (if name 
+  (let ((ann (if name
 		 (make-new-symbol name)
 		 (make-new-symbol 'ann))))
     (setf (slot-value self 'name) ann
@@ -153,8 +151,26 @@
           "<~S>" (name self) )
   (values))
 
+(defgeneric temperature (self)
+  (:documentation "Temperature of an ANN or neuron, i.e randomnes of its output (synonyme of 'temp')."))
+
+(defmethod temperature ((self neuron))
+  (temp self))
+
+(defmethod temperature ((self ann))
+  (temp self))
+
+(defgeneric net-temperature (self)
+  (:documentation "Temperature of the synatic weights of an ANN or of a neuron (synonyme : 'net-temp')."))
+
+(defmethod net-temperature ((self neuron))
+  (temp self))
+
+(defmethod net-temperature ((self ann))
+  (temp self))
+
 (defgeneric ann-p (self)
-  (:documentation "Test si <self> est un reseau de neurones"))
+  (:documentation "Tests if <self> is a neural net."))
 
 (defmethod ann-p ((self t))
   nil)
@@ -162,19 +178,11 @@
 (defmethod ann-p ((self ann))
   t)
 
-(defgeneric net (self)
-  (:documentation "Donne la partie constituant le reseau (ou coeur) de l'objet,
- neurones et/ou leurs connections elon l'objet auquel s'applique la fonction 'net'."))
-
 (defmethod net ((self symbol))
   (net (eval self)))
 
 (defmethod net ((self list))
   self)
-
-(defgeneric id (self)
-  (:documentation "Donne le numero d'identification de l'objet 'self'.
-Dans le cas d'une liste, l'ID est celui du premier element de la liste."))
 
 (defmethod id ((self list))
 	(id (car self)))
@@ -182,75 +190,64 @@ Dans le cas d'une liste, l'ID est celui du premier element de la liste."))
 (defmethod id ((self null))
   0)
 
+(defgeneric activation (self &key neuron)
+  (:documentation "To compute activation of 'self'."))
+
 (defun warning-msg (string &optional (port t))
   (format port (concatenate 'string "~% WARNING : " string)))
 
+#|
 (defun structure-slot-names (s-name)
-  "Given a STRUCTURE-NAME, returns a list of the slots in the
-  structure."
-  #+allegro (class-slot-names s-name)
-  #+lispworks (structure:structure-class-slot-names
+  "Given a STRUCTURE-NAME such as a neural net, returns the list of the slots for the structure."
+  ;+allegro (class-slot-names s-name)
+  ;+lispworks (structure:structure-class-slot-names
 	       (find-class s-name))
-  #+sbcl (mapcar #'sb-pcl::slot-definition-name
+  +sbcl (mapcar #'sb-pcl::slot-definition-name
 		 (sb-pcl:class-slots
 		  (find-class s-name))) ;;sbcl 0.9.6.55, fv
-  #+cmu (mapcar
+  ;+cmu (mapcar
 	 #'pcl::slot-definition-name
 	 (pcl:class-slots (pcl:find-class s-name)))
-  #+scl
-  (loop as
-	s across
-	(kernel::layout-slots
-	 (slot-value (find-class s-name) 'clos::layout))
-	collecting s)
-  #+mcl (let* ((sd (gethash s-name ccl::%defstructs%))
-               (slots (if sd (ccl::sd-slots sd))))
-          (mapcar #'car (if (symbolp (caar slots)) slots (cdr slots))))
   #-(or allegro lispworks cmu sbcl scl mcl)
   (error "structure-slot-names is not defined for this lisp dialect,
- some features won't work (as save...)")  )
+ some features won't work (as save...)")
+  )
+|#
 
 (defgeneric init (self &key size input)
-  (:documentation "Initialise un objet - ann, som, agent...- work in progress"))
+  (:documentation "To initialize some object - ann, som, etc.- work in progress"))
 
-(defgeneric nnsave (self &optional path)
-  (:documentation "Sauvegarde l'instance de l'objet 'self' dans un fichier 'path'."))
+(defgeneric save (self &optional path)
+  (:documentation "Save neural net <self> to <path>."))
 
-(defmethod nnsave ((self ann) &optional (path "ann.lisp"))
-  (declare (ignore path))
-  (let ((slots (structure-slot-names (type-of self))))
-    (dolist (slot slots)
-      (print slot))))
-;;do (save (eval `(,slot self)) path))))
-
-(defmethod nnsave ((self neuron) &optional (path "ann.lisp"))
+(defmethod save ((self neuron) &optional (path "ann.lisp"))
   (let ((slots (structure-slot-names (type-of self))))
     (with-open-file (stream path
 			    :direction :output
 			    :if-exists :append
 			    :if-does-not-exist :create)
+      (format stream "(in-package :neuromuse)")
       (format stream "~&(make-instance 'neuron")
       (loop for s in slots
 	    do
 	    (format stream " :~S \'~S" s (funcall s self)))
       (format stream ")~%"))))
 
-(defmethod nnsave ((self number) &optional (path "ann.lisp"))
-   (with-open-file (stream path
-			    :direction :output
-			    :if-exists :append
-			    :if-does-not-exist :create)
-     (format stream "~S" self)))
+(defmethod save ((self list) &optional (path "ann.lisp"))
+  (with-open-file (stream path
+			  :direction :output
+			  :if-exists :append
+			  :if-does-not-exist :create)
+    (if (atom (car self))
+	(format stream " ~S~&" self)
+	(save self path)))
+  (values))
 
-(defmethod nnsave ((self list) &optional (path "ann.lisp"))
-  (dolist (elt self)
-    (nnsave elt path)))
+(defmethod save ((self t) &optional (path "ann.lisp"))
+  (declare (ignore path))
+  (format t "~&No method for saving ~S !~&" self))
 
-(defmethod nnsave ((self t) &optional (path "ann.lisp"))
-  (dolist (elt self)
-    (nnsave elt path)))
-
-;**************** Threads stuff ****************
+;**************** Threading ****************
 
 #+mcl (defun mk-process (name process &key)
 	(when (not (stringp name)) (string name))
@@ -275,25 +272,18 @@ Dans le cas d'une liste, l'ID est celui du premier element de la liste."))
 #+sbcl (defun mk-process (name process &key)
 	 (sb-thread:make-thread process :name name) )
 
+;; #-(or sbcl mcl) (format t "Are threads implemented in this Lisp environnement !~%")
 
-
-;; #-(or sbcl mcl) (format t "Threads not yet implemented in this Lisp environnement !~%")
-
+#|
 ;;;; neuromuse suite...
+; ai cas ou
+; (load "perceptron.lisp")
 (load "maths&misc.lisp")
 (load "mlp.lisp")
 (load "som.lisp")
-(load "udp.lisp")
 (load "rosom.lisp")
+(load "udp.lisp")
 (format t "Ready !~&")
-
-;;;; for testing ****************
-
-#|
-(listenudp 42000 128) ;; attend et imprime un (seul) paquet...
-
-(sendudp "udp_from_lisp"  "127.0.0.1" 42000)
-
 |#
 
 ;EOF

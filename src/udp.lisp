@@ -1,6 +1,8 @@
 ;; UDP in lisp
 
-(format t "Loading UDP...~%")
+(in-package :neuromuse)
+
+;(format t "Loading UDP...~%")
 
 #+sbcl (require :sb-bsd-sockets)
 
@@ -25,10 +27,6 @@
 		   (print buf)))
 	   (sb-bsd-sockets:socket-close s)))
 
-; (setf *udp* t)
-; (receive-udp 60000)
-; (setf *udp* nil)
-
 #+mcl (defun send-udp (string host port &key verbose)
 	(let ((sock (make-socket :format :text :type :datagram)))
 	  (send-to sock
@@ -52,18 +50,34 @@
 	  (print data)
 	  (values (subseq data 0 (- (length data) 2)))))
 
-#+sbcl (defun som-input-server (som port lenght)
+#+sbcl (defgeneric input-server (ann port lenght)
+	 (:documentation "input server for neural nets"))
+
+#+sbcl (defmethod input-server ((ann som) (port number) (lenght number))
 	 (let ((s (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp)))
 	   (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
-	   (loop while (superdaemon som) do
+	   (loop while (superdaemon ann) do
 		 (multiple-value-bind (buf len address port) (sb-bsd-sockets:socket-receive s nil lenght)
-		   (when (verbose som)
+		   (when (verbose ann)
 		     (format t "Received ~A bytes from ~A:~A - ~A ~%"
 			     len address port (subseq buf 0 (min 10 len))))
-		   (setf (input som) (st2v buf)
-			 (winner-neuron som) (winner som)
-			 (output som) (activation som :n (car (id (winner-neuron som)))))
-		   (sleep (attention som))))
+		   (setf (input ann) (st2v buf)
+			 (winner-neuron ann) (winner ann)
+			 (output ann) (activation ann :n (car (id (winner-neuron ann)))))
+		   (sleep (attention ann))))
+	   (sb-bsd-sockets:socket-close s)))
+
+#+sbcl (defmethod input-server ((ann mlp) (port number) (lenght number))
+	 (let ((s (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp)))
+	   (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
+	   (loop while (superdaemon ann) do
+		 (multiple-value-bind (buf len address port) (sb-bsd-sockets:socket-receive s nil lenght)
+		   (when (verbose ann)
+		     (format t "Received ~A bytes from ~A:~A - ~A ~%"
+			     len address port (subseq buf 0 (min 10 len))))
+		   (setf (input ann) (st2list buf))
+		   (run-mlp ann)
+		   (sleep (latence ann))))
 	   (sb-bsd-sockets:socket-close s)))
 
 #+mcl (defun som-input-server (som port length)
@@ -78,18 +92,35 @@
 		(sleep (attention som)))
 	  (close s)))
 
-#+sbcl (defun som-control-server (som port lenght)
+#+sbcl (defgeneric control-server (ann port lenght)
+	 (:documentation "control server for neural nets"))
+
+#+sbcl (defmethod control-server ((ann som) (port number) (lenght number))
 	 (let ((s (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp)))
 	   (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
-	   (loop while (superdaemon som) do
+	   (loop while (superdaemon ann) do
 		 (multiple-value-bind (buf len address port) (sb-bsd-sockets:socket-receive s nil lenght)
-		   (when (verbose som)
+		   (when (verbose ann)
 		     (format t "Received ~A bytes from ~A:~A - ~A ~%"
 			     len address port (subseq buf 0 (min 10 len))))
 		   (let* ((cmd-val (st2list buf))
 			  (cmd (car cmd-val))
 			  (val (cadr cmd-val)))
-		     (eval `(setf (,cmd som) ,val)))))
+		     (eval `(setf (,cmd ann) ,val)))))
+	   (sb-bsd-sockets:socket-close s)))
+
+#+sbcl (defmethod control-server ((ann mlp) (port number) (lenght number))
+	 (let ((s (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp)))
+	   (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
+	   (loop while (superdaemon ann) do
+		 (multiple-value-bind (buf len address port) (sb-bsd-sockets:socket-receive s nil lenght)
+		   (when (verbose ann)
+		     (format t "Received ~A bytes from ~A:~A - ~A ~%"
+			     len address port (subseq buf 0 (min 10 len))))
+		   (let* ((cmd-val (st2list buf))
+			  (cmd (car cmd-val))
+			  (val (cadr cmd-val)))
+		     (eval `(setf (,cmd ann) ,val)))))
 	   (sb-bsd-sockets:socket-close s)))
 
 #+mcl (defun som-control-server (som port length)
@@ -104,16 +135,19 @@
 		  (eval `(setf (,cmd som) ,val))))
 	  (close s)))
 
-(defun som-output-server (som ip port) ;send-udp-activation (som)
-  (loop while (superdaemon som) do
-	(let ((out (list2string (output som))))
-	  (send-udp out ip port)
-	  (sleep (latence som)))))
+#+sbcl (defgeneric output-server (ann ip port)
+	 (:documentation "output server for neural nets : send activation to ip port"))
 
-(defun som-activation-server (som ip port) ;send-udp-activation (som)
-  (loop while (superdaemon som) do
-	(let ((out (list2string (activation som))))
+#+sbcl (defmethod output-server ((ann som) (ip string) (port number))
+	 (loop while (superdaemon ann) do
+	      (let ((out (list2string (output ann))))
+		(send-udp out ip port)
+		(sleep (latence ann)))))
+
+#+sbcl (defmethod output-server ((ann mlp) (ip string) (port number))
+  (loop while (superdaemon ann) do
+	(let ((out (list2string (output ann))))
 	  (send-udp out ip port)
-	  (sleep (latence som)))))
+	  (sleep (latence ann)))))
 
 ;eof

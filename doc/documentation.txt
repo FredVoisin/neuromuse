@@ -1,0 +1,36 @@
+
+
+Classes !
+
+neuron
+with:
+name
+id
+nn
+age
+net
+fun
+slope
+temp
+bias
+fact
+learn-fact
+output
+distance
+
+
+Generic functions :
+
+net : returns the list of synaptic values of neurons
+id : unique number to identify an object. A list's id is the id of the first element of the list.
+
+
+
+
+Testing
+
+testing network communication thru UDP
+
+(listenudp 42000 128) ;; attend et imprime un (seul) paquet...
+
+(sendudp "udp_from_lisp"  "127.0.0.1" 42000)

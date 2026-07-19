@@ -1,6 +1,8 @@
 ;;;;; MATHS & UTILITIES
 
-(format t "~&Loading maths & misc...~&")
+(in-package :neuromuse)
+
+;(format t "math&misc.lisp...~%")
 
 (defun rand (x)
   (if (zerop x) 0 (random x)))
@@ -42,8 +44,7 @@
     (setf (aref x i) (sign (aref x i) :thresh thresh))))
 
 (defun temp-value (temp)
-  (if (< (random 1.0) temp)
-    t nil))
+  (if temp (if (< (random 1.0) temp) t nil) nil))
 
 (defgeneric logistic (x &key thresh temp learn slope)
   (:documentation "Fonction 'logisitic' de x, ie. sigmoide a probabilite gaussienne."))
@@ -68,8 +69,11 @@
   (:documentation "Fonction sigmoide de x"))
 
 (defmethod sigmoide ((x number) &key (thresh 0) (temp nil) (learn nil) (slope 1))
-  (declare (ignore learn temp))
-  (/ (exp (/ (- x thresh) slope)) (+ (exp (/ (- x thresh) slope)) (exp (- (/ (- x thresh) slope))))))
+  (declare (ignore learn))
+  (if (temp-value temp)
+      (random 1.0)
+      (/ (exp (/ (- x thresh) slope))
+	 (+ (exp (/ (- x thresh) slope)) (exp (- (/ (- x thresh) slope)))))))
 
 (defmethod sigmoide ((x list) &key (thresh 0) (temp nil) (learn nil) (slope 1))
   (mapcar #'(lambda (a) (sigmoide a :slope slope :thresh thresh :temp temp :learn learn)) x))
@@ -82,14 +86,16 @@
   (:documentation "Valeur lineaire de x = slope . x - thresh."))
 
 (defmethod linear ((x number) &key (thresh 0) (temp nil) (learn nil) (slope 1))
-  (declare (ignore learn temp))
-  (- (* slope x) thresh))
+  (declare (ignore learn))
+  (if (temp-value temp)
+      (random 1.0)
+      (- (* slope x) thresh)))
 
 (defmethod linear ((x list) &key (thresh 0) (temp nil) (learn nil) (slope 1))
   (mapcar #'(lambda (a) (linear a :thresh thresh :slope slope :temp temp :learn learn)) x))
 
 (defmethod linear ((x vector) &key (thresh 0) (temp nil) (learn nil) (slope 1))
-  (declare (ignore learn temp))
+  (declare (ignore learn))
   (dotimes (i (length x) x)
     (setf (aref x i) (linear (aref x i) :thresh thresh :slope slope))))
 
@@ -133,16 +139,22 @@
 (defmethod check-error ((v1 vector) (v2 vector) (error number))
   (let ((diff '()))
     (dotimes (n (length v1))
-      (push (abs (- (aref v1 n) (aref v2 n))) diff))
-    (remove-if #'(lambda (x) (<= x error)) diff)))
+      (let ((e (abs (- (aref v1 n) (aref v2 n)))))
+	(if (< e error)
+	    (push 0 diff)
+	    (push e diff))))
+    (values (apply #'+ diff))))
 
 (defmethod check-error ((v1 list) (v2 list) (error number))
   (let ((diff '()))
     (dotimes (n (length v1))
-      (push (abs (- (nth n v1) (nth n v2))) diff))
-    (remove-if #'(lambda (x) (< x error)) diff)))
+      (let ((e (abs (- (nth n v1) (nth n v2)))))
+	(if (< e error)
+	    (push 0 diff)
+	    (push e diff))))
+    (values (apply #'+ diff))))
 
-;(check-error #(0 .3 9 4) #(.1 .3 8.8 4) 0)
+;(check-error #(0 .3 9 4) #(.1 .3 8.8 4) 0.2)
 
 (defgeneric declip (x &optional thresh)
   (:documentation "Randomises x lorsqu'il depasse le seuil 'thresh'."))
@@ -180,30 +192,32 @@
       (dotimes (j (array-dimension value 1))
         (setf (aref clipped-matrix i j) (clip (aref value i j) :min min :max max))))))
 
-;(defmethod clip ((value mlp) &key (min 0) (max 1))
-;  (make-instance 'mlp
-;    :net
-;    (mapcar #'(lambda (layer) (clip layer :min min :max max)) (net value))
-;    :in-size (in-size value)
-;    :out-size (out-size value)
-;    :hidden-size (hidden-size value)
-;    :name (format nil "~S-clipped" (name value))))
-
-(defgeneric noiser (data p)
+(defgeneric noise (data p)
   (:documentation
-   "Noiser : Apply a random variation of + and - p on each element of data;
-    p must be included between 0 and 1."))
+   "Noise : random variation into a range from plus to minus p for each value of data;
+    p must be included between 0 and 1. When data is of type ann, returns a noise variation
+    of the network values of the ann (i.e. : (noise (net ann) p))."))
 
-(defmethod noiser ((data number) (p float))
-  (let ((sig (random 2)))
-    (if (plusp sig) (+ data (* data (random p))) (- data (* data (random p))))))
+(defmethod noise ((data t) (p null))
+  (values data))
 
-(defmethod noiser ((data list) (p float))
-  (mapcar #'(lambda (x) (noiser x p)) data))
+(defmethod noise ((data number) (p float))
+  (if (zerop p)
+      data
+      (let ((sig (* p (- (random 2.0) 1))))
+	(+ data sig))))
 
-(defmethod noiser ((data vector) (p float))
-  (coerce (noiser (coerce data 'list) p) 'vector))
+(defmethod noise ((data list) (p float))
+  (if (zerop p) data (mapcar #'(lambda (x) (noise x p)) data)))
 
+(defmethod noise ((data vector) (p float))
+  (if (zerop p) data (coerce (noise (coerce data 'list) p) 'vector)))
+
+(defmethod noise ((data neuron) (p float))
+  (if (zerop p) (net data) (noise (net data) p)))
+
+(defmethod noise ((data ann) (p number))
+  (if (zerop p) (net data) (noise (net data) p)))
 
 (defgeneric inhibit-synaps (matrix from &optional to &key factor)
   (:documentation "mettre a jour pour som'."))
@@ -262,7 +276,7 @@
 		     (setf (aref inhibited j i) (aref matrix j i)))))))))
 
 (defun match-i (w list)
-  "prend dans les synapses inhibees de net qui match avec le rang de la couche w, 
+  "prend dans les synapses inhibees de net qui match avec le rang de la couche w,
 et formate pour <inhibit-synaps>."
   (let ((temp (mapcar #'(lambda (x) (list (cadar x) (cadadr x)))
                       (remove-if-not #'(lambda (a) (= a w)) list :key #'caar))))
@@ -548,7 +562,7 @@ returns
   "Does a resampling of list by n samples."
   (let ((l (length list))
         (r '()))
-    (if (>= n l) 
+    (if (>= n l)
       (dotimes (i n (reverse r))
         (push (nth (floor (* i (/ l n))) list) r))
       (let ((newn (- n 2)))
@@ -639,7 +653,7 @@ returns
       (dotimes (n (floor (+ (* (car d) ratio) subrest)))
         (push (float (- (cadr d) (* n (/ (cadr d) (floor (+ (* (car d) ratio) subrest))))))
               result)))
-    
+
     (if (= n (length result))
       result
       (append result (make-list (- n (length result))
@@ -721,7 +735,7 @@ returns
 (defmethod euclidian ((a vector) (b list))
   (sqrt (apply #'+ (loop for k from 0 to (1- (length a))
 			 collect (expt (- (elt a k) (elt b k)) 2)))))
-  
+
 (defmethod euclidian-fast ((a list) (b list))
   (apply #'+ (mapcar #'(lambda (x y) (expt (- x y) 2)) a b)))
 
@@ -776,7 +790,7 @@ returns
 	      (loop for i from 1 to radius
 		    do
 		    (push (list (min (+ x i) o)) r)
-		    (push (list (max (- x i) 0)) r))	      
+		    (push (list (max (- x i) 0)) r))
 	      (voisins pos radius n r))
 	    (progn
 	      (loop for a in r

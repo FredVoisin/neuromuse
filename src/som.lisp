@@ -1,6 +1,8 @@
 ;;; code for Self-Organizing maps
 
-(format t "Loading SOM...~&")
+(in-package :neuromuse)
+
+;(format t "som.lisp ...~%")
 
 (defclass som (ANN)
   ((radius
@@ -18,7 +20,7 @@
   (:documentation "som"))
 
 (defmethod initialize-instance :after ((self som) &key name)
-  (let ((name-of-som (if name 
+  (let ((name-of-som (if name
                           (make-new-symbol name)
                           (make-new-symbol 'som))))
      (setf (slot-value self 'name) name-of-som
@@ -42,7 +44,7 @@
   (setf (epoch self) 0)
   (dotimes (i size)
     (let ((nr (eval (nth i (net self)))))
-      (dotimes (j input (setf (net nr) (nreverse (net nr)))) 
+      (dotimes (j input (setf (net nr) (nreverse (net nr))))
 	(push (list (list j i)
 		    (- .25 (random .5)) 0) (net nr)))))
   (setf (winner self) (random size)
@@ -84,7 +86,7 @@
 	       (- (/ temp 2)
 		  (if (zerop temp) 0 (random temp))))))
     (values)))
-		  	
+
 (defmethod update-activation ((self som))
   (dolist (n (net self))
     (update-activation n))
@@ -156,7 +158,7 @@
 	    do
 	    (let ((val (funcall s self)))
 	    (case val
-	      (functionp 
+	      (functionp
 	    (format t "~%:~S '~S"
 		    s
 		    (funcall s self)
@@ -178,7 +180,3 @@
 ;(setf (learn-fact SOM) .6)
 ;(setf (temp SOM) .0)
 ;(learn SOM)
-
-
-
-

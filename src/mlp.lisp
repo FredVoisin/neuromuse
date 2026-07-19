@@ -1,6 +1,8 @@
 ;; MLP et recurrent MLP
 
-(format t "MLP...~&")
+(in-package :neuromuse)
+
+;(format t "mlp.Lisp ...~%")
 
 ;; Multi Layered Perceptron
 
@@ -59,19 +61,14 @@
 	  :initarg :stop
 	  :reader stop
 	  :accessor stop
-	  :type integer)
-   )
+	  :type integer))
   (:documentation "MLP"))
 
 (defmethod print-object ((object MLP) stream)
   (format stream
-          "<mlp ~S: ~D cell~:P, ~D in~:P, ~D hidden-layer~:P, ~D out~:P>"
+          "<mlp ~S: ~D input~:P, ~D hidden layer~:P, ~D output~:P>"
           (string (name object))
-          (apply #'+ (append
-		      (list (in-size object)
-			    (out-size object))
-		      (hidden-size object)))
-          (in-size object)
+	  (in-size object)
           (length (hidden-size object))
           (out-size object) )
   (values))
@@ -176,13 +173,13 @@
   (let ((dd (make-listarray (length output-layer) (length (car output-layer)))))
     (dotimes (i (length output-layer))
       (dotimes (j (length (car output-layer)))
-        (setf (nth j (nth i dd)) (elt output-signal-error i)
-              (nth j (nth i dd)) (elt output-signal-error i))))
+        (setf (nth j (nth i dd)) (elt output-signal-error i))))
     (hadamar-product output-layer dd)))
 
 (defmethod backpropagate ((mlp mlp) &optional in)
   (let ((goal (goal mlp))
-	(input (if in in (input mlp)))  ; implemeter learn-temp !
+	(net (noise mlp (* (learn-fact mlp) (net-temp mlp))))
+	(input (if in in (input mlp)))
 	(learn (learn-fact mlp))
 	(hidden-func (hidden-fun mlp))
 	(out-func (out-fun mlp))
@@ -195,17 +192,16 @@
 	(e 10000))
     (dotimes (down (- (length (net mlp)) 1))  ;; 1- activation = top->down
       (if (zerop down)
-	  (push (funcall hidden-func (multiply-matrix-and-vector (car (net mlp))
-								 input)
+	  (push (funcall hidden-func (multiply-matrix-and-vector (car net) input)
 			 :thresh thresh
 			 :slope slope)
 		hidden-answer-cell)
-	  (push (funcall hidden-func (multiply-matrix-and-vector (nth down (net mlp))
+	  (push (funcall hidden-func (multiply-matrix-and-vector (nth down net)
 								 (nth (1- down) hidden-answer-cell))
 			 :thresh thresh
 			 :slope slope)
 		hidden-answer-cell)))
-    (setf output-answer-cell (funcall out-func (multiply-matrix-and-vector (car (last (net mlp)))
+    (setf output-answer-cell (funcall out-func (multiply-matrix-and-vector (car (last net))
 									   (car hidden-answer-cell))
 				      :slope slope
 				      :thresh thresh)
@@ -215,33 +211,33 @@
       (if (zerop up)
 	  (push (hidden-signal-error (car hidden-answer-cell)
 				     (hidden-error-estimation
-				      (error-retropropagation (car (last (net mlp))) out-signal-error)))
+				      (error-retropropagation (car (last net)) out-signal-error)))
 		hidden-signal-error)
 	  (push (hidden-signal-error (nth up hidden-answer-cell)
 				     (hidden-error-estimation
-				      (error-retropropagation (nth (- (length (net mlp)) up 1)  (net mlp))
+				      (error-retropropagation (nth (- (length net) up 1) net)
 							      (car hidden-signal-error)))) ;(nth (- up 1)
 		hidden-signal-error)))
     (setf hidden-answer-cell (reverse hidden-answer-cell))
     (dotimes (down (length hidden-signal-error))  ;;3- update = top->down
       (if (zerop down)
-	  (setf (car (net mlp)) (update-hidden-weights (car (net mlp)) input
+	  (setf (car (net mlp)) (update-hidden-weights (car net) input
 						       (car hidden-signal-error)
 						       learn))
-	  (setf (nth down (net mlp)) (update-hidden-weights (nth down (net mlp))
+	  (setf (nth down (net mlp)) (update-hidden-weights (nth down net)
 							    (nth (- down 1) hidden-answer-cell)
 							    (nth down hidden-signal-error)
 							    learn))))
-    (setf (car (last (net mlp))) (update-output-weights (car (last (net mlp)))
+    (setf (car (last (net mlp))) (update-output-weights (car (last net))
 							(car (last hidden-answer-cell))
 							out-signal-error
 							learn)
-	  e (apply #'+ (check-error output-answer-cell goal thresh)))
+	  e (check-error output-answer-cell goal thresh))
     (values e)))
 
 (defmethod run-mlp ((mlp mlp) &key in)  ;in pour method rmlp...
     (let ((hidden-answer-cell (list))
-	  (net (net mlp)) )
+	  (net (noise mlp (net-temp mlp))))
      (dotimes (w (- (length net) 1))
        (if (zerop w)
          (push (funcall (hidden-fun mlp) (multiply-matrix-and-vector (car net) (if in in (input mlp))))
@@ -250,38 +246,53 @@
                hidden-answer-cell)))
      (setf (output mlp)
 	   (funcall (out-fun mlp)
-		    (multiply-matrix-and-vector (car (last net))
-						(car hidden-answer-cell))
+		    (multiply-matrix-and-vector (car (last net)) (car hidden-answer-cell))
 		    :slope (slope mlp)
 		    :temp (temp mlp)
-		    :thresh 0)))) ; thresh)))
+		    :thresh 0))
+     (values (output mlp))))
 
-(defun report-error (ann input output
-		     &key (error 0) (temp 0) (slope 1)
-		     (hidden-func #'logistic) (out-func #'logistic)
-		     (thresh 0))
-   (let ((hidden-answer-cell (list))
-         output-answer-cell)
-     (dotimes (down (- (length (net ann)) 1))  ;; 1- activation = top->down
-       (if (zerop down)
-         (push (funcall hidden-func (multiply-matrix-and-vector (car (net ann)) input)
-                        :thresh thresh
-                        :temp temp
-                        :slope slope)
-               hidden-answer-cell)
-         (push (funcall hidden-func (multiply-matrix-and-vector (nth down (net ann)) (nth (1- down) hidden-answer-cell))
-                        :thresh thresh
-                        :temp temp
-                        :slope slope)
-               hidden-answer-cell)))
-     (setf output-answer-cell (funcall out-func (multiply-matrix-and-vector (car (last (net ann))) (car hidden-answer-cell))
-                                       :temp temp
-                                       :slope slope
-                                       :thresh thresh) )
-     (apply #'+ (check-error output-answer-cell output error))))
+(defmethod activation ((ann mlp) &key (neuron nil))
+  (declare (ignore neuron))
+  (run-mlp ann :in (input ann)))
+
+(defmethod clear ((self mlp) )
+   (setf (previous self) (net self)
+         (net self) (apply #'init-mlp-net (append (list (in-size self)
+							(out-size self))
+						  (hidden-size self)))
+         (epoch self) 0
+         (last-stop self) '(0 nil)
+         (current-error self) 1000
+         (last-error self) 1000
+         (history self) '()
+         (creation-date self) (GET-UNIVERSAL-TIME)
+         (modification-date self) '())
+   (format t "~%MLP ~S cleared.~%" (name self))
+   self)
+
+(defmethod save ((self mlp) &optional path)
+  (when (not path) (setf path (format nil "~S.lisp" (name self))))
+  (let ((slots (structure-slot-names (type-of self))))
+    (with-open-file (stream path
+			    :direction :output
+			    :if-exists :supersede
+			    :if-does-not-exist :create)
+      (format stream "(in-package :neuromuse)")
+      (format stream "~&(make-instance 'mlp")
+      (loop for s in slots
+	 do
+	   (let ((slot-value (funcall s self)))
+	     (if (listp slot-value)
+		 (format stream " :~S '~S~&" s slot-value)
+		 (format stream " :~S ~S~&" s slot-value))))
+      (format stream ")~%")))
+  (format t "~& MLP ~S saved to file ~S !" (name self) path)
+  (values))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; MLP recurent (a la Jordan / Elman)
+;; Elman recurrent MLP
 
 (defclass rMLP (mlp)
   ((recurrent-layer
@@ -296,7 +307,7 @@
     :reader recurrent-layer-activation
     :accessor recurrent-layer-activation
     :type list) )
-  (:documentation "MLP recursif a la Elman / Jordan"))
+  (:documentation "Elman Recurrent Multi-Layer Perceptron."))
 
 (defmacro make-rMLP (name in out recurrent-layer &rest hid) ;; h0 =0
   (cond ((not (boundp name))
@@ -332,7 +343,8 @@
 
 (defmethod backpropagate ((mlp rmlp) &optional in)
   (let ((goal (goal mlp))
-	(input (if in in (append (input mlp) (recurrent-layer-activation mlp)))) ; implemeter learn-temp !
+	(input (if in in (append (input mlp) (recurrent-layer-activation mlp))))
+	(net (noise mlp (* (learn-fact mlp) (net-temp mlp))))
 	(learn (learn-fact mlp))
 	(hidden-func (hidden-fun mlp))
 	(out-func (out-fun mlp))
@@ -343,20 +355,20 @@
 	out-signal-error
 	(hidden-signal-error (list))
 	(e 10000))
-    (dotimes (down (- (length (net mlp)) 1))  ;; 1- activation = top->down
+    (dotimes (down (- (length net) 1))  ;; 1- activation = top->down
       (if (zerop down)
-	  (push (funcall hidden-func (multiply-matrix-and-vector (car (net mlp)) input)
+	  (push (funcall hidden-func (multiply-matrix-and-vector (car net) input)
 			 :thresh thresh
 			 :slope slope)
 		hidden-answer-cell)
-	  (push (funcall hidden-func (multiply-matrix-and-vector (nth down (net mlp))
-								 (nth (1- down) hidden-answer-cell))
+	  (push (funcall hidden-func (multiply-matrix-and-vector (nth down net)
+								 (car hidden-answer-cell))
 			 :thresh thresh
 			 :slope slope)
 		hidden-answer-cell))
       (when  (= down (recurrent-layer mlp))
 	(setf (recurrent-layer-activation mlp) (car hidden-answer-cell))))
-    (setf output-answer-cell (funcall out-func (multiply-matrix-and-vector (car (last (net mlp)))
+    (setf output-answer-cell (funcall out-func (multiply-matrix-and-vector (car (last net))
 									   (car hidden-answer-cell))
 				      :slope slope
 				      :thresh thresh)
@@ -366,34 +378,34 @@
       (if (zerop up)
 	  (push (hidden-signal-error (car hidden-answer-cell)
 				     (hidden-error-estimation
-				      (error-retropropagation (car (last (net mlp))) out-signal-error)))
+				      (error-retropropagation (car (last net)) out-signal-error)))
 		hidden-signal-error)
 	  (push (hidden-signal-error (nth up hidden-answer-cell)
 				     (hidden-error-estimation
-				      (error-retropropagation (nth (- (length (net mlp)) up 1)  (net mlp))
+				      (error-retropropagation (nth (- (length net) up 1) net)
 							      (car hidden-signal-error)))) ;(nth (- up 1)
 		hidden-signal-error)))
     (setf hidden-answer-cell (reverse hidden-answer-cell))
     (dotimes (down (length hidden-signal-error))  ;;3- update = top->down
       (if (zerop down)
-	  (setf (car (net mlp)) (update-hidden-weights (car (net mlp)) input
+	  (setf (car (net mlp)) (update-hidden-weights (car net) input
 						       (car hidden-signal-error)
 						       learn))
-	  (setf (nth down (net mlp)) (update-hidden-weights (nth down (net mlp))
+	  (setf (nth down (net mlp)) (update-hidden-weights (nth down net)
 							    (nth (- down 1) hidden-answer-cell)
 							    (nth down hidden-signal-error)
 							    learn))))
-    (setf (car (last (net mlp))) (update-output-weights (car (last (net mlp)))
+    (setf (car (last (net mlp))) (update-output-weights (car (last net))
 							(car (last hidden-answer-cell))
 							out-signal-error
 							learn)
-	  e (apply #'+ (check-error output-answer-cell goal thresh)))
+	  e (check-error output-answer-cell goal thresh))
     (values e)))
 
 (defmethod run-mlp ((mlp rmlp) &key in)  ;in pour method rmlp...
     (let ((hidden-answer-cell (list))
-	  (net (net mlp)) )
-     (dotimes (w (- (length net) 1))
+	  (net (noise mlp (net-temp mlp))))
+     (dotimes (w (1- (length net)))
        (if (zerop w)
          (push (funcall (hidden-fun mlp) (multiply-matrix-and-vector (car net)
 								     (if in in
@@ -402,19 +414,26 @@
 	       hidden-answer-cell)
          (push (funcall (hidden-fun mlp) (multiply-matrix-and-vector (nth w net)
 								     (car hidden-answer-cell)))
-               hidden-answer-cell)))
+		      hidden-answer-cell))
+       (when (= w (recurrent-layer mlp))
+	 (setf (recurrent-layer-activation mlp) (car hidden-answer-cell))))
      (setf (output mlp)
 	   (funcall (out-fun mlp)
-		    (multiply-matrix-and-vector (car (last net))
-						(car hidden-answer-cell))
+		    (multiply-matrix-and-vector (car (last net)) (car hidden-answer-cell))
 		    :slope (slope mlp)
 		    :temp (temp mlp)
-		    :thresh 0))))
+		    :thresh 0)))
+    (values (output mlp)))
 
-(defmethod clear ((self mlp) )
+(defmethod activation ((ann rmlp) &key (neuron nil))
+  (declare (ignore neuron))
+  (run-mlp ann :in (input ann)))
+
+(defmethod clear ((self rmlp) )
    (setf (previous self) (net self)
-         (net self) (apply #'init-mlp (append (list (in-size self)
-                                                    (out-size self))
+         (net self) (apply #'init-mlp-net (append (list (+ (in-size self) (nth (recurrent-layer self)
+									       (hidden-size self)))
+							(out-size self))
                                               (hidden-size self)))
          (epoch self) 0
          (last-stop self) '(0 nil)
@@ -424,7 +443,8 @@
          (creation-date self) (GET-UNIVERSAL-TIME)
          (modification-date self) '())
    (format t "~%MLP ~S cleared.~%" (name self))
-   self)
+   (values self))
+
 (defmacro create-name (symbol)
    `(defvar ,symbol nil))
 
@@ -468,11 +488,11 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; vieilleries....
+;; oldies....
 
 #|
-;; variante avec inhibition
-(defmethod run-mlp ((mlp mlp) (input vector) 
+;; run variante with inhibition
+(defmethod run-mlp ((mlp mlp) (input vector)
                         &key (hidden-func #'logistic) (out-func #'logistic) (temp 0) (thresh 0) (slope 1.0))
    (if (inhibit-run mlp)
      (let* ((hidden-answer-cell (list))
@@ -481,7 +501,7 @@
        (dotimes (w (- (length mlp-net) 1))
          (let ((inhibited (match-i w (inhibit mlp))))
            (if (zerop w)
-             (push (funcall hidden-func (multiply-matrix-and-vector 
+             (push (funcall hidden-func (multiply-matrix-and-vector
                                          (inhibit-synaps (car mlp-net)
                                                          (car inhibited)
                                                          (cadr inhibited) :factor 1)
@@ -500,9 +520,12 @@
                 :temp temp))
      (run-mlp (net mlp) input :hidden-func hidden-func :out-func out-func :temp temp :thresh thresh)))
 
+
+;; learn method have been deaxctivated since it exists numerous methods to train mlp, not only algorithms
+;; ways to interact with, for instance it can be usefull to train while running (when agent archtecture).
 (defmethod learn ((self mlp))
   (let ((input (input self))
-	(goal (goal self)) 
+	(goal (goal self))
 	(temp (temp self))
 	(learn (learn-fact self))
 	(slope (slope self))
@@ -533,7 +556,7 @@
 		    (epoch self) (current-error self))
 	    (setf (last-stop self) (append (list (list (epoch self) 'interrupted)) (last-stop self)))
 	    (setf (last-error self) (current-error self)))
-	   (t 
+	   (t
             (when verbose (format t "~%> Learning at epoch ~D with error = ~D"
 				  (epoch self) (car (history-error self))) )
             (learn self))))))

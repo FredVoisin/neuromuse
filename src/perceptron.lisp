@@ -1,5 +1,7 @@
 ;;; perceptron, unfinished ?, see mlp
 
+(in-package :neuromuse)
+
 (defclass perceptron (ANN)
   ((name
     :initform 'perceptron
@@ -72,7 +74,7 @@
                   :in-size in
                   :out-size out 
                   :net (init-perceptron-net in out :range range)
-                  :creation-date (get-time))))
+                  :creation-date (get-universal-time))))
            `(setf ,name ,net)))))
 
 ;; terminer perceptron
