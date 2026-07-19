@@ -90,6 +90,16 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
         in Paradox"), September 2005.</i></sub>
       </td>
     </tr>
+    <tr>
+      <td align="center" width="50%">
+        <img src="img/Taipe_112.jpg" alt="Neuromuse demo/workshop setup, Taipei 2003" width="360"><br>
+        <sub><i>Demo/workshop setup, National Taiwan University, Taipei, 2003.</i></sub>
+      </td>
+      <td align="center" width="50%">
+        <img src="img/Taipe_114.jpg" alt="Neuromuse demo/workshop setup, FNAC Asia, Taipei 2003" width="360"><br>
+        <sub><i>Demo/workshop setup, FNAC Asia, Taipei, 2003.</i></sub>
+      </td>
+    </tr>
   </table>
 </p>
 
