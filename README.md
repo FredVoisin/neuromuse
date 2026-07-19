@@ -2,6 +2,48 @@
 
 Artificial neural networks to generate music and artistic productions with real-time applications (since 2000).
 
+## How to install and run
+
+### Requirements
+
+- [SBCL](http://www.sbcl.org)
+- [Quicklisp](https://www.quicklisp.org/) (needed to fetch `:prove`, the test-suite dependency)
+- Emacs with [SLIME](https://slime.common-lisp.dev/) (recommended, for an interactive REPL workflow)
+
+### Installation
+
+1. Clone this repository, e.g. into `~/projets/neuromuse`.
+2. Make it visible to ASDF/Quicklisp, either by symlinking it into Quicklisp's `local-projects`:
+   ```bash
+   ln -s ~/projets/neuromuse ~/quicklisp/local-projects/neuromuse
+   ```
+   or by pushing it onto `asdf:*central-registry*` from the Lisp REPL instead (see below).
+3. Start Emacs, then start a Lisp REPL with `M-x slime`.
+4. Load the system:
+   ```lisp
+   (ql:quickload :neuromuse)
+   (in-package :neuromuse)
+   ```
+   (if you skipped the symlink step, use `(push #P"~/projets/neuromuse/" asdf:*central-registry*)` followed
+   by `(asdf:load-system :neuromuse)` instead).
+5. Try it:
+   ```lisp
+   (load "examples/mlp-test.lisp")   ; trains a small MLP on XOR
+   ```
+   or run the test suite: `(asdf:test-system :neuromuse)` (Quicklisp will fetch `:prove` automatically the
+   first time).
+
+### Day-to-day Emacs/SLIME workflow
+
+Once a `.lisp` file is open in Emacs:
+
+- `C-c C-k` — compile/load the whole file
+- `C-c C-c` — compile the top-level form under point
+- `C-c C-z` — jump to the REPL buffer
+
+Evaluating forms updates the running Lisp image live, so you can redefine a method and re-test it
+without restarting.
+
 ## History
 
 This project was initiated by Fred Voisin ([www.fredvoisin.com](http://www.fredvoisin.com)) in 1999 to study the application of artificial neural nets to contemporary music creation using, at first, the Lisp language (Macintosh Common Lisp and Common Lisp Object System), OpenMusic software (Ircam, [www.ircam.fr](http://www.ircam.fr)) and the MIDI protocol. Some overall principles were inspired by [David Wessel](http://music.berkeley.edu/who-was-david-wessel/) and [Adrian Freed](https://cnmat.berkeley.edu/people/adrian-freed) at [CNMAT](http://cnmat.berkeley.edu). At this time, the very first ('alpha') version of this project was available at [www.neuromuse.net](http://www.neuromuse.net) and at the OpenMusic Ircam Forum (an [archived snapshot](https://web.archive.org/web/20050910170552/http://www.neuromuse.org/) of the original www.neuromuse.org site, from September 2005). It was also the moment for demos and short public conference-performances (Ircam, the Web-Bar, Prisma composer workshops in Paris and Firenze). Training a recurrent MLP could take hours of computation on the laptops available at the time, and running real-time applications at a symbolic level (MIDI) made it hard to go beyond a few dozen neurons on an IBM PowerPC CPU.
