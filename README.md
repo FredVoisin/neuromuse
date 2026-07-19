@@ -16,6 +16,16 @@ After 2007, the project was also used as teaching material by the author at the 
 
 Even if this project is becoming quite old, it may be a good start for new developments since it's short, simple, easy to use and efficient enough for education and artistic productions.
 
+## Publications
+
+- Voisin, F., Meier, R. (2004). "Playing Integrated Music Knowledges with Artificial Neural Networks."
+  Journées d'Informatique Musicale / Sound and Music Computing, Ircam/Centre Pompidou, Paris.
+- Voisin, F., Meier, R. (2009). "On Analytical vs. Schizophrenic Procedures for Computing Music."
+  *Contemporary Music Review*, 28(2), pp. 205-219.
+  [DOI: 10.1080/07494460903322489](https://doi.org/10.1080/07494460903322489)
+- Voisin, F. (2015). "De la brousse dans les synthés." In *Gilles Deleuze : la pensée-musique*
+  (P. Criton &amp; J.-M. Chouvel, eds.). [hal-01611947](https://hal.science/hal-01611947v1)
+
 ## Updates
 
 **July 2026** — the project has been reorganized as a proper ASDF system (`src/`, `tests/`, `examples/`,
@@ -174,7 +184,7 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
       <td align="center" width="25%">
         <img src="img/eurecom13mai.jpg" alt="Pure Data control patches and SOM visualization, Eurecom" width="220"><br>
         <sub><i>The Pure Data GUI to control 25 Lisp "avatit" agents dispatched on a grid, at
-        <a href="https://www.eurecom.fr">Eurecom</a>, Sophia-Antipolis.</i></sub>
+        Eurecom, Sophia-Antipolis.</i></sub>
       </td>
     </tr>
   </table>
