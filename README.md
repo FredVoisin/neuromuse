@@ -74,11 +74,16 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
   </table>
 </p>
 
-### Ars Electronica (2005)
+### Demos &amp; talks
 
 <p align="center">
   <table>
     <tr>
+      <td align="center" width="50%">
+        <img src="img/livedemos_.png" alt="MLP objects in Max/MSP, Prisma composers masterclass" width="360"><br>
+        <sub><i>A demo showing a first port of the MLP as "objects" in Max/MSP, able to learn and play in
+        real time, at a Prisma composers masterclass.</i></sub>
+      </td>
       <td align="center" width="50%">
         <img src="img/arselectronica2005.jpg" alt="Ars Electronica 2005, Hybrid - Living in Paradox" width="360"><br>
         <sub><i>Invited talk with Robin Meier on neuromuse-based projects, Ars Electronica ("Hybrid — Living
