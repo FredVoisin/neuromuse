@@ -202,22 +202,42 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
   </table>
 </p>
 
+### Effet Lisière (Diois, 2008)
+
+<p align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <img src="img/rosom_pouillot-fitis_1.png" alt="ROSOM output while learning the willow warbler song, 1" width="360"><br>
+        <sub><i>Output of a recurrent oscillatory SOM (rosom), before learning the song of the pouillot fitis
+        (willow warbler), for "Effet Lisière", by Jean-Luc Hervé, in the Diois.</i></sub>
+      </td>
+      <td align="center" width="50%">
+        <img src="img/rosom_pouillot-fitis_2.png" alt="ROSOM output after learning the willow warbler song, 2" width="360"><br>
+        <sub><i>The same rosom's output after hundreds of epochs of learning.</i></sub>
+      </td>
+    </tr>
+  </table>
+</p>
+
 ### Last Manoeuvres in the Dark (2008)
 
 <p align="center">
   <table>
     <tr>
-      <td align="center" width="33%">
-        <img src="img/m4lmd-000.jpg" alt="Darth Vader helmet sculptures, neural activation decoder array" width="280"><br>
+      <td align="center" width="50%">
+        <img src="img/m4lmd-000.jpg" alt="Darth Vader helmet sculptures, neural activation decoder array" width="360"><br>
         <sub><i>The neural activation decoder: rows of Darth Vader helmet sculptures, Palais de Tokyo,
         Paris, 2008.</i></sub>
       </td>
-      <td align="center" width="33%">
-        <img src="img/m4lmd-002.jpg" alt="Cabling rig for the helmet array" width="280"><br>
+      <td align="center" width="50%">
+        <img src="img/m4lmd-002.jpg" alt="Cabling rig for the helmet array" width="360"><br>
         <sub><i>Cabling rig distributing signal to the helmet array.</i></sub>
       </td>
-      <td align="center" width="33%">
-        <img src="img/m4lmd-005.jpg" alt="System diagram, Last Manoeuvres in the Dark" width="280"><br>
+    </tr>
+    <tr>
+      <td align="center" width="100%">
+        <img src="img/m4lmd-005.jpg" alt="System diagram, Last Manoeuvres in the Dark" width="600"><br>
         <sub><i>System diagram: music information retrieval, SOM-based stylistic analysis, multi-agent/neural
         control, and the neural activation decoder.</i></sub>
       </td>
@@ -240,24 +260,6 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
         <img src="img/smallgreencalaos.jpg" alt="Neuromuse agents in Java on Calao ARM boards" width="360"><br>
         <sub><i>Five neuromuse agents in Java playing live on Calao motherboards running Linux, audio rendered
         through UDP with a local Max/MSP ad-hoc patch.</i></sub>
-      </td>
-    </tr>
-  </table>
-</p>
-
-### Effet Lisière (Diois)
-
-<p align="center">
-  <table>
-    <tr>
-      <td align="center" width="50%">
-        <img src="img/rosom_pouillot-fitis_1.png" alt="ROSOM output while learning the willow warbler song, 1" width="360"><br>
-        <sub><i>Output of a recurrent oscillatory SOM (rosom), before learning the song of the pouillot fitis
-        (willow warbler), for "Effet Lisière", by Jean-Luc Hervé, in the Diois.</i></sub>
-      </td>
-      <td align="center" width="50%">
-        <img src="img/rosom_pouillot-fitis_2.png" alt="ROSOM output after learning the willow warbler song, 2" width="360"><br>
-        <sub><i>The same rosom's output after hundreds of epochs of learning.</i></sub>
       </td>
     </tr>
   </table>
