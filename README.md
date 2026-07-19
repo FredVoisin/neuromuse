@@ -244,3 +244,21 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
     </tr>
   </table>
 </p>
+
+### Effet Lisière (Diois)
+
+<p align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <img src="img/rosom_pouillot-fitis_1.png" alt="ROSOM output while learning the willow warbler song, 1" width="360"><br>
+        <sub><i>Output of a recurrent oscillatory SOM (rosom), before learning the song of the pouillot fitis
+        (willow warbler), for "Effet Lisière", by Jean-Luc Hervé, in the Diois.</i></sub>
+      </td>
+      <td align="center" width="50%">
+        <img src="img/rosom_pouillot-fitis_2.png" alt="ROSOM output after learning the willow warbler song, 2" width="360"><br>
+        <sub><i>The same rosom's output after hundreds of epochs of learning.</i></sub>
+      </td>
+    </tr>
+  </table>
+</p>
