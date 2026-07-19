@@ -37,6 +37,18 @@ New updates in progress with the help of Claude AI, in the former spirit of the 
 
 Fred Voisin.
 
+## TODO
+
+- `src/perceptron.lisp` is marked "unfinished ?, see mlp" and isn't part of the ASDF build; either finish
+  it or fold its role entirely into `mlp`.
+- `copy-MLP`/`duplicate` (`src/mlp.lisp`) are commented out: they call an undefined `copy-net` and
+  reference a nonexistent `:parent` initarg. Net-copying was never actually designed and still needs it.
+- `som`'s `save` method (`src/som.lisp`) is commented out and needs the same treatment `mlp`'s `save` got.
+- `mlp`'s `save` doesn't perfectly round-trip: it only quotes list-valued slots, so a non-list slot
+  holding a symbol (e.g. `:name`) prints unquoted and would be read back as a variable reference.
+- Port the graphical rendering used to draw nets (as seen in the Gallery, e.g. `mlp_mcl_macos9.png`),
+  originally built on Macintosh Common Lisp's dedicated CLOS toolbox, to something available under SBCL.
+
 ---
 
 ## Présentation (Nice, mai 2005)
