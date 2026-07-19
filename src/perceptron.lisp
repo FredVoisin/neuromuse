@@ -51,16 +51,17 @@
   (init-perceptron-net in-size out-size :range range))
 
 (defmacro make-perceptron (name in out &key (range .4))
+  ;; see make-MLP in mlp.lisp: expands to CODE that builds the instance
+  ;; at load/run time, rather than splicing a literal instance into the
+  ;; expansion (which only worked when interpreted, not compile-file'd).
   (cond ((not (boundp name))
-         (let ((net
-                (make-instance 'perceptron
-                  :name name
-                  :in-size in
-                  :out-size out 
-                  :net (init-perceptron-net in out :range .4)
-                  :creation-date (get-universal-time))))
-           `(defvar ,name ,net)
-           ))
+         `(defvar ,name
+            (make-instance 'perceptron
+              :name ',name
+              :in-size ,in
+              :out-size ,out
+              :net (init-perceptron-net ,in ,out :range ,range)
+              :creation-date (get-universal-time))))
         ((ann-p (symbol-value name))
          (warning-msg (format nil
 			  "~S already exists !~S"
@@ -68,13 +69,18 @@
                           (type-of (symbol-value name))
                           name)))
         (t
-         (let ((net
-                (make-instance 'perceptron
-                  :name name
-                  :in-size in
-                  :out-size out 
-                  :net (init-perceptron-net in out :range range)
-                  :creation-date (get-universal-time))))
-           `(setf ,name ,net)))))
+         `(setf ,name
+            (make-instance 'perceptron
+              :name ',name
+              :in-size ,in
+              :out-size ,out
+              :net (init-perceptron-net ,in ,out :range ,range)
+              :creation-date (get-universal-time))))))
+
+;; not part of the neuromuse.asd build (see mlp.lisp instead); export the same
+;; way udp.lisp does when this file is loaded manually, for symmetry.
+(do-symbols (sym (find-package :neuromuse))
+  (when (eq (symbol-package sym) (find-package :neuromuse))
+    (export sym :neuromuse)))
 
 ;; terminer perceptron

@@ -32,13 +32,25 @@ this order: `neuromuse` (package definition), `neuromuse-main` (core classes/gen
 `:components` list (mirrors upstream: it's marked "unfinished ?, see mlp") and must be loaded manually
 with `(load "src/perceptron.lisp")` after the system if needed.
 
-There is no automated test suite. `tests/neuromuse.lisp` is a `prove`-based stub (`(defpackage
-neuromuse-test ...)`, empty `plan`/`finalize`) wired into the `.asd` via `:in-order-to ((test-op
-(test-op "neuromuse-test")))`, but the `neuromuse-test` system it references doesn't exist yet, so
-`(asdf:test-system :neuromuse)` will fail as-is. "Testing" in practice means running the scripts in
-`examples/` at the REPL (e.g. `(load "examples/mlp-test.lisp")` after loading the system trains an MLP
-on XOR and prints predictions) or evaluating the commented-out example forms left at the bottom of
-`src/som.lisp` and `src/rosom.lisp`, and checking output/behavior by hand.
+Run the test suite with:
+
+```lisp
+(push #P"./" asdf:*central-registry*)
+(asdf:test-system :neuromuse)
+```
+
+`tests/neuromuse.lisp` is a `prove`-based suite (package `neuromuse-test`, `:use`s `:neuromuse` and
+`:prove`) covering the math/transfer-function layer, matrix/vector algebra, SOM topology helpers, MLP
+construction/shape, one deterministic MLP-training-reduces-error check (fixed `*random-state*` seed, so
+it's not flaky), rmlp construction, and som/rosom construction+activation+winner-finding. It's wired up
+via a second system, `neuromuse-test`, defined at the bottom of `neuromuse.asd`
+(`:depends-on (:neuromuse :prove)`, loads `tests/neuromuse.lisp`) and referenced from `neuromuse`'s
+`:in-order-to ((test-op (test-op "neuromuse-test")))`. Requires Quicklisp for `:prove`.
+
+Beyond the test suite, "testing" in practice also means running the scripts in `examples/` at the REPL
+(e.g. `(load "examples/mlp-test.lisp")` after loading the system trains an MLP on XOR and prints
+predictions) or evaluating the commented-out example forms left at the bottom of `src/som.lisp` and
+`src/rosom.lisp`, and checking output/behavior by hand.
 
 ## Architecture
 
@@ -76,13 +88,33 @@ the generic function (see the `net`/`id` generic methods in `src/neuromuse-main.
 symbol/list dispatch pattern used throughout).
 
 Networks are constructed via macros, not `make-instance` directly: `make-perceptron`, `make-MLP`,
-`make-rMLP` (and the commented-out `copy-MLP`). Each expands to a `defvar`/`setf` that also guards
-against clobbering an existing network bound to the same name (via `ann-p` + `warning-msg`).
+`make-rMLP`. Each expands to code that builds the instance at load/run time (a `defvar`/`setf` wrapping
+a `make-instance` form) and guards against clobbering an existing network bound to the same name (via
+`ann-p` + `warning-msg`). These macros used to splice a *live instance*, built at macroexpansion time,
+directly into their expansion — which only worked when the call was interpreted at the REPL, not when
+compiled (SBCL has no `make-load-form` for these classes, so `compile-file` errored with "don't know how
+to dump ..."). This broke as soon as anything (the ASDF-compiled test suite) actually called them from a
+file. Fixed by having the macros return *code* that constructs the instance, not the instance itself. If
+you add a similar constructor macro, follow the same pattern: return a form, don't embed a runtime
+object literal in the expansion. `copy-MLP`/`duplicate` (also in `mlp.lisp`) are commented out — they
+called an undefined `copy-net` and referenced a nonexistent `:parent` initarg; shelved rather than
+half-fixed, since net-copying was never actually designed.
 
-`mlp.lisp`'s `save` method and `neuromuse-main.lisp`'s `neuron` `save` method both call
-`structure-slot-names`, but that function's definition is commented out (`#| ... |#`) in
-`neuromuse-main.lisp` — calling `save` on an `mlp` or `neuron` will signal an undefined-function error.
-This is a pre-existing gap in the upstream WIP code, not something introduced by this repo's layout.
+`structure-slot-names` (`src/neuromuse-main.lisp`) — used by `mlp`'s and `neuron`'s `save` methods to
+list a class's slots — is implemented via `sb-mop:class-slots`/`sb-mop:slot-definition-name` (SBCL-only;
+the upstream version was commented out and had `+sbcl` instead of `#+sbcl`, so it never actually ran).
+`save`'s output isn't a perfect round-trip yet: `mlp`'s `save` method only wraps list-valued slots in a
+quote when printing, so a non-list slot holding a symbol (e.g. `:name`) prints unquoted and would be read
+back as a variable reference, not a literal — a pre-existing quirk, not something this pass redesigned.
+
+The `:neuromuse` package exports nothing from its own `defpackage` form (`src/neuromuse.lisp`). Instead,
+`src/udp.lisp` (last file in the `.asd` load order) and `src/perceptron.lisp` (loaded separately) each
+end with a `do-symbols` sweep that exports every symbol interned in `:neuromuse` so far — restoring the
+same unqualified, load-and-use-everything-at-the-REPL visibility the code had before the 2021 package
+split (when everything lived directly in `:cl-user`). This is why a separate consumer package like
+`neuromuse-test` (which `:use`s `:neuromuse`) can see `logistic`, `make-mlp`, `in-size`, etc. unqualified.
+If you add a new top-level `src/` file to the `.asd` `:components` list, put it *before* `udp.lisp`, or
+the export sweep won't see its symbols.
 
 ### Math / utility layer
 
@@ -96,6 +128,9 @@ code is built on:
   a list), `compare-vectors`.
 - `noise` (replaces the old `noiser`) — random perturbation of a number/list/vector/`neuron`/`ann`;
   `mlp`'s `backpropagate`/`run-mlp` call it on the net via `net-temp` to add weight jitter.
+- Gotcha: `ANN`'s `learn-fact` slot defaults to `0.0`, and `make-MLP`/`make-rMLP` don't override it — a
+  freshly-constructed net won't learn anything from `backpropagate` until you `(setf (learn-fact net)
+  ...)` yourself (see `examples/mlp-test.lisp` or the `tests/neuromuse.lisp` MLP subtest).
 - SOM topology/neighborhood helpers: `2d`/`d2`, `3d`/`d3` (index <-> spatial coordinate conversion),
   `voisins` (neighborhood lookup), `gaussian-hat` (Mexican-hat-style learning rate falloff).
 - String/wire-format conversion for the UDP layer: `st2v`, `st2list`, `vector2string`/`v2st`,
@@ -108,7 +143,10 @@ code is built on:
 threaded daemons driven by its `superdaemon` flag, dispatched via generic functions specialized on the
 `ann` subclass (`som` vs `mlp`) rather than the older per-class `som-input-server`-style functions:
 - `input-server` — receives data over UDP into `(input ann)`; for a `som` this also computes the winner
-  and activation, for an `mlp` it triggers `run-mlp`.
+  (`(setf (winner ann) (find-winner ann))`, mirroring the `#+mcl` variant a few lines below it — the
+  `#+sbcl` version used to call undefined `winner-neuron`/`(setf winner-neuron)` accessors instead, a
+  drift bug fixed by bringing it back in line with the working MCL code path) and activation; for an
+  `mlp` it triggers `run-mlp`.
 - `control-server` — receives `(slot value)` pairs over UDP and `eval`s a `setf` on that slot of the
   network (i.e. remote parameter control, e.g. adjusting `learn-fact` or `temp` live).
 - `output-server` — periodically pushes `(output ann)` out over UDP, paced by `(latence ann)`.
@@ -135,7 +173,7 @@ package is current (`(in-package :neuromuse)`) since they reference unqualified 
   When adding genuinely new functionality, SBCL-only is acceptable since that's the actively used
   implementation.
 - Several methods/macros are explicitly marked incomplete in comments (`src/perceptron.lisp`:
-  "unfinished ?, see mlp"; the commented-out `structure-slot-names` and `save`-for-`som` in
-  `src/neuromuse-main.lisp`/`src/som.lisp`; large commented-out blocks at the end of `src/mlp.lisp`) —
-  don't assume commented-out code is dead weight to delete without checking whether it's a preserved
-  reference implementation.
+  "unfinished ?, see mlp"; the commented-out `save`-for-`som` in `src/som.lisp`; the shelved
+  `copy-MLP`/`duplicate` and large commented-out blocks at the end of `src/mlp.lisp`) — don't assume
+  commented-out code is dead weight to delete without checking whether it's a preserved reference
+  implementation or explicitly-shelved WIP.

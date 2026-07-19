@@ -62,8 +62,8 @@
 		     (format t "Received ~A bytes from ~A:~A - ~A ~%"
 			     len address port (subseq buf 0 (min 10 len))))
 		   (setf (input ann) (st2v buf)
-			 (winner-neuron ann) (winner ann)
-			 (output ann) (activation ann :n (car (id (winner-neuron ann)))))
+			 (winner ann) (find-winner ann)
+			 (output ann) (activation ann :n (car (id (winner ann)))))
 		   (sleep (attention ann))))
 	   (sb-bsd-sockets:socket-close s)))
 
@@ -149,5 +149,13 @@
 	(let ((out (list2string (output ann))))
 	  (send-udp out ip port)
 	  (sleep (latence ann)))))
+
+;; udp.lisp is the last file loaded by the neuromuse.asd system: export every
+;; symbol interned in :neuromuse so far, so the library keeps the same
+;; unqualified, load-and-use-everything-at-the-REPL visibility it had back
+;; when everything lived in :cl-user, before the package split.
+(do-symbols (sym (find-package :neuromuse))
+  (when (eq (symbol-package sym) (find-package :neuromuse))
+    (export sym :neuromuse)))
 
 ;eof

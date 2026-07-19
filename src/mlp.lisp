@@ -94,33 +94,34 @@
     (values hidden)))
 
 (defmacro make-MLP (name in out &rest hid)
+  ;; expands to CODE that builds the instance at load/run time (not a
+  ;; literal instance spliced into the expansion) so this works both
+  ;; interpreted at the REPL and under compile-file/ASDF.
   (cond ((not (boundp name))
-         (let ((net
-                (make-instance 'mlp
-                  :name name
-                  :in-size in
-		  :hidden-size hid
-                  :out-size out
-                  :last-error 1000
-                  :net (apply #'init-mlp-net (append (list in out) hid))
-                  :creation-date (get-universal-time))))
-           `(defvar ,name ,net) ))
+         `(defvar ,name
+            (make-instance 'mlp
+              :name ',name
+              :in-size ,in
+              :hidden-size ',hid
+              :out-size ,out
+              :last-error 1000
+              :net (apply #'init-mlp-net (append (list ,in ,out) ',hid))
+              :creation-date (get-universal-time))))
         ((ann-p (symbol-value name))
          (warning-msg (format nil "~S already exists ! ~S"
                           name
                           (type-of (symbol-value name))
                           )))
         (t
-	 (let ((net
-		(make-instance 'mlp
-			       :name name
-			       :in-size in
-			       :hidden-size hid
-			       :out-size out
-			       :last-error 1000
-			       :net (apply #'init-mlp-net (append (list in out) hid))
-			       :creation-date (get-universal-time))))
-	   `(setf ,name ,net)))))
+         `(setf ,name
+            (make-instance 'mlp
+              :name ',name
+              :in-size ,in
+              :hidden-size ',hid
+              :out-size ,out
+              :last-error 1000
+              :net (apply #'init-mlp-net (append (list ,in ,out) ',hid))
+              :creation-date (get-universal-time))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -310,36 +311,35 @@
   (:documentation "Elman Recurrent Multi-Layer Perceptron."))
 
 (defmacro make-rMLP (name in out recurrent-layer &rest hid) ;; h0 =0
+  ;; see make-MLP: expands to CODE that builds the instance at load/run
+  ;; time, rather than splicing a literal instance into the expansion.
   (cond ((not (boundp name))
-         (let ((net
-                (make-instance 'rmlp
-                  :name name
-                  :in-size in
-                  :hidden-size hid
-                  :out-size out
-		  :recurrent-layer recurrent-layer
-		  :recurrent-layer-activation (make-list (nth recurrent-layer hid) :initial-element 0)
-                  :net (apply #'init-mlp-net (append (list (+ in (nth recurrent-layer hid)) out) hid))
-                  :creation-date (get-universal-time))))
-           `(defvar ,name ,net) ))
+         `(defvar ,name
+            (make-instance 'rmlp
+              :name ',name
+              :in-size ,in
+              :hidden-size ',hid
+              :out-size ,out
+              :recurrent-layer ,recurrent-layer
+              :recurrent-layer-activation (make-list (nth ,recurrent-layer ',hid) :initial-element 0)
+              :net (apply #'init-mlp-net (append (list (+ ,in (nth ,recurrent-layer ',hid)) ,out) ',hid))
+              :creation-date (get-universal-time))))
         ((ann-p (symbol-value name))
          (warning-msg (format nil "~S already exists! ~S"
                           name
                           (type-of (symbol-value name))
                           name)))
         (t
-         (let ((net
-                (make-instance 'rmlp
-                  :name name
-                  :in-size in
-                  :hidden-size hid
-                  :out-size out
-		  :recurrent-layer recurrent-layer
-		  :recurrent-layer-activation (make-list (nth recurrent-layer hid) :initial-element 0)
-                  :net (apply #'init-mlp-net (append (list (+ in (nth recurrent-layer hid)) out) hid))
-                  :creation-date (get-universal-time))))
-           `(setf ,name ,net)  )))
-  (values (eval name)))
+         `(setf ,name
+            (make-instance 'rmlp
+              :name ',name
+              :in-size ,in
+              :hidden-size ',hid
+              :out-size ,out
+              :recurrent-layer ,recurrent-layer
+              :recurrent-layer-activation (make-list (nth ,recurrent-layer ',hid) :initial-element 0)
+              :net (apply #'init-mlp-net (append (list (+ ,in (nth ,recurrent-layer ',hid)) ,out) ',hid))
+              :creation-date (get-universal-time))))))
 
 (defmethod backpropagate ((mlp rmlp) &optional in)
   (let ((goal (goal mlp))
@@ -448,6 +448,10 @@
 (defmacro create-name (symbol)
    `(defvar ,symbol nil))
 
+;; copy-MLP / duplicate : not yet implemented. Both call an undefined
+;; copy-net, and construct an mlp with a :parent initarg the mlp class
+;; doesn't have. Shelved until net-copying is actually designed.
+#|
 (defmacro copy-MLP (old new)
    (setf old (symbol-value old))
    (cond ((not (boundp new))
@@ -485,6 +489,7 @@
           (setf new (read-from-string (symbol-name (gensym (format nil "~S-" (name old))))))
           (eval `(copy-mlp ,old ,new)))
          (t `(copy-mlp ,old ,new))))
+|#
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

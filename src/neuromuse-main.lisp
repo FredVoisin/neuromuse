@@ -196,23 +196,14 @@
 (defun warning-msg (string &optional (port t))
   (format port (concatenate 'string "~% WARNING : " string)))
 
-#|
 (defun structure-slot-names (s-name)
-  "Given a STRUCTURE-NAME such as a neural net, returns the list of the slots for the structure."
-  ;+allegro (class-slot-names s-name)
-  ;+lispworks (structure:structure-class-slot-names
-	       (find-class s-name))
-  +sbcl (mapcar #'sb-pcl::slot-definition-name
-		 (sb-pcl:class-slots
-		  (find-class s-name))) ;;sbcl 0.9.6.55, fv
-  ;+cmu (mapcar
-	 #'pcl::slot-definition-name
-	 (pcl:class-slots (pcl:find-class s-name)))
-  #-(or allegro lispworks cmu sbcl scl mcl)
+  "Given a class name such as a neural net's, returns the list of the slots for the class."
+  #+sbcl (mapcar #'sb-mop:slot-definition-name
+		 (sb-mop:class-slots
+		  (find-class s-name)))
+  #-sbcl
   (error "structure-slot-names is not defined for this lisp dialect,
- some features won't work (as save...)")
-  )
-|#
+ some features won't work (as save...)"))
 
 (defgeneric init (self &key size input)
   (:documentation "To initialize some object - ann, som, etc.- work in progress"))

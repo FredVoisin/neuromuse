@@ -21,3 +21,10 @@
   #.(uiop:read-file-string
      (uiop:subpathname *load-pathname* "README.md"))
   :in-order-to ((test-op (test-op "neuromuse-test"))))
+
+(defsystem "neuromuse-test"
+  :depends-on (:neuromuse :prove)
+  :components ((:module "tests"
+                :components
+                ((:file "neuromuse"))))
+  :description "Test suite for neuromuse.")
