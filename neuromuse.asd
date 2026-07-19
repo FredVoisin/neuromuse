@@ -11,7 +11,8 @@
                 :components
                 ((:file "neuromuse")
 		 (:file	"neuromuse-main")
-		 (:file "maths&misc")
+		 (:file "misc")
+		 (:file "maths")
 		 (:file	"mlp")
 		 (:file "som")
 		 (:file "rosom")

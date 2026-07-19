@@ -26,11 +26,16 @@ Load the system via ASDF from an SBCL REPL started in this directory (or with th
 ```
 
 `neuromuse.asd` defines the `neuromuse` system, depends on `:sb-bsd-sockets`, and loads `src/` files in
-this order: `neuromuse` (package definition), `neuromuse-main` (core classes/generics), `maths&misc`,
-`mlp`, `som`, `rosom`, `udp`. Load order matters — later files depend on classes/functions (e.g. `ANN`,
-`make-new-symbol`, matrix helpers) defined earlier. `src/perceptron.lisp` is not part of the `.asd`
-`:components` list (mirrors upstream: it's marked "unfinished ?, see mlp") and must be loaded manually
-with `(load "src/perceptron.lisp")` after the system if needed.
+this order: `neuromuse` (package definition), `neuromuse-main` (core classes/generics), `misc` (generic
+Lisp/wire-format utilities), `maths` (transfer functions, matrix/vector algebra, SOM topology math —
+depends on `make-listarray` from `misc`, hence loading after it), `mlp`, `som`, `rosom`, `udp`. Load
+order matters — later files depend on classes/functions (e.g. `ANN`, `make-new-symbol`, matrix helpers)
+defined earlier. `maths.lisp` and `misc.lisp` used to be one file, `maths&misc.lisp`; split along the
+line the old name already implied (numerical/matrix code vs. generic utilities), with the duplicate
+`make-new-symbol` definition (also in `neuromuse-main.lisp`) dropped rather than carried into either
+half. `src/perceptron.lisp` is not part of the `.asd` `:components` list (mirrors upstream: it's marked
+"unfinished ?, see mlp") and must be loaded manually with `(load "src/perceptron.lisp")` after the
+system if needed.
 
 Run the test suite with:
 
@@ -59,7 +64,7 @@ predictions) or evaluating the commented-out example forms left at the bottom of
 All network types inherit from the base `ANN` class (`src/neuromuse-main.lisp`), which holds shared
 state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fact`, `history-error`,
 `temp` / `net-temp` (stochastic noise temperature for output vs. for synaptic weights — see `noise` in
-`maths&misc.lisp`), UDP-related fields (`udplist`, `iplist`, `daemons`, `superdaemon`, `attention`,
+`maths.lisp`), UDP-related fields (`udplist`, `iplist`, `daemons`, `superdaemon`, `attention`,
 `latence`), and bookkeeping (`creation-date`, `history`, `verbose`).
 
 - `neuron` (`src/neuromuse-main.lisp`) — a single unit with its own `net` (list of `(neuron weight
@@ -118,8 +123,10 @@ the export sweep won't see its symbols.
 
 ### Math / utility layer
 
-`src/maths&misc.lisp` has no dependencies on the other `src/` files and provides everything the network
-code is built on:
+`src/maths.lisp` and `src/misc.lisp` (split from a single `maths&misc.lisp`) have no dependencies on
+`mlp`/`som`/`rosom`/`udp` and provide everything the network code is built on.
+
+`src/maths.lisp` — the numerical/matrix core:
 - Activation/transfer functions as generics dispatching on `number`/`list`/`vector`: `binary`, `sign`,
   `logistic`, `sigmoide`, `linear`, `boltzmann` (all take `:thresh :temp :learn :slope`).
 - Matrix/vector algebra on plain lists (not CL arrays), e.g. `multiply-matrix-and-vector`,
@@ -133,6 +140,11 @@ code is built on:
   ...)` yourself (see `examples/mlp-test.lisp` or the `tests/neuromuse.lisp` MLP subtest).
 - SOM topology/neighborhood helpers: `2d`/`d2`, `3d`/`d3` (index <-> spatial coordinate conversion),
   `voisins` (neighborhood lookup), `gaussian-hat` (Mexican-hat-style learning rate falloff).
+
+`src/misc.lisp` — generic Lisp utilities and UDP wire-format conversion, loaded *before* `maths.lisp`
+since `maths.lisp`'s matrix functions (`add-2-matrices`, `hadamar-product`) default-call `make-listarray`
+from here:
+- `make-listarray`, `ldlp`/`ldvp`, `round1`, `test-t`, `get-time`.
 - String/wire-format conversion for the UDP layer: `st2v`, `st2list`, `vector2string`/`v2st`,
   `list2string`, `buf2string`, `split`.
 

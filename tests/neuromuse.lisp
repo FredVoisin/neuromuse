@@ -8,7 +8,7 @@
 
 (plan nil)
 
-(subtest "maths&misc: transfer functions"
+(subtest "maths: transfer functions"
   (is (logistic 0) 0.5)
   (is (binary 1 :thresh 0) 1)
   (is (binary -1 :thresh 0) 0)
@@ -16,7 +16,7 @@
   (is (sign -1 :thresh 0) -1)
   (is (linear 2 :slope 3 :thresh 1) 5))
 
-(subtest "maths&misc: distance & error"
+(subtest "maths: distance & error"
   (is (euclidian (list 0 0) (list 3 4)) 5.0)
   (is (euclidian-fast (list 0 0) (list 3 4)) 25)
   (is (check-error (vector 1.0 2.0) (vector 1.0 2.0) 0.01) 0
@@ -26,7 +26,7 @@
   (is (compare-vectors (list 1 2 3) (list 1 2 3)) (list 0 0 0))
   (is (compare-vectors (list 1 2 3) (list 1 9 3)) (list 0 1 0)))
 
-(subtest "maths&misc: clip, scale, normalize, noise"
+(subtest "maths: clip, scale, normalize, noise"
   (is (clip 5) 1)
   (is (clip -1) 0)
   (is (clip 0.5) 0.5)
@@ -35,7 +35,7 @@
   (is (noise 5.0 0.0) 5.0 "zero noise leaves a number unchanged")
   (is (noise 5 nil) 5 "nil p is a no-op"))
 
-(subtest "maths&misc: SOM topology helpers"
+(subtest "maths: SOM topology helpers"
   (let ((coords (2d 4 25)))
     (is (d2 (first coords) (second coords) 25) 4
         "2d/d2 round-trip on a perfect-square grid"))
@@ -44,13 +44,13 @@
   (is (length (voisins (list 2) 1 5)) 3
       "voisins with radius 1 covers position, -1 and +1"))
 
-(subtest "maths&misc: matrix/vector algebra"
+(subtest "maths: matrix/vector algebra"
   (is (multiply-2-vectors (list 1 2 3) (list 4 5 6)) (list 4 10 18) :test #'equal)
   (is (substract-2-vectors (list 5 5 5) (list 1 2 3)) (list 4 3 2) :test #'equal)
   (is (hadamar-product (list (list 1 2) (list 3 4)) (list (list 1 1) (list 1 1)))
       (list (list 1 2) (list 3 4)) :test #'equal))
 
-(subtest "maths&misc: string/wire formatting"
+(subtest "misc: string/wire formatting"
   (is (split "a b  c") (list "a" "b" "c") :test #'equal)
   (is (st2list "1 2 3") (list 1 2 3) :test #'equal))
 
