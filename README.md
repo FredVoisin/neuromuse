@@ -123,17 +123,22 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
 <p align="center">
   <table>
     <tr>
-      <td align="center" width="33%">
-        <img src="img/cluster-infineon-sun_sym1-32.jpg" alt="Sun servers of the Infineon compute cluster" width="280"><br>
+      <td align="center" width="25%">
+        <img src="img/cluster-infineon-sun_sym1-32.jpg" alt="Sun servers of the Infineon compute cluster" width="220"><br>
         <sub><i>Sun servers of the Infineon-donated compute cluster used for "Symphonie des machines".</i></sub>
       </td>
-      <td align="center" width="33%">
-        <img src="img/cluster-infineon-sym-p4_fred.jpg" alt="The cluster's row of PCs" width="280"><br>
+      <td align="center" width="25%">
+        <img src="img/cluster-infineon-sym-p4_fred.jpg" alt="The cluster's row of PCs" width="220"><br>
         <sub><i>The cluster's row of PC nodes.</i></sub>
       </td>
-      <td align="center" width="33%">
-        <img src="img/grappe-infineon-etherape.jpg" alt="EtherApe network map of the cluster" width="280"><br>
+      <td align="center" width="25%">
+        <img src="img/grappe-infineon-etherape.jpg" alt="EtherApe network map of the cluster" width="220"><br>
         <sub><i>EtherApe network map of the cluster's topology.</i></sub>
+      </td>
+      <td align="center" width="25%">
+        <img src="img/eurecom13mai.jpg" alt="Pure Data control patches and SOM visualization, Eurecom" width="220"><br>
+        <sub><i>The Pure Data GUI to control 25 Lisp "avatit" agents dispatched on a grid, at
+        <a href="https://www.eurecom.fr">Eurecom</a>, Sophia-Antipolis.</i></sub>
       </td>
     </tr>
   </table>
