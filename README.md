@@ -40,3 +40,27 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
   <img src="img/wwwneuromuse2005.png" alt="neuromuse.org home page, January 2005" width="360"><br>
   <sub><i>www.neuromuse.org home page as of January 22, 2005 (Wayback Machine)</i></sub>
 </p>
+
+---
+
+## Gallery
+
+<p align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <img src="img/mlp_mcl_macos9.png" alt="Recurrent MLP topology, Macintosh Common Lisp on Mac OS 9" width="360"><br>
+        <sub><i>A small recurrent MLP trained to interpolate, in real time and slowly, some rhythms on a
+        PowerPC G3 laptop, as demonstrated at an Ircam weekly R&amp;D conference. Audio was rendered in
+        real time in Max via MIDI controllers or local UDP, mapped from the 4 neurons of the output layer
+        (bottom). Nodes represent neurons, links represent synapses, and color represents synaptic
+        activation weight.</i></sub>
+      </td>
+      <td align="center" width="50%">
+        <img src="img/avatit_pd2004.png" alt="The two SOMs of the Avatit agent, Pure Data 2004" width="360"><br>
+        <sub><i>The two self-organizing maps (content and context) of an agent named "Avatit", written in
+        Lisp, rendered in Pd, 2004.</i></sub>
+      </td>
+    </tr>
+  </table>
+</p>
