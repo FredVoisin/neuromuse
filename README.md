@@ -17,3 +17,12 @@ The last multi-threaded runs required bordeaux-mp lisp patch for SBCL (may be ob
 Work still in progress...
 
 Fred Voisin, March 31th 2017.
+
+Update, July 2026: the project has been reorganized as a proper ASDF system (src/, tests/, examples/,
+doc/), with the code moved into its own :neuromuse package, a handful of long-standing bugs fixed
+(instance saving, network constructors, UDP SOM input), and a real test suite added. Still short, still
+simple, hopefully still useful.
+
+New updates in progress with the help of Claude AI, in the former spirit of the neuromuse project.
+
+Fred Voisin.
