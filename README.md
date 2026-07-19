@@ -222,6 +222,12 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
         control, and the neural activation decoder.</i></sub>
       </td>
     </tr>
+    <tr>
+      <td align="center" width="100%">
+        <img src="img/calaosolaire.jpg" alt="Solar-powered Calao board" width="360"><br>
+        <sub><i>A Calao board powered by a portable solar panel, each running a neuromuse Java agent.</i></sub>
+      </td>
+    </tr>
   </table>
 </p>
 
@@ -231,8 +237,8 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
   <table>
     <tr>
       <td align="center" width="100%">
-        <img src="img/smallgreencalaos.jpg" alt="Neuromuse Python agents on Calao ARM boards" width="360"><br>
-        <sub><i>Four neuromuse Python agents playing live on Calao motherboards running Linux, audio rendered
+        <img src="img/smallgreencalaos.jpg" alt="Neuromuse agents in Java on Calao ARM boards" width="360"><br>
+        <sub><i>Five neuromuse agents in Java playing live on Calao motherboards running Linux, audio rendered
         through UDP with a local Max/MSP ad-hoc patch.</i></sub>
       </td>
     </tr>
