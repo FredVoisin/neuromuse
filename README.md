@@ -74,6 +74,20 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
   </table>
 </p>
 
+### Ars Electronica (2005)
+
+<p align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <img src="img/arselectronica2005.jpg" alt="Ars Electronica 2005, Hybrid - Living in Paradox" width="360"><br>
+        <sub><i>Invited talk with Robin Meier on neuromuse-based projects, Ars Electronica ("Hybrid — Living
+        in Paradox"), September 2005.</i></sub>
+      </td>
+    </tr>
+  </table>
+</p>
+
 ### Taire / L'écarlate (2000–2001)
 
 <p align="center">
