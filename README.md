@@ -100,6 +100,13 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
         <sub><i>Demo/workshop setup, FNAC Asia, Taipei, 2003.</i></sub>
       </td>
     </tr>
+    <tr>
+      <td align="center" width="50%">
+        <img src="img/compo-couv-s.jpg" alt="Cover, computer music lessons, Conservatoire de Montbéliard" width="360"><br>
+        <sub><i>Cover for computer music lessons at the Conservatoire de Montbéliard, 2007, showing various
+        GUIs in use for computer music production, including neuromuse in Lisp/Pd.</i></sub>
+      </td>
+    </tr>
   </table>
 </p>
 
