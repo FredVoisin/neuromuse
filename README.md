@@ -93,6 +93,13 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
         Lisp, rendered in Pd, 2004.</i></sub>
       </td>
     </tr>
+    <tr>
+      <td align="center" width="100%">
+        <img src="img/rosom-lisp-firstOK1.jpg" alt="First working ROSOM, Macintosh Common Lisp" width="480"><br>
+        <sub><i>The first working rosom, in Macintosh Common Lisp: a proof of concept, learning a sine wave
+        in the symbolic domain.</i></sub>
+      </td>
+    </tr>
   </table>
 </p>
 
@@ -176,6 +183,33 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
   </table>
 </p>
 
+### CIRM Nice residency (2004)
+
+<p align="center">
+  <table>
+    <tr>
+      <td align="center" width="33%">
+        <img src="img/nice072004_35.jpg" alt="Work session, CIRM Nice residency, July 2004" width="280"><br>
+        <sub><i>Work session, CIRM Nice residency, July 2004.</i></sub>
+      </td>
+      <td align="center" width="33%">
+        <img src="img/nice072004_42.jpg" alt="CIRM Nice residency, July 2004" width="280"><br>
+        <sub><i>CIRM Nice residency, July 2004.</i></sub>
+      </td>
+      <td align="center" width="33%">
+        <img src="img/nice072004_45.jpg" alt="Work session, CIRM Nice residency, July 2004" width="280"><br>
+        <sub><i>Work session, CIRM Nice residency, July 2004.</i></sub>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="100%">
+        <img src="img/Nice09_78.jpg" alt="Robin Meier coding a rosom in Max/MSP Jitter, Nice 2004" width="480"><br>
+        <sub><i>Robin Meier coding a rosom in Max/MSP Jitter, CIRM Nice, 2004.</i></sub>
+      </td>
+    </tr>
+  </table>
+</p>
+
 ### Symphonie des machines (2006)
 
 <p align="center">
@@ -197,6 +231,12 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
         <img src="img/eurecom13mai.jpg" alt="Pure Data control patches and SOM visualization, Eurecom" width="220"><br>
         <sub><i>The Pure Data GUI to control 25 Lisp "avatit" agents dispatched on a grid, at
         Eurecom, Sophia-Antipolis.</i></sub>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="100%">
+        <img src="img/somlisp2pd+max.png" alt="SOM Lisp to Pd/Max bridge, Symphonie des machines" width="480"><br>
+        <sub><i>SOM computed in Lisp, bridged to Pd and Max via UDP, for "Symphonie des machines".</i></sub>
       </td>
     </tr>
   </table>
@@ -248,6 +288,13 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
         <sub><i>A Calao board powered by a portable solar panel, each running a neuromuse Java agent.</i></sub>
       </td>
     </tr>
+    <tr>
+      <td align="center" width="100%">
+        <img src="img/LMD_controlroom.png" alt="Last Manoeuvres in the Dark control room" width="700"><br>
+        <sub><i>The control room: training agents on a cluster of Calao boards and playing them back in real
+        time.</i></sub>
+      </td>
+    </tr>
   </table>
 </p>
 
@@ -260,6 +307,28 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
         <img src="img/smallgreencalaos.jpg" alt="Neuromuse agents in Java on Calao ARM boards" width="360"><br>
         <sub><i>Five neuromuse agents in Java playing live on Calao motherboards running Linux, audio rendered
         through UDP with a local Max/MSP ad-hoc patch.</i></sub>
+      </td>
+    </tr>
+  </table>
+</p>
+
+### Since 2012
+
+<p align="center">
+  <table>
+    <tr>
+      <td align="center" width="100%">
+        <img src="img/avatit+arms.jpg" alt="Avatit controlling a robot arm on an ARM CPU, Ircam" width="480"><br>
+        <sub><i>Neuromuse (avatit) still alive underground at Ircam since 2012, controlling a robot arm on an
+        ARM CPU (photo 2025).</i></sub>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="100%">
+        <img src="img/mimercjouer-general.png" alt="Mime recognition and gesture-to-sound mapping system diagram" width="700"><br>
+        <sub><i>System diagram for a research engineering application in cognitive rehabilitation: mime
+        gesture recognition (MLP), movement descriptors, and gesture/sound mapping to a sampler. LEAD lab,
+        CNRS-Université de Bourgogne, 2017.</i></sub>
       </td>
     </tr>
   </table>
