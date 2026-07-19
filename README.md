@@ -193,17 +193,11 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
         <sub><i>Work session, CIRM Nice residency, July 2004.</i></sub>
       </td>
       <td align="center" width="33%">
-        <img src="img/nice072004_42.jpg" alt="CIRM Nice residency, July 2004" width="280"><br>
-        <sub><i>CIRM Nice residency, July 2004.</i></sub>
-      </td>
-      <td align="center" width="33%">
         <img src="img/nice072004_45.jpg" alt="Work session, CIRM Nice residency, July 2004" width="280"><br>
         <sub><i>Work session, CIRM Nice residency, July 2004.</i></sub>
       </td>
-    </tr>
-    <tr>
-      <td align="center" width="100%">
-        <img src="img/Nice09_78.jpg" alt="Robin Meier coding a rosom in Max/MSP Jitter, Nice 2004" width="480"><br>
+      <td align="center" width="33%">
+        <img src="img/Nice09_78.jpg" alt="Robin Meier coding a rosom in Max/MSP Jitter, Nice 2004" width="280"><br>
         <sub><i>Robin Meier coding a rosom in Max/MSP Jitter, CIRM Nice, 2004.</i></sub>
       </td>
     </tr>
