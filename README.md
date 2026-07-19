@@ -51,10 +51,10 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
       <td align="center" width="50%">
         <img src="img/mlp_mcl_macos9.png" alt="Recurrent MLP topology, Macintosh Common Lisp on Mac OS 9" width="360"><br>
         <sub><i>A small recurrent MLP trained to interpolate, in real time and slowly, some rhythms on a
-        PowerPC G3 laptop, as demonstrated at an Ircam weekly R&amp;D conference. Audio was rendered in
-        real time in Max via MIDI controllers or local UDP, mapped from the 4 neurons of the output layer
-        (bottom). Nodes represent neurons, links represent synapses, and color represents synaptic
-        activation weight.</i></sub>
+        PowerPC G3 laptop running Mac OS 9, ~2000, as demonstrated at an Ircam weekly R&amp;D conference.
+        Audio was rendered in real time in Max via MIDI controllers or local UDP, mapped from the 4
+        neurons of the output layer (bottom). Nodes represent neurons, links represent synapses, and
+        color represents synaptic activation weight.</i></sub>
       </td>
       <td align="center" width="50%">
         <img src="img/avatit_pd2004.png" alt="The two SOMs of the Avatit agent, Pure Data 2004" width="360"><br>
