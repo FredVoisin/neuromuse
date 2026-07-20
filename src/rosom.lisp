@@ -121,8 +121,11 @@
 
 
 (defmethod find-winner ((self rosom) &key (equality #'=) (inf #'<))
+  ;; loop bound is the neuron count (CADR of TOPOLOGY, as everywhere else
+  ;; in this file), not the input size (CAR) -- using CAR here walked past
+  ;; the end of the neuron list into NIL neurons.
   (let ((win '((-1 696969))) (som (car (net self))) (vector (input self)))
-    (loop for k from 0 to (1- (car (topology self)))
+    (loop for k from 0 to (1- (cadr (topology self)))
           do
           (let ((dist (euclidian vector (activation self :n k))))
             (if (funcall inf dist (cadar win))
@@ -158,6 +161,7 @@
 					;(winner ;(winner input netrosom))
 					;(coord-w (2d (car winner) n))
 	voisins
+	flat-voisins ;; VOISINS's 2D coordinate pairs, converted to flat neuron indices via D2
 	)
     (setf w-som (car netrosom)
 	  w-rosom (cadr netrosom)
@@ -179,48 +183,60 @@
        (when (minusp (car winner)) (setf winner (list (rand n) (cadr winner))))
        (conteur (car winner) rosom)  ;;<---
        ;;; voila, on a fixe ici les frequences et phases du rosom
-       (setf voisins (voisins (2d (car winner) n) radius n))
+       ;; VOISINS wants the grid width (not the neuron count N) as its third
+       ;; argument -- matching how SOM's own LEARN method (src/som.lisp)
+       ;; calls it -- and returns 2D coordinate pairs, which must be
+       ;; converted back to flat neuron indices via D2 before use (again,
+       ;; matching SOM's LEARN). W-SOM/W-ROSOM are lists of NEURON instances
+       ;; (per INIT/CONTENTN), not arrays, so weight updates walk each
+       ;; neuron's own synapse list instead of using AREF.
+       (setf voisins (voisins (2d (car winner) n) radius (floor (sqrt n)))
+             flat-voisins (mapcar #'(lambda (v) (d2 (car v) (cadr v) n)) voisins))
        (when verbose (format t "~%win : ~S voisins : ~S" winner voisins))
        ;;correction du gagnant du SOM
        (when (not (zerop learn))
-	 (loop for i from 0 to (1- (length input))
-	       do
-	       (setf (aref w-som (car winner) i) ;;xx
-		     (+ (aref w-som (car winner) i)
-			(* learn (- (elt input i) (aref w-som (car winner) i))))))
-	 ;;correction des neurones voisins du SOM
-	 (loop for neuron in voisins for p from 0 to (1- (length voisins))
-	       do
-	       (setf distances (append distances
-				       (list (euclidian (2d (car winner) n)
-								 (2d neuron n)))))
-	       (let* ((correction
-		       (* learn
-			  (exp (/ (- (expt (nth p distances) 2))
-				  (expt (* 2 radius) 2))))))  ;;;  changer ici eventuellement dynamiquement en fonction de l erreur
-		 (loop for i from 0 to (1- (length input))
-		       do
-		       (setf (aref w-som neuron i)
-			     (+ (aref w-som neuron i)
-				(* correction (- (elt input i) (aref w-som neuron i))))))))
-	 ;;correction du gagnant du ROSOM 
-	 (loop for i from 0 to (1- n)
-	       do
-	       (setf (aref w-rosom (car winner) i)
-		     (+ (aref w-rosom (car winner) i)
-			(* learn (- (elt context i) (aref w-rosom (car winner) i))))))
-	 ;;correction des neurones voisins du ROSOM
-	 (loop for neuron in voisins for p from 0 to (1- (length voisins))
-	       do
-	       (let* ((correction
-		       (* learn
-			  (exp (/ (- (expt (nth p distances) 2))
-				  (expt (* 2 radius) 2))))))  ;;;  changer ici eventuellement dynamiquement en fonction de l erreur
-		 (loop for i from 0 to (1- n)
-		       do
-		       (setf (aref w-rosom neuron i)
-			     (+ (aref w-rosom neuron i)
-				(* correction (- (elt context i) (aref w-rosom neuron i)))))))))
+	 (let ((wn (nth (car winner) w-som)))
+	   (loop for i from 0 to (1- (length input))
+		 do
+		 (let ((synapse (nth i (net wn))))
+		   (setf (cadr synapse)
+			 (+ (cadr synapse) (* learn (- (elt input i) (cadr synapse)))))))
+	   ;;correction des neurones voisins du SOM
+	   (loop for flat in flat-voisins for p from 0 to (1- (length flat-voisins))
+		 do
+		 (setf distances (append distances
+					 (list (euclidian (2d (car winner) n)
+							   (2d flat n)))))
+		 (let* ((correction
+			 (* learn
+			    (exp (/ (- (expt (nth p distances) 2))
+				    (expt (* 2 radius) 2)))))  ;;;  changer ici eventuellement dynamiquement en fonction de l erreur
+			(nn (nth flat w-som)))
+		   (loop for i from 0 to (1- (length input))
+			 do
+			 (let ((synapse (nth i (net nn))))
+			   (setf (cadr synapse)
+				 (+ (cadr synapse) (* correction (- (elt input i) (cadr synapse)))))))))
+	   ;;correction du gagnant du ROSOM
+	   (let ((rn (nth (car winner) w-rosom)))
+	     (loop for i from 0 to (1- n)
+		   do
+		   (let ((synapse (nth i (net rn))))
+		     (setf (cadr synapse)
+			   (+ (cadr synapse) (* learn (- (elt context i) (cadr synapse))))))))
+	   ;;correction des neurones voisins du ROSOM
+	   (loop for flat in flat-voisins for p from 0 to (1- (length flat-voisins))
+		 do
+		 (let* ((correction
+			 (* learn
+			    (exp (/ (- (expt (nth p distances) 2))
+				    (expt (* 2 radius) 2)))))  ;;;  changer ici eventuellement dynamiquement en fonction de l erreur
+			(nn (nth flat w-rosom)))
+		   (loop for i from 0 to (1- n)
+			 do
+			 (let ((synapse (nth i (net nn))))
+			   (setf (cadr synapse)
+				 (+ (cadr synapse) (* correction (- (elt context i) (cadr synapse)))))))))))
          ;; jamais deux sans trois : maintenant, on tend a synchroniser les gagnants...
          ;;SYNCHRO du ROSOM
        (when (not (zerop entrainement-rate))
@@ -230,21 +246,22 @@
 		     (+ (cadr (nth i (input-context rosom)))
 			entrainement-rate)))
 	 ;;SYNCHRO des neurones voisins du ROSOM
-	 (loop for neuron in voisins for p from 0 to (1- (length voisins))
+	 (loop for flat in flat-voisins for p from 0 to (1- (length flat-voisins))
 	       do
 	       (let ((correction
 		      (* entrainement-rate
 			 (exp (/ (- (expt (nth p distances) 2))
 				 (expt (* 2 radius) 2))))))  ;;;  changer ici eventuellement dynamiquement en fonction de l erreur
-		 (setf (cadr (nth neuron (input-context rosom)))
-		       (+ (cadr (nth neuron (input-context rosom)))
-			  (* correction (- (cadr (nth (car winner) (input-context rosom))) (cadr (nth neuron (input-context rosom))))))))))
+		 (setf (cadr (nth flat (input-context rosom)))
+		       (+ (cadr (nth flat (input-context rosom)))
+			  (* correction (- (cadr (nth (car winner) (input-context rosom))) (cadr (nth flat (input-context rosom))))))))))
        ;; voila
        (setf (epoch rosom) (1+ (epoch rosom)))
        (when verbose (format t "~%epoch : ~S~%"  (epoch rosom)))
-       (let* ((winner-rep  (loop for i from 0 to (1- (length input))
+       (let* ((wn (nth (car winner) w-som))
+	      (winner-rep  (loop for i from 0 to (1- (length input))
 				 collect
-				 (aref w-som (car winner) i)))
+				 (cadr (nth i (net wn)))))
 	      (max (apply #'max winner-rep)))
 	 (format t "~2D : ~S~%"
 		 (car winner)
