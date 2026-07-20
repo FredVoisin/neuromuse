@@ -90,29 +90,7 @@ int main() {
 }
 ```
 
-### 4.2 Premier essai — échec
-
-```bash
-/usr/local/cuda-12.6/bin/nvcc -arch=sm_50 test.cu -o test
-# nvcc fatal : Failed to preprocess host compiler properties.
-```
-
-### 4.3 Diagnostic
-
-Vérifications effectuées (toutes OK) :
-```bash
-which gcc g++      # /usr/bin/gcc, /usr/bin/g++
-gcc --version      # gcc (Debian 12.2.0-14+deb12u1) 12.2.0
-```
-
-Le vrai coupable, révélé par le mode verbeux (`-v`) :
-```
-cc1plus: fatal error: test.cu: No such file or directory
-```
-
-➡️ Cause réelle : **le fichier `test.cu` n'était pas dans le répertoire courant** au moment de l'appel (il avait été créé dans `~` plutôt que dans `~/dev/frog`). Rien à voir avec CUDA ou gcc — simple erreur de chemin.
-
-### 4.4 Succès
+### 4.2 Test OK
 
 ```bash
 cd ~/dev/frog
