@@ -63,6 +63,7 @@ without restarting.
   holding a symbol (e.g. `:name`) prints unquoted and would be read back as a variable reference.
 - Port the graphical rendering used to draw nets (as seen in the Gallery, e.g. `mlp_mcl_macos9.png`),
   originally built on Macintosh Common Lisp's dedicated CLOS toolbox, to something available under SBCL.
+- Add a Jordan arch to the recurrent mlsp (rmlp), so that a arg may specify arch (Elman|Jordan|...).
 
 ### In progress
 - Investigation on GPU optimisation:
