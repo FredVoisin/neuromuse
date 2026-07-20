@@ -2,6 +2,14 @@
 
 Artificial neural networks to generate music and artistic productions with real-time applications (since 2000).
 
+## Updates
+
+**July 2026** — the project has been reorganized as a proper ASDF system (`src/`, `tests/`, `examples/`,
+`doc/`), with the code moved into its own `:neuromuse` package, a handful of long-standing bugs fixed
+(instance saving, network constructors, UDP SOM input), and a real test suite added. Still short, still
+simple, hopefully still useful.
+
+
 ## How to install and run
 
 ### Requirements
@@ -43,6 +51,29 @@ Once a `.lisp` file is open in Emacs:
 
 Evaluating forms updates the running Lisp image live, so you can redefine a method and re-test it
 without restarting.
+
+## TO DO
+
+- `src/perceptron.lisp` is marked "unfinished ?, see mlp" and isn't part of the ASDF build; either finish
+  it or fold its role entirely into `mlp`.
+- `copy-MLP`/`duplicate` (`src/mlp.lisp`) are commented out: they call an undefined `copy-net` and
+  reference a nonexistent `:parent` initarg. Net-copying was never actually designed and still needs it.
+- `som`'s `save` method (`src/som.lisp`) is commented out and needs the same treatment `mlp`'s `save` got.
+- `mlp`'s `save` doesn't perfectly round-trip: it only quotes list-valued slots, so a non-list slot
+  holding a symbol (e.g. `:name`) prints unquoted and would be read back as a variable reference.
+- Port the graphical rendering used to draw nets (as seen in the Gallery, e.g. `mlp_mcl_macos9.png`),
+  originally built on Macintosh Common Lisp's dedicated CLOS toolbox, to something available under SBCL.
+
+### In progress
+- Investigation on GPU optimisation:
+   (July 2026): benchmarked `mgl-mat` (CPU-BLAS and CUDA/cuBLAS backends) against the existing list-based
+  matrix code — see `examples/benchmark-mgl-mat.lisp`. At neuromuse's actual real-time net sizes (a handful
+  of neurons, e.g. the 2-2-1 XOR and 6-4-1 accelerometer examples), the current list-based code is ~40x
+  faster than mgl-mat/BLAS, since call overhead dominates at that scale; the list-based code only wins less as networks get much larger than anything neuromuse
+  actually uses.
+  Unfortunatly, CUDA/cuBLAS turned out unusable on my dev machine's GTX 950M (Maxwell) under a
+  modern CUDA 13 toolkit (`CUBLAS_STATUS_ARCH_MISMATCH`). Any donation, time or modern Nvidia card would be appreciated
+  to investigate furher !
 
 ## Examples
 
@@ -138,39 +169,7 @@ Even if this project is becoming quite old, it may be a good start for new devel
 - Voisin, F. (2015). "De la brousse dans les synthés." In *Gilles Deleuze : la pensée-musique*
   (P. Criton &amp; J.-M. Chouvel, eds.). [hal-01611947](https://hal.science/hal-01611947v1)
 
-## Updates
-
-**July 2026** — the project has been reorganized as a proper ASDF system (`src/`, `tests/`, `examples/`,
-`doc/`), with the code moved into its own `:neuromuse` package, a handful of long-standing bugs fixed
-(instance saving, network constructors, UDP SOM input), and a real test suite added. Still short, still
-simple, hopefully still useful.
-
-New updates in progress with the help of Claude AI, in the former spirit of the neuromuse project.
-
-Fred Voisin.
-
-## TO DO
-
-- `src/perceptron.lisp` is marked "unfinished ?, see mlp" and isn't part of the ASDF build; either finish
-  it or fold its role entirely into `mlp`.
-- `copy-MLP`/`duplicate` (`src/mlp.lisp`) are commented out: they call an undefined `copy-net` and
-  reference a nonexistent `:parent` initarg. Net-copying was never actually designed and still needs it.
-- `som`'s `save` method (`src/som.lisp`) is commented out and needs the same treatment `mlp`'s `save` got.
-- `mlp`'s `save` doesn't perfectly round-trip: it only quotes list-valued slots, so a non-list slot
-  holding a symbol (e.g. `:name`) prints unquoted and would be read back as a variable reference.
-- Port the graphical rendering used to draw nets (as seen in the Gallery, e.g. `mlp_mcl_macos9.png`),
-  originally built on Macintosh Common Lisp's dedicated CLOS toolbox, to something available under SBCL.
-
-### In progress
-- Investigation on GPU optimisation:
-   (July 2026): benchmarked `mgl-mat` (CPU-BLAS and CUDA/cuBLAS backends) against the existing list-based
-  matrix code — see `examples/benchmark-mgl-mat.lisp`. At neuromuse's actual real-time net sizes (a handful
-  of neurons, e.g. the 2-2-1 XOR and 6-4-1 accelerometer examples), the current list-based code is ~40x
-  faster than mgl-mat/BLAS, since call overhead dominates at that scale; the list-based code only wins less as networks get much larger than anything neuromuse
-  actually uses.
-  Unfortunatly, CUDA/cuBLAS turned out unusable on my dev machine's GTX 950M (Maxwell) under a
-  modern CUDA 13 toolkit (`CUBLAS_STATUS_ARCH_MISMATCH`). Any donation, time or modern Nvidia card would be appreciated
-  to investigate furher !
+---
 
 ---
 
