@@ -180,8 +180,8 @@ Test effectué : relancer le benchmark `examples/benchmark-mgl-mat.lisp` du proj
 `mgl-mat`, comme le confirmait déjà le test C autonome de la section 5. Le fix CUDA 12.6 fonctionne
 bien pour cuBLAS.
 
-**Nouveau blocage, distinct** : `mgl-mat:with-cuda*` échoue quand même, mais plus tôt et pour une
-autre raison. En traçant précisément (impression + `force-output` avant/après chaque étape), le
+**Nouveau blocage, distinct** : `mgl-mat:with-cuda*` échoue quand même, mais pour une
+autre raison. En traçant (impression + `force-output` avant/après chaque étape), le
 corps de `with-cuda*` n'est **jamais atteint** — l'échec a lieu pendant l'initialisation interne de
 `with-cuda*` lui-même, avant tout code utilisateur :
 
