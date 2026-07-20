@@ -90,10 +90,16 @@ Fred Voisin.
   holding a symbol (e.g. `:name`) prints unquoted and would be read back as a variable reference.
 - Port the graphical rendering used to draw nets (as seen in the Gallery, e.g. `mlp_mcl_macos9.png`),
   originally built on Macintosh Common Lisp's dedicated CLOS toolbox, to something available under SBCL.
-- Add GPU support.
 
 ### In progress
-- Investigation on GPU optimisation.
+- ~~Investigation on GPU optimisation.~~ Done (July 2026): benchmarked `mgl-mat` (CPU-BLAS and CUDA/cuBLAS
+  backends) against the existing list-based matrix code — see `examples/benchmark-mgl-mat.lisp`. At
+  neuromuse's actual real-time net sizes (a handful of neurons, e.g. the 2-2-1 XOR and 6-4-1 accelerometer
+  examples), the current list-based code is ~40x faster than mgl-mat/BLAS, since call overhead dominates
+  at that scale; the list-based code only wins less as networks get much larger than anything neuromuse
+  actually uses. CUDA/cuBLAS also turned out unusable on this dev machine's GTX 950M (Maxwell) under a
+  modern CUDA 13 toolkit (`CUBLAS_STATUS_ARCH_MISMATCH`). Conclusion: no GPU integration into `src/` is
+  warranted for neuromuse's real-time, tiny-network use case — closing this investigation.
 
 ---
 
