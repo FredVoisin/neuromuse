@@ -95,7 +95,8 @@ without restarting.
   actually uses.
   Unfortunatly, CUDA/cuBLAS turned out unusable on my dev machine's GTX 950M (Maxwell) under a
   modern CUDA 13 toolkit (`CUBLAS_STATUS_ARCH_MISMATCH`). Any donation, time or modern Nvidia card would be appreciated
-  to investigate furher !
+  to investigate furher ! See [`doc/memo-cuda-gtx950m-debian12.md`](doc/memo-cuda-gtx950m-debian12.md)
+  for the detailed notes on getting CUDA working (and the next blocker found) on this GPU.
 
 ## Examples
 
