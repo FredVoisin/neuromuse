@@ -145,6 +145,17 @@ of input vectors and a list of matching goal vectors) and a `make-mlp` call size
 training/testing loop above works unchanged. `examples/mlp-test2.lisp` does exactly this for
 6-input accelerometer data.
 
+## FAQ
+
+**Is `rmlp` Elman or Jordan?** Elman: its recurrent feedback comes from a hidden layer's
+activation, not the output layer's. See
+[`doc/rmlp-elman-vs-jordan.md`](doc/rmlp-elman-vs-jordan.md) for the code walkthrough plus a
+structural test (the feedback vector's length matches the hidden layer, not `out-size`) and a
+behavioral test (a 1-step delayed-copy memory task: 46.9% for a plain `mlp` vs 90.0% for the
+`rmlp`) confirming it.
+
+---
+
 ## History
 
 This project was initiated by Fred Voisin ([www.fredvoisin.com](http://www.fredvoisin.com)) in 1999 to study the application of artificial neural nets to contemporary music creation using, at first, the Lisp language (Macintosh Common Lisp and Common Lisp Object System), OpenMusic software (Ircam, [www.ircam.fr](http://www.ircam.fr)) and the MIDI protocol. Some overall principles were inspired by [David Wessel](http://music.berkeley.edu/who-was-david-wessel/) and [Adrian Freed](https://cnmat.berkeley.edu/people/adrian-freed) at [CNMAT](http://cnmat.berkeley.edu). At this time, the very first ('alpha') version of this project was available at [www.neuromuse.net](http://www.neuromuse.net) and at the OpenMusic Ircam Forum (an [archived snapshot](https://web.archive.org/web/20050910170552/http://www.neuromuse.org/) of the original www.neuromuse.org site, from September 2005). It was also the moment for demos and short public conference-performances (Ircam, the Web-Bar, Prisma composer workshops in Paris and Firenze). Training a recurrent MLP could take hours of computation on the laptops available at the time, and running real-time applications at a symbolic level (MIDI) made it hard to go beyond a few dozen neurons on an IBM PowerPC CPU.
