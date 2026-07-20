@@ -56,9 +56,18 @@ list is consed by MULTIPLY-MATRIX-AND-VECTOR on every call."
       (multiply-matrix-and-vector w2 (multiply-matrix-and-vector w1 input)))
     (bench-elapsed-ms start)))
 
+(defvar *bench-cuda-elapsed-ms* nil
+  "Escape hatch for BENCH-MGL-MAT's CUDA timing: WITH-CUDA* can fail its
+own pool-teardown assertion (freeing its internal curand random-state
+pool depends on GC finalizers that don't always run promptly under
+SBCL) *after* the timed work already completed successfully. Stashing
+the result in a special variable lets callers recover it even when
+WITH-CUDA* itself signals on the way out.")
+
 (defun bench-mgl-mat (w1 w2 input repeats &key cuda)
   "Idiomatic mgl-mat usage: MAT buffers are allocated once and reused
 across calls, as they would be for persistent GPU-resident weights."
+  (setf *bench-cuda-elapsed-ms* nil)
   (mgl-mat:with-cuda* (:enabled cuda)
     (let* ((in-n (length input))
            (hid-n (length w1))
@@ -69,11 +78,18 @@ across calls, as they would be for persistent GPU-resident weights."
                                     :initial-contents (mapcar #'list input)))
            (m-h (mgl-mat:make-mat (list hid-n 1)))
            (m-o (mgl-mat:make-mat (list out-n 1))))
-      (let ((start (get-internal-real-time)))
-        (dotimes (i repeats)
-          (mgl-mat:gemm! 1 m-w1 m-in 0 m-h)
-          (mgl-mat:gemm! 1 m-w2 m-h 0 m-o))
-        (bench-elapsed-ms start)))))
+      (unwind-protect
+           (let ((start (get-internal-real-time)))
+             (dotimes (i repeats)
+               (mgl-mat:gemm! 1 m-w1 m-in 0 m-h)
+               (mgl-mat:gemm! 1 m-w2 m-h 0 m-o))
+             (setf *bench-cuda-elapsed-ms* (bench-elapsed-ms start)))
+        ;; Eagerly free CUDA-side storage instead of relying on GC
+        ;; finalizers, which WITH-CUDA* waits on (and can time out
+        ;; waiting for) when it tears the pool down on exit.
+        (dolist (m (list m-w1 m-w2 m-in m-h m-o))
+          (mgl-cube:destroy-cube m)))))
+  *bench-cuda-elapsed-ms*)
 
 (defun run-benchmark ()
   (format t "~&~%mgl-mat spike benchmark -- ~a forward passes per backend/size~%"
@@ -97,7 +113,11 @@ across calls, as they would be for persistent GPU-resident weights."
                (format t "  mgl-mat CUDA/cuBLAS:            ~,2f ms~%"
                        (bench-mgl-mat w1 w2 input repeats :cuda t))
              (error (e)
-               (format t "  mgl-mat CUDA/cuBLAS:            failed: ~a~%" e))))))))
+               (if *bench-cuda-elapsed-ms*
+                   (format t "  mgl-mat CUDA/cuBLAS:            ~,2f ms (WITH-CUDA*'s pool teardown ~
+then errored harmlessly after the timed work finished: ~a)~%"
+                           *bench-cuda-elapsed-ms* e)
+                   (format t "  mgl-mat CUDA/cuBLAS:            failed: ~a~%" e)))))))))
   (values))
 
 (run-benchmark)
