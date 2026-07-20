@@ -44,6 +44,76 @@ Once a `.lisp` file is open in Emacs:
 Evaluating forms updates the running Lisp image live, so you can redefine a method and re-test it
 without restarting.
 
+## Examples
+
+### Training an MLP on XOR
+
+This walks through `examples/mlp-test.lisp` — a minimal, complete example of training a
+multi-layer perceptron with backpropagation on the classic XOR problem (not linearly separable,
+so it's a good sanity check that backprop and a hidden layer are actually working).
+
+**1. The data.** Each input is a 2-value vector (as a list), each goal its matching 1-value
+target output:
+```lisp
+(defvar *xor-in* '((0 0) (1 0) (0 1) (1 1)))
+(defvar *xor-goal* '((0) (1) (1) (0)))
+```
+
+**2. Build the network.** `make-mlp` takes a name, then `in-size`, `out-size`, and any number of
+hidden-layer sizes — here 2 inputs, 1 output, one hidden layer of 2 neurons:
+```lisp
+(make-mlp xor 2 1 2)
+```
+This expands into a `defvar`/`setf` form that constructs an `mlp` instance and binds it to the
+symbol `xor`.
+
+**3. Configure it.**
+```lisp
+(let ((mlp xor))
+  (setf (learn-fact mlp) .4
+        (temp mlp) .1
+        (verbose mlp) t
+        (threshold mlp) .1
+        (input mlp) (car *xor-in*)
+        (goal mlp) (car *xor-goal*)))
+```
+`learn-fact` is the backpropagation learning rate — a freshly-built `mlp` defaults it to `0.0`,
+so nothing is learned until you set it yourself. `temp` adds a bit of stochastic noise during
+training (see `noise` in `src/maths.lisp`). `threshold` is the training-loop stop condition
+below.
+
+**4. Train.**
+```lisp
+(let ((mlp xor) (in *xor-in*) (goal *xor-goal*) (e 999999))
+  (loop until (< e (threshold mlp))
+        do (loop for i from 0 to (- (length in) 2)
+                 do (setf (input mlp) (nth i in)
+                          (goal mlp) (nth i goal)
+                          e (backpropagate mlp))
+                    (format t "~&epoch ~S, e = ~S" (epoch mlp) e))))
+```
+Each call to `backpropagate` does one forward pass plus one weight update for the current
+`input`/`goal` pair, and returns that pair's error. The loop keeps cycling through the training
+set until the error drops below `threshold`. (Note: as written, the inner loop bound
+`(- (length in) 2)` only visits 3 of the 4 XOR patterns per epoch — worth knowing if you're
+comparing error curves against a from-scratch version of this loop.)
+
+**5. Check the result.**
+```lisp
+(dolist (input *xor-in*)
+  (setf (input xor) input)
+  (run-mlp xor)
+  (format t "~S : ~S~&" input (apply #'round (output xor))))
+```
+`run-mlp` does a forward pass only (no learning) and stores the result in `(output xor)`. After
+training, each of the four XOR inputs should round to its correct output (`(0 0)` → 0, `(1 0)` →
+1, `(0 1)` → 1, `(1 1)` → 0).
+
+**Trying your own problem:** swap in different `*xor-in*`/`*xor-goal*` data (same shape: a list
+of input vectors and a list of matching goal vectors) and a `make-mlp` call sized to match — the
+training/testing loop above works unchanged. `examples/mlp-test2.lisp` does exactly this for
+6-input accelerometer data.
+
 ## History
 
 This project was initiated by Fred Voisin ([www.fredvoisin.com](http://www.fredvoisin.com)) in 1999 to study the application of artificial neural nets to contemporary music creation using, at first, the Lisp language (Macintosh Common Lisp and Common Lisp Object System), OpenMusic software (Ircam, [www.ircam.fr](http://www.ircam.fr)) and the MIDI protocol. Some overall principles were inspired by [David Wessel](http://music.berkeley.edu/who-was-david-wessel/) and [Adrian Freed](https://cnmat.berkeley.edu/people/adrian-freed) at [CNMAT](http://cnmat.berkeley.edu). At this time, the very first ('alpha') version of this project was available at [www.neuromuse.net](http://www.neuromuse.net) and at the OpenMusic Ircam Forum (an [archived snapshot](https://web.archive.org/web/20050910170552/http://www.neuromuse.org/) of the original www.neuromuse.org site, from September 2005). It was also the moment for demos and short public conference-performances (Ircam, the Web-Bar, Prisma composer workshops in Paris and Firenze). Training a recurrent MLP could take hours of computation on the laptops available at the time, and running real-time applications at a symbolic level (MIDI) made it hard to go beyond a few dozen neurons on an IBM PowerPC CPU.
