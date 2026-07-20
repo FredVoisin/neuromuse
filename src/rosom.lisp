@@ -1,8 +1,30 @@
-;; rosom.lisp for rosom
+;; neuromuse version 2.0 beta 2
+;; LISP code to simulate artificial neural networks
+
+;; (C) Frederic Voisin 2000-2008
+;; <fredvoisin@neuromuse.org>, <www.neuromuse.org>
+
+;This program is free software; you can redistribute it and/or modify
+;it under the terms of the GNU General Public License as published by
+;the Free Software Foundation; either version 2 of the License, or
+;(at your option) any later version.
+
+;This program is distributed in the hope that it will be useful,
+;but WITHOUT ANY WARRANTY; without even the implied warranty of
+;MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;GNU General Public License for more details.
+
+;You should have received a copy of the GNU General Public License
+;along with this program; if not, write to the Free Software
+;Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+;The GNU Public Licence can be found in the file COPYING
+;------------------------------------------------------------------
 
 (in-package :neuromuse)
 
-;(format t "rosom.lisp ...~%")
+(format t "ROSOM...~&")
+;; portage de MCL a opemMCL (SBCL a suivre)
 
 (defclass rosom (SOM)
   ((input-context :initform nil :initarg :input-context :accessor input-context :type list)
@@ -12,7 +34,7 @@
    )
 
 (defmethod initialize-instance :after ((self rosom) &key name)
-  (let ((name-of-rosom (if name
+  (let ((name-of-rosom (if name 
                           (make-new-symbol name)
                           (make-new-symbol 'rosom))))
      (setf (slot-value self 'name) name-of-rosom
@@ -36,7 +58,7 @@
 	   (car (net self))))
    (dotimes (i size)
      (let ((nr (eval (nth i (car (net self))))))
-       (dotimes (j input (setf (net nr) (nreverse (net nr))))
+       (dotimes (j input (setf (net nr) (nreverse (net nr)))) 
 	 (push (list (list j i) (- .1 (random .2)) 0)
 	       (net nr)))))
    (dotimes (k size (setf (cadr (net self)) (nreverse (cadr (net self))))) ;; neurones contexte
@@ -144,7 +166,7 @@
 		   'vector))
     (loop for n from 0 to (1- n)
           do
-          (setf
+          (setf  
            content-response (- 1 (+ (euclidian (contentn w-som n) input )
                                           (- (/ temp-som 2) (rand temp-som))))
            context-response (- 1 (+ (euclidian (contentn w-rosom n) context )
@@ -181,7 +203,7 @@
 		       (setf (aref w-som neuron i)
 			     (+ (aref w-som neuron i)
 				(* correction (- (elt input i) (aref w-som neuron i))))))))
-	 ;;correction du gagnant du ROSOM
+	 ;;correction du gagnant du ROSOM 
 	 (loop for i from 0 to (1- n)
 	       do
 	       (setf (aref w-rosom (car winner) i)
