@@ -2,6 +2,14 @@
 
 Artificial neural networks to generate music and artistic productions with real-time applications (since 2000).
 
+Even if this project is becoming quite old, it is still short, simple, and efficient enough for
+education and artistic productions in real time. It now runs under [SBCL](http://www.sbcl.org) as a
+proper ASDF system (`src/`, `tests/`, `examples/`, `doc/`), and new developments are ongoing, in the
+spirit of the original project — see [Updates](#updates) below.
+
+The presentation that follows is the project's original one, written in 2005; kept as-is for its
+historical value.
+
 ## Présentation (Nice, mai 2005)
 
 ### neuromuse
