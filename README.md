@@ -79,7 +79,7 @@ New updates in progress with the help of Claude AI, in the former spirit of the 
 
 Fred Voisin.
 
-## TODO
+## TO DO
 
 - `src/perceptron.lisp` is marked "unfinished ?, see mlp" and isn't part of the ASDF build; either finish
   it or fold its role entirely into `mlp`.
@@ -90,6 +90,10 @@ Fred Voisin.
   holding a symbol (e.g. `:name`) prints unquoted and would be read back as a variable reference.
 - Port the graphical rendering used to draw nets (as seen in the Gallery, e.g. `mlp_mcl_macos9.png`),
   originally built on Macintosh Common Lisp's dedicated CLOS toolbox, to something available under SBCL.
+- Add GPU support.
+
+### In progress
+- Investigation on GPU optimisation.
 
 ---
 
