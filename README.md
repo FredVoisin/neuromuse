@@ -236,7 +236,7 @@ Even if this project is becoming quite old, it may be a good start for new devel
     </tr>
     <tr>
       <td align="center" width="100%">
-        <img src="img/rosom-lisp-firstOK1.png" alt="First working ROSOM, Macintosh Common Lisp" width="480"><br>
+        <img src="img/rosom-lisp-firstOK1.png" alt="First working ROSOM, Macintosh Common Lisp" width="360"><br>
         <sub><i>The first working rosom, in Macintosh Common Lisp: a proof of concept, learning a sine wave
         in the symbolic domain.</i></sub>
       </td>
@@ -351,26 +351,26 @@ Even if this project is becoming quite old, it may be a good start for new devel
   <table>
     <tr>
       <td align="center" width="25%">
-        <img src="img/cluster-infineon-sun_sym1-32.png" alt="Sun servers of the Infineon compute cluster" width="220"><br>
+        <img src="img/cluster-infineon-sun_sym1-32.png" alt="Sun servers of the Infineon compute cluster" width="280"><br>
         <sub><i>Sun servers of the Infineon-donated compute cluster used for "Symphonie des machines".</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/cluster-infineon-sym-p4_fred.png" alt="The cluster's row of PCs" width="220"><br>
+        <img src="img/cluster-infineon-sym-p4_fred.png" alt="The cluster's row of PCs" width="280"><br>
         <sub><i>The cluster's row of PC nodes.</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/grappe-infineon-etherape.png" alt="EtherApe network map of the cluster" width="220"><br>
+        <img src="img/grappe-infineon-etherape.png" alt="EtherApe network map of the cluster" width="280"><br>
         <sub><i>EtherApe network map of the cluster's topology.</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/eurecom13mai.png" alt="Pure Data control patches and SOM visualization, Eurecom" width="220"><br>
+        <img src="img/eurecom13mai.png" alt="Pure Data control patches and SOM visualization, Eurecom" width="280"><br>
         <sub><i>The Pure Data GUI to control 25 Lisp "avatit" agents dispatched on a grid, at
         Eurecom, Sophia-Antipolis.</i></sub>
       </td>
     </tr>
     <tr>
       <td align="center" width="100%">
-        <img src="img/somlisp2pd+max.png" alt="SOM Lisp to Pd/Max bridge, Symphonie des machines" width="480"><br>
+        <img src="img/somlisp2pd+max.png" alt="SOM Lisp to Pd/Max bridge, Symphonie des machines" width="360"><br>
         <sub><i>SOM computed in Lisp, bridged to Pd and Max via UDP, for "Symphonie des machines".</i></sub>
       </td>
     </tr>
@@ -412,7 +412,7 @@ Even if this project is becoming quite old, it may be a good start for new devel
     </tr>
     <tr>
       <td align="center" width="100%">
-        <img src="img/m4lmd-005.png" alt="System diagram, Last Manoeuvres in the Dark" width="600"><br>
+        <img src="img/m4lmd-005.png" alt="System diagram, Last Manoeuvres in the Dark" width="360"><br>
         <sub><i>System diagram: music information retrieval, SOM-based stylistic analysis, multi-agent/neural
         control, and the neural activation decoder.</i></sub>
       </td>
@@ -425,7 +425,7 @@ Even if this project is becoming quite old, it may be a good start for new devel
     </tr>
     <tr>
       <td align="center" width="100%">
-        <img src="img/LMD_controlroom.png" alt="Last Manoeuvres in the Dark control room" width="700"><br>
+        <img src="img/LMD_controlroom.png" alt="Last Manoeuvres in the Dark control room" width="360"><br>
         <sub><i>The control room: training agents on a cluster of Calao boards and playing them back in real
         time.</i></sub>
       </td>
@@ -453,14 +453,14 @@ Even if this project is becoming quite old, it may be a good start for new devel
   <table>
     <tr>
       <td align="center" width="100%">
-        <img src="img/avatit+arms.png" alt="Avatit controlling a robot arm on an ARM CPU, Ircam" width="480"><br>
+        <img src="img/avatit+arms.png" alt="Avatit controlling a robot arm on an ARM CPU, Ircam" width="360" rotate="90"><br>
         <sub><i>Neuromuse (avatit) still alive underground at Ircam in 2015, controlling a robot arm on an
         ARM CPU (photo 2025).</i></sub>
       </td>
     </tr>
     <tr>
       <td align="center" width="100%">
-        <img src="img/mimercjouer-general.png" alt="Mime recognition and gesture-to-sound mapping system diagram" width="700"><br>
+        <img src="img/mimercjouer-general.png" alt="Mime recognition and gesture-to-sound mapping system diagram" width="360"><br>
         <sub><i>System diagram for a research engineering application in cognitive rehabilitation: mime
         gesture recognition (MLP), movement descriptors, and gesture/sound mapping to a sampler. LEAD lab,
         CNRS-Université de Bourgogne, 2017.</i></sub>
