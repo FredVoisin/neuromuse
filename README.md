@@ -236,7 +236,7 @@ Even if this project is becoming quite old, it may be a good start for new devel
     </tr>
     <tr>
       <td align="center" width="100%">
-        <img src="img/rosom-lisp-firstOK1.jpg" alt="First working ROSOM, Macintosh Common Lisp" width="480"><br>
+        <img src="img/rosom-lisp-firstOK1.png" alt="First working ROSOM, Macintosh Common Lisp" width="480"><br>
         <sub><i>The first working rosom, in Macintosh Common Lisp: a proof of concept, learning a sine wave
         in the symbolic domain.</i></sub>
       </td>
@@ -255,24 +255,24 @@ Even if this project is becoming quite old, it may be a good start for new devel
         real time, at a Prisma composers masterclass.</i></sub>
       </td>
       <td align="center" width="50%">
-        <img src="img/arselectronica2005.jpg" alt="Ars Electronica 2005, Hybrid - Living in Paradox" width="360"><br>
+        <img src="img/arselectronica2005.png" alt="Ars Electronica 2005, Hybrid - Living in Paradox" width="360"><br>
         <sub><i>Invited talk with Robin Meier on neuromuse-based projects, Ars Electronica ("Hybrid — Living
         in Paradox"), September 2005.</i></sub>
       </td>
     </tr>
     <tr>
       <td align="center" width="50%">
-        <img src="img/Taipe_112.jpg" alt="Neuromuse demo/workshop setup, Taipei 2003" width="360"><br>
+        <img src="img/Taipe_112.png" alt="Neuromuse demo/workshop setup, Taipei 2003" width="360"><br>
         <sub><i>Demo/workshop setup, National Taiwan University, Taipei, 2003.</i></sub>
       </td>
       <td align="center" width="50%">
-        <img src="img/Taipe_114.jpg" alt="Neuromuse demo/workshop setup, FNAC Asia, Taipei 2003" width="360"><br>
+        <img src="img/Taipe_114.png" alt="Neuromuse demo/workshop setup, FNAC Asia, Taipei 2003" width="360"><br>
         <sub><i>Demo/workshop setup, FNAC Asia, Taipei, 2003.</i></sub>
       </td>
     </tr>
     <tr>
       <td align="center" width="50%">
-        <img src="img/compo-couv-s.jpg" alt="Cover, computer music lessons, Conservatoire de Montbéliard" width="360"><br>
+        <img src="img/compo-couv-s.png" alt="Cover, computer music lessons, Conservatoire de Montbéliard" width="360"><br>
         <sub><i>Cover for computer music lessons at the Conservatoire de Montbéliard, 2007, showing various
         GUIs in use for computer music production, including neuromuse in Lisp/Pd.</i></sub>
       </td>
@@ -286,38 +286,38 @@ Even if this project is becoming quite old, it may be a good start for new devel
   <table>
     <tr>
       <td align="center" width="25%">
-        <img src="img/taire_figure1.jpg" alt="Declarative/sequential vs. neuromimetic architecture" width="220"><br>
+        <img src="img/taire_figure1.png" alt="Declarative/sequential vs. neuromimetic architecture" width="220"><br>
         <sub><i>Declarative/sequential vs. neuromimetic architecture, from the "Taire" paper.</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/taire_figure2.jpg" alt="MLP topology, Taire paper" width="220"><br>
+        <img src="img/taire_figure2.png" alt="MLP topology, Taire paper" width="220"><br>
         <sub><i>MLP topology used for "Taire".</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/taire_figure3.jpg" alt="MLP topology with synaptic weight scale, Taire paper" width="220"><br>
+        <img src="img/taire_figure3.png" alt="MLP topology with synaptic weight scale, Taire paper" width="220"><br>
         <sub><i>Same topology, with a synaptic weight color scale.</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/taire_figure5small.jpg" alt="Backpropagation data flow diagram, Taire paper" width="220"><br>
+        <img src="img/taire_figure5small.png" alt="Backpropagation data flow diagram, Taire paper" width="220"><br>
         <sub><i>Backpropagation data flow through an MLP, from the "Taire" paper.</i></sub>
       </td>
     </tr>
     <tr>
       <td align="center" width="25%">
-        <img src="img/ecarlate-sin.jpg" alt="Recurrent MLP used for L'Ecarlate" width="220"><br>
+        <img src="img/ecarlate-sin.png" alt="Recurrent MLP used for L'Ecarlate" width="220"><br>
         <sub><i>Recurrent MLP used for "L'écarlate": dance-derived input recurrently mapped to sound
         synthesis parameters (freq, amp, dur).</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/lecarlate-performance.jpg" alt="L'écarlate performance" width="220"><br>
+        <img src="img/lecarlate-performance.png" alt="L'écarlate performance" width="220"><br>
         <sub><i>"L'écarlate" performance, by Toeplitz and Gourfink, Ircam, June 2001.</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/lol-saisies.gif" alt="LOL capture interface" width="220"><br>
+        <img src="img/lol-saisies.png" alt="LOL capture interface" width="220"><br>
         <sub><i>LOL (Laban Orienté Lisp) capture interface: movement parameters by body part.</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/LOL-neurones_1.gif" alt="LOL movement data, original vs reconstructed" width="220"><br>
+        <img src="img/LOL-neurones_1.png" alt="LOL movement data, original vs reconstructed" width="220"><br>
         <sub><i>LOL movement data: original vs. reconstructed pattern (Moment 1).</i></sub>
       </td>
     </tr>
@@ -330,15 +330,15 @@ Even if this project is becoming quite old, it may be a good start for new devel
   <table>
     <tr>
       <td align="center" width="33%">
-        <img src="img/nice072004_35.jpg" alt="Work session, CIRM Nice residency, July 2004" width="280"><br>
+        <img src="img/nice072004_35.png" alt="Work session, CIRM Nice residency, July 2004" width="280"><br>
         <sub><i>Work session, CIRM Nice residency, July 2004.</i></sub>
       </td>
       <td align="center" width="33%">
-        <img src="img/nice072004_45.jpg" alt="Work session, CIRM Nice residency, July 2004" width="280"><br>
+        <img src="img/nice072004_45.png" alt="Work session, CIRM Nice residency, July 2004" width="280"><br>
         <sub><i>Work session, CIRM Nice residency, July 2004.</i></sub>
       </td>
       <td align="center" width="33%">
-        <img src="img/Nice09_78.jpg" alt="Robin Meier coding a rosom in Max/MSP Jitter, Nice 2004" width="280"><br>
+        <img src="img/Nice09_78.png" alt="Robin Meier coding a rosom in Max/MSP Jitter, Nice 2004" width="280"><br>
         <sub><i>Robin Meier coding a rosom in Max/MSP Jitter, CIRM Nice, 2004.</i></sub>
       </td>
     </tr>
@@ -351,19 +351,19 @@ Even if this project is becoming quite old, it may be a good start for new devel
   <table>
     <tr>
       <td align="center" width="25%">
-        <img src="img/cluster-infineon-sun_sym1-32.jpg" alt="Sun servers of the Infineon compute cluster" width="220"><br>
+        <img src="img/cluster-infineon-sun_sym1-32.png" alt="Sun servers of the Infineon compute cluster" width="220"><br>
         <sub><i>Sun servers of the Infineon-donated compute cluster used for "Symphonie des machines".</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/cluster-infineon-sym-p4_fred.jpg" alt="The cluster's row of PCs" width="220"><br>
+        <img src="img/cluster-infineon-sym-p4_fred.png" alt="The cluster's row of PCs" width="220"><br>
         <sub><i>The cluster's row of PC nodes.</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/grappe-infineon-etherape.jpg" alt="EtherApe network map of the cluster" width="220"><br>
+        <img src="img/grappe-infineon-etherape.png" alt="EtherApe network map of the cluster" width="220"><br>
         <sub><i>EtherApe network map of the cluster's topology.</i></sub>
       </td>
       <td align="center" width="25%">
-        <img src="img/eurecom13mai.jpg" alt="Pure Data control patches and SOM visualization, Eurecom" width="220"><br>
+        <img src="img/eurecom13mai.png" alt="Pure Data control patches and SOM visualization, Eurecom" width="220"><br>
         <sub><i>The Pure Data GUI to control 25 Lisp "avatit" agents dispatched on a grid, at
         Eurecom, Sophia-Antipolis.</i></sub>
       </td>
@@ -401,25 +401,25 @@ Even if this project is becoming quite old, it may be a good start for new devel
   <table>
     <tr>
       <td align="center" width="50%">
-        <img src="img/m4lmd-000.jpg" alt="Darth Vader helmet sculptures, neural activation decoder array" width="360"><br>
+        <img src="img/m4lmd-000.png" alt="Darth Vader helmet sculptures, neural activation decoder array" width="360"><br>
         <sub><i>The neural activation decoder: rows of Darth Vader helmet sculptures, Palais de Tokyo,
         Paris, 2008.</i></sub>
       </td>
       <td align="center" width="50%">
-        <img src="img/m4lmd-002.jpg" alt="Cabling rig for the helmet array" width="360"><br>
+        <img src="img/m4lmd-002.png" alt="Cabling rig for the helmet array" width="360"><br>
         <sub><i>Cabling rig distributing signal to the helmet array.</i></sub>
       </td>
     </tr>
     <tr>
       <td align="center" width="100%">
-        <img src="img/m4lmd-005.jpg" alt="System diagram, Last Manoeuvres in the Dark" width="600"><br>
+        <img src="img/m4lmd-005.png" alt="System diagram, Last Manoeuvres in the Dark" width="600"><br>
         <sub><i>System diagram: music information retrieval, SOM-based stylistic analysis, multi-agent/neural
         control, and the neural activation decoder.</i></sub>
       </td>
     </tr>
     <tr>
       <td align="center" width="100%">
-        <img src="img/calaosolaire.jpg" alt="Solar-powered Calao board" width="360"><br>
+        <img src="img/calaosolaire.png" alt="Solar-powered Calao board" width="360"><br>
         <sub><i>A Calao board powered by a portable solar panel, each running a neuromuse Java agent.</i></sub>
       </td>
     </tr>
@@ -439,7 +439,7 @@ Even if this project is becoming quite old, it may be a good start for new devel
   <table>
     <tr>
       <td align="center" width="100%">
-        <img src="img/smallgreencalaos.jpg" alt="Neuromuse agents in Java on Calao ARM boards" width="360"><br>
+        <img src="img/smallgreencalaos.png" alt="Neuromuse agents in Java on Calao ARM boards" width="360"><br>
         <sub><i>Five neuromuse agents in Java playing live on Calao motherboards running Linux, audio rendered
         through UDP with a local Max/MSP ad-hoc patch.</i></sub>
       </td>
@@ -453,7 +453,7 @@ Even if this project is becoming quite old, it may be a good start for new devel
   <table>
     <tr>
       <td align="center" width="100%">
-        <img src="img/avatit+arms.jpg" alt="Avatit controlling a robot arm on an ARM CPU, Ircam" width="480"><br>
+        <img src="img/avatit+arms.png" alt="Avatit controlling a robot arm on an ARM CPU, Ircam" width="480"><br>
         <sub><i>Neuromuse (avatit) still alive underground at Ircam in 2015, controlling a robot arm on an
         ARM CPU (photo 2025).</i></sub>
       </td>
