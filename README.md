@@ -453,7 +453,7 @@ Even if this project is becoming quite old, it may be a good start for new devel
   <table>
     <tr>
       <td align="center" width="100%">
-        <img src="img/avatit+arms.png" alt="Avatit controlling a robot arm on an ARM CPU, Ircam" width="360" rotate="90"><br>
+        <img src="img/avatit+arms.png" alt="Avatit controlling a robot arm on an ARM CPU, Ircam" width="360" style="transform:rotate(90deg)><br>
         <sub><i>Neuromuse (avatit) still alive underground at Ircam in 2015, controlling a robot arm on an
         ARM CPU (photo 2025).</i></sub>
       </td>
