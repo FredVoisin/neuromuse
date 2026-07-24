@@ -1,6 +1,6 @@
 # neuromuse
 
-Artificial neural networks to generate music and artistic productions with real-time applications (since 2000).
+Artificial neural networks to generate music and artistic productions with real-time applications, since 2000 by <a href="https://www.fredvoisin.com/">Fred Voisin.</a>
 
 Even if this project is becoming quite old, it is still short, simple, and efficient enough for
 education and artistic productions in real time. It now runs under [SBCL](http://www.sbcl.org) as a
