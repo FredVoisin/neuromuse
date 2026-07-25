@@ -334,7 +334,7 @@ Even if this project is becoming quite old, it may be a good start for new devel
         <sub><i>Work session, CIRM Nice residency, July 2004.</i></sub>
       </td>
       <td align="center" width="33%">
-        <img src="img/nice072004_45.png" alt="Work session, CIRM Nice residency, July 2004" width="280"><br>
+        <img src="img/nice072004_45.png" alt="Robin Meier playing, CIRM Nice residency, July 2004" width="280"><br>
         <sub><i>Work session, CIRM Nice residency, July 2004.</i></sub>
       </td>
       <td align="center" width="33%">
