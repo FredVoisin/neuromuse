@@ -30,8 +30,6 @@ https://ressources.ircam.fr/fr/media/x218df0_lecarlate-myriam-gourfink-kasper-t-
 
 ## Contenu
 
-## Contenu
-
 Chargement et interface
 - ` ECARLATE-loader.lisp` : loader de l'ensemble (l'espace initiale le
   plaçait en tête dans le Finder)
