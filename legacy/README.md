@@ -13,4 +13,8 @@ actuelle (`src/`).
 D'autres versions antérieures (1999, 2000) pourront être ajoutées
 ultérieurement.
 
-Remerciements à Florian Iochem pour son inspiration. 
+## Remerciements
+
+La mise en ligne de ces sources historiques doit beaucoup à
+Florian Iochem, [musicien chercheur](https://fabricadesites.fcsh.unl.pt/ncmm/florian-iochem/).
+Qu'il en soit remercié.
