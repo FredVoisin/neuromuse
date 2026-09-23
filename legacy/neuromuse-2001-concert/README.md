@@ -25,8 +25,8 @@ https://ressources.ircam.fr/fr/media/x218df0_lecarlate-myriam-gourfink-kasper-t-
 - Macintosh Common Lisp, Mac OS 9
 - PowerBook G3 « Pismo » (PowerPC)
 - Communication en temps réel via MIDI (MidiShare) avec la scène et avec
-  l'ordinateur dédié à l'analyse de la danse (voir le projet Laban on
-  Lisp)
+  l'ordinateur dédié à l'analyse de la danse, qui faisait tourner Laban
+  on Lisp : https://github.com/FredVoisin/LabanOnLisp
 
 ## Contenu
 
