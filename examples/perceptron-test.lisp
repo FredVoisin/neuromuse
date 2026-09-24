@@ -149,3 +149,19 @@
                                  0 0 0 0 1
                                  0 0 0 0 0
                                  1 1 1 1 0))
+;;; Biais : une entrée supplémentaire toujours à 1, dont les poids sont appris.
+;;; Sans biais, un perceptron ne peut pas apprendre le ET logique (la sortie
+;;; ne peut s'allumer pour (1 1) sans s'allumer aussi pour (1 0) ou (0 1)).
+
+(defvar *logique* '((0 0) (0 1) (1 0) (1 1)))
+
+(make-perceptron et 2 1 :bias t)
+(train-perceptron et *logique* '((0) (0) (0) (1)) :verbose t)
+(mapcar #'(lambda (e) (run-perceptron et :in e)) *logique*)   ; => ((0) (0) (0) (1))
+(net et)   ; la dernière ligne est le poids de biais, négatif : un seuil
+
+;; le OU EXCLUSIF reste hors de portée, biais ou non : il faut une couche
+;; cachée (cf. examples/mlp-test.lisp)
+(make-perceptron ou-x 2 1 :bias t)
+(setf (stop ou-x) 100)
+(train-perceptron ou-x *logique* '((0) (1) (1) (0)) :verbose t)   ; interrompu

@@ -54,6 +54,8 @@
   (is (split "a b  c") (list "a" "b" "c") :test #'equal)
   (is (st2list "1 2 3") (list 1 2 3) :test #'equal))
 
+;;; à ajouter dans tests/neuromuse.lisp (après les subtests existants, avant (finalize))
+
 (subtest "perceptron"
   (let ((p (make-instance 'perceptron :in-size 3 :out-size 2
                           :net (list (list 1 -1) (list 1 -1) (list -3 1)))))
@@ -75,7 +77,24 @@
     (train-perceptron p retines buts)
     (is (second (last-stop p)) 'completed "l'apprentissage converge")
     (is (mapcar #'(lambda (r) (run-perceptron p :in r)) retines) buts
-        "chaque rétine donne sa sortie apprise")))
+        "chaque rétine donne sa sortie apprise"))
+  ;; biais : le ET logique n'est apprenable qu'avec un biais ; le OU EXCLUSIF
+  ;; ne l'est jamais (non linéairement séparable, Minsky & Papert 1969)
+  (let ((entrees '((0 0) (0 1) (1 0) (1 1)))
+        (p (make-instance 'perceptron :in-size 2 :out-size 1 :bias t
+                          :net (list (list 1) (list 1) (list -1.5)))))
+    (is (length (net p)) 3 "le biais ajoute une ligne au réseau")
+    (is (mapcar #'(lambda (e) (run-perceptron p :in e)) entrees)
+        '((0) (0) (0) (1))
+        "le biais est une entrée à 1 ajoutée au stimulus")
+    (flet ((apprend (buts bias)
+             (let ((q (make-instance 'perceptron :in-size 2 :out-size 1 :bias bias
+                                     :net (init-perceptron-net 2 1 :bias bias))))
+               (train-perceptron q entrees buts)
+               (second (last-stop q)))))
+      (is (apprend '((0) (0) (0) (1)) t) 'completed "ET appris avec biais")
+      (is (apprend '((0) (0) (0) (1)) nil) 'interrupted "ET inapprenable sans biais")
+      (is (apprend '((0) (1) (1) (0)) t) 'interrupted "OU exclusif inapprenable"))))
 
 (subtest "mlp: construction and shape"
   (make-mlp mlp-shape-test 3 2 4)
