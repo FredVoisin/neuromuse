@@ -14,6 +14,7 @@
 		 (:file "misc")
 		 (:file "maths")
 		 (:file	"mlp")
+		 (:file "perceptron")
 		 (:file "som")
 		 (:file "rosom")
 		 (:file "udp"))))

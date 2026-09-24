@@ -54,6 +54,29 @@
   (is (split "a b  c") (list "a" "b" "c") :test #'equal)
   (is (st2list "1 2 3") (list 1 2 3) :test #'equal))
 
+(subtest "perceptron"
+  (let ((p (make-instance 'perceptron :in-size 3 :out-size 2
+                          :net (list (list 1 -1) (list 1 -1) (list -3 1)))))
+    (is (perceptron-activity p :in '(1 1 0)) '(2 -2)
+        "activité = somme pondérée des entrées, par cellule de sortie")
+    (is (run-perceptron p :in '(1 1 0)) '(1 0)
+        "sortie binaire : 1 si activité > 0")
+    (is (run-perceptron p :in #(1 0 1)) '(0 0)
+        "les stimuli peuvent être des vecteurs (comme en 1999)"))
+  ;; exemple de perceptron.lisp (IRCAM, mars 1999) : 4 rétines de 30 cellules,
+  ;; linéairement séparables -> convergence garantie (théorème du perceptron)
+  (let* ((retines (list (loop for i below 30 collect (if (zerop (mod i 5)) 1 0))
+                        (loop for i below 30 collect (if (= 2 (mod i 5)) 1 0))
+                        (make-list 30 :initial-element 0)
+                        (make-list 30 :initial-element 1)))
+         (buts '((1 0 0) (0 1 0) (0 0 0) (0 0 1)))
+         (p (make-instance 'perceptron :in-size 30 :out-size 3
+                           :net (init-perceptron-net 30 3))))
+    (train-perceptron p retines buts)
+    (is (second (last-stop p)) 'completed "l'apprentissage converge")
+    (is (mapcar #'(lambda (r) (run-perceptron p :in r)) retines) buts
+        "chaque rétine donne sa sortie apprise")))
+
 (subtest "mlp: construction and shape"
   (make-mlp mlp-shape-test 3 2 4)
   (is (in-size mlp-shape-test) 3)
