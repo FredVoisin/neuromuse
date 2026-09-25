@@ -38,6 +38,7 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
 (instance saving, network constructors, UDP SOM input), and a real test suite added. Still short, still
 simple, hopefully still useful.
 
+---
 
 ## How to install and run
 

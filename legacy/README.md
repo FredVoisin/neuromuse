@@ -16,5 +16,5 @@ ultérieurement.
 ## Remerciements
 
 La mise en ligne de ces sources historiques doit beaucoup à
-Florian Iochem, [musicien chercheur](https://fabricadesites.fcsh.unl.pt/ncmm/florian-iochem/).
+Florian Iochem, [musicien chercheur](https://accra-recherche.unistra.fr/laccra/membres/doctorants/florian-iochem/).
 Qu'il en soit remercié.
