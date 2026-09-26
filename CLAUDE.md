@@ -12,7 +12,10 @@ on Macintosh Common Lisp (MCL/OpenMCL), Lispworks, and CMUCL, and reader conditi
 harness — this is a "load the system into a Lisp image and interact at the REPL" project.
 
 All library code lives in the `:neuromuse` package (`(in-package :neuromuse)` at the top of every file
-under `src/`) and is loaded as an ASDF system, not via ad hoc `load` calls.
+under `src/`) and is loaded as an ASDF system, not via ad hoc `load` calls. The one exception is
+`src/gui.lisp`, the optional Ltk window, which defines its own `:neuromuse-gui` package (`:use`ing
+`:cl` and `:neuromuse`) because it needs `ltk:` symbols and ships as a separate system — see
+"Visualisation (Ltk)" below.
 
 ## Running the code
 
@@ -28,14 +31,13 @@ Load the system via ASDF from an SBCL REPL started in this directory (or with th
 `neuromuse.asd` defines the `neuromuse` system, depends on `:sb-bsd-sockets`, and loads `src/` files in
 this order: `neuromuse` (package definition), `neuromuse-main` (core classes/generics), `misc` (generic
 Lisp/wire-format utilities), `maths` (transfer functions, matrix/vector algebra, SOM topology math —
-depends on `make-listarray` from `misc`, hence loading after it), `mlp`, `som`, `rosom`, `udp`. Load
-order matters — later files depend on classes/functions (e.g. `ANN`, `make-new-symbol`, matrix helpers)
-defined earlier. `maths.lisp` and `misc.lisp` used to be one file, `maths&misc.lisp`; split along the
-line the old name already implied (numerical/matrix code vs. generic utilities), with the duplicate
-`make-new-symbol` definition (also in `neuromuse-main.lisp`) dropped rather than carried into either
-half. `src/perceptron.lisp` is not part of the `.asd` `:components` list (mirrors upstream: it's marked
-"unfinished ?, see mlp") and must be loaded manually with `(load "src/perceptron.lisp")` after the
-system if needed.
+depends on `make-listarray` from `misc`, hence loading after it), `mlp`, `perceptron`, `som`, `rosom`,
+`udp`. Load order matters — later files depend on classes/functions (e.g. `ANN`, `make-new-symbol`,
+matrix helpers) defined earlier. `maths.lisp` and `misc.lisp` used to be one file, `maths&misc.lisp`;
+split along the line the old name already implied (numerical/matrix code vs. generic utilities), with
+the duplicate `make-new-symbol` definition (also in `neuromuse-main.lisp`) dropped rather than carried
+into either half. `src/perceptron.lisp` is part of the `:components` list, loaded right after `mlp`;
+the upstream "unfinished ?, see mlp" comment is about the class being superseded, not about the build.
 
 Run the test suite with:
 
@@ -71,7 +73,7 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   last-activation)` triples), `fun` (activation function + args), `slope`, `bias`, `temp`. Used as the
   node type inside SOM/ROSOM nets.
 - `perceptron` (`src/perceptron.lisp`, subclass of `ANN`) — simple single-layer net; marked "unfinished"
-  in a comment, superseded by MLP. Not part of the `.asd` build (see above).
+  in a comment, superseded by MLP. Loaded by the `.asd` after `mlp`.
 - `mlp` (`src/mlp.lisp`, subclass of `ANN`) — multi-layer perceptron with backpropagation. `net` is a
   list of weight matrices (one per layer transition), each matrix a list-of-lists. `hidden-fun`/
   `out-fun` are activation functions (default `logistic`). Has `activation`, `clear`, and `save`
@@ -113,13 +115,14 @@ quote when printing, so a non-list slot holding a symbol (e.g. `:name`) prints u
 back as a variable reference, not a literal — a pre-existing quirk, not something this pass redesigned.
 
 The `:neuromuse` package exports nothing from its own `defpackage` form (`src/neuromuse.lisp`). Instead,
-`src/udp.lisp` (last file in the `.asd` load order) and `src/perceptron.lisp` (loaded separately) each
-end with a `do-symbols` sweep that exports every symbol interned in `:neuromuse` so far — restoring the
-same unqualified, load-and-use-everything-at-the-REPL visibility the code had before the 2021 package
-split (when everything lived directly in `:cl-user`). This is why a separate consumer package like
+`src/udp.lisp` (last file in the `.asd` load order) ends with a `do-symbols` sweep that exports every
+symbol interned in `:neuromuse` so far — restoring the same unqualified,
+load-and-use-everything-at-the-REPL visibility the code had before the 2021 package split (when
+everything lived directly in `:cl-user`). This is why a separate consumer package like
 `neuromuse-test` (which `:use`s `:neuromuse`) can see `logistic`, `make-mlp`, `in-size`, etc. unqualified.
 If you add a new top-level `src/` file to the `.asd` `:components` list, put it *before* `udp.lisp`, or
-the export sweep won't see its symbols.
+the export sweep won't see its symbols. (`src/gui.lisp` isn't in that system at all, so the sweep never
+reaches it; it exports its own entry points from its `defpackage`.)
 
 ### Math / utility layer
 
@@ -166,6 +169,67 @@ threaded daemons driven by its `superdaemon` flag, dispatched via generic functi
 This is the mechanism referenced in the README for driving Max/PureData or other real-time environments
 externally over the network. Threads are started with `mk-process` (`src/neuromuse-main.lisp`), which
 wraps `sb-thread:make-thread` under SBCL or MCL's process API under `#+mcl`.
+
+### Visualisation (Ltk)
+
+`src/gui.lisp` is an optional Tk window that watches a live `mlp`/`rmlp`, drawing the synaptic weights
+either of two ways — a heatmap (one grid per layer transition, one row per neuron, red = positive /
+blue = negative, normalised by the net's largest |weight|) or a layered graph (a circle per neuron,
+input layer at the top and output at the bottom, each weight the link from its source neuron down to
+the one it feeds, coloured the same red/blue as the heatmap; the input-layer circles are filled grey
+in proportion to the value presented and the output-layer ones to the predicted value, white = 0 and
+black = 1, hidden circles stay white) — plus the curve of `history-error` and
+two status lines (topology + settings; epoch, current error, `input`/`output`/`goal`). A button in the
+window toggles between the two views live; `(neuromuse-gui:gui xor :view :graph)` opens straight into
+the graph one. It is deliberately *read-only* —
+nothing in a training loop has to change for the window to follow it, since `examples/mlp-test.lisp`
+already pushes onto `(history-error mlp)`, which is what the curve plots (that list is pushed
+newest-first, so the GUI reverses it).
+
+It is its own ASDF system, `neuromuse/gui` (bottom of `neuromuse.asd`), so `:ltk` stays out of the
+`neuromuse` system's `:depends-on` and the library keeps loading on a headless machine. Named
+`neuromuse/gui` and not `neuromuse-gui` so that ASDF resolves it to `neuromuse.asd` even in a fresh
+image — the `neuromuse-test` naming only resolves once something else has caused `neuromuse.asd` to be
+read, which is why `asdf:test-system :neuromuse` works but a cold `(asdf:load-system :neuromuse-test)`
+would not:
+
+```lisp
+(ql:quickload :ltk)                  ; once; needs Tk itself (Debian: apt install tk)
+(asdf:load-system "neuromuse/gui")
+(neuromuse-gui:gui xor)              ; non-blocking: opens in its own thread via mk-process
+(neuromuse-gui:demo)                 ; same window on fake weights, to check Tk/Ltk alone
+```
+
+Design points worth preserving if you extend it:
+- One generic, `gui-snapshot`, is the only tie between the window and a network class: it returns a
+  `snapshot` struct (weights, error series, the two status lines, error threshold). To visualise a
+  `som`/`rosom`, add one method rather than spreading accessor calls through the drawing code.
+  `(net mlp)` is already exactly the structure both the heatmap and the graph view want, so the `mlp`
+  method is essentially `(copy-list (net source))` — the `copy-list` freezes the list's spine, because
+  `backpropagate` replaces the layer matrices in place while the window is reading them.
+- The heatmap and the graph view are two independent renderers of that same `weights` structure — see
+  `layer-sizes` for how the graph derives each layer's neuron count from the matrices alone (no mlp
+  slots involved), so it works unchanged on `demo`'s fake weights too. `viewer-view` (`:heatmap` or
+  `:graph`) plus a `(view . topology)` cache key in `viewer-built` decide whether `refresh` has to
+  rebuild the canvas items or can just recolour the ones already there.
+- What `(output mlp)` holds, since the graph view reads it instead of recomputing a forward pass:
+  `backpropagate` (and `run-mlp`) write it with the *current* `(input mlp)`, so it is always the
+  prediction for the state on screen. But after `backpropagate` it is the prediction made *before*
+  that step's weight update, computed with `(threshold mlp)` subtracted from every neuron's input
+  (`logistic`'s `:thresh` — `run-mlp` passes 0, so the two disagree whenever `threshold` is non-zero,
+  e.g. .51135 vs .53775 measured for threshold .1) and on weights jittered by `net-temp`. Hidden
+  activations are not kept anywhere (local variable in `backpropagate`), hence not drawn. For an
+  `rmlp` the extra input circles show `recurrent-layer-activation`, which by then is the context that
+  will feed the *next* step, not the one the displayed output was computed from.
+- Canvas items (weight rectangles or neuron circles/links, error curve, graduations) are created once
+  and afterwards only reconfigured or given new coordinates; nothing is destroyed and recreated per
+  frame. They're rebuilt only when the topology or the view changes — note that switching view resizes
+  the window, since each canvas is sized to its content (heatmap: cell grid; graph: `graph-geometry`,
+  at most `*graph-row-gap*` px between layers and `*graph-height-max*` px in total).
+- All Tk traffic stays in the window's own thread, which re-arms itself with `ltk:after`, because Ltk
+  is not thread-safe: the REPL's training loop only mutates the network, never the widgets. Each
+  refresh runs inside a `handler-case` that writes the condition into the window instead of opening a
+  debugger in a background thread.
 
 ### Examples
 

@@ -1,6 +1,6 @@
 # neuromuse
 
-Artificial neural networks to generate music and artistic productions with real-time applications, since 2000 by <a href="https://www.fredvoisin.com/">Fred Voisin.</a>
+neuromuse is a Common Lisp toolkit of artificial neural networks (perceptrons, multi-layer perceptrons, self-organizing maps) for real-time music generation and artistic production. Developed since 2000 at the intersection of ethnomusicology, choreography and computer music, it has been used in stage productions, installations and research collaborations at IRCAM (Paris) and CIRM (Nice).
 
 Even if this project is becoming quite old, it is still short, simple, and efficient enough for
 education and artistic productions in real time. It now runs under [SBCL](http://www.sbcl.org) as a
@@ -32,6 +32,8 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
 ---
 
 ## Updates
+
+**Sept 2026** — Perceptron added with demos, MLP demos, Ltk-based GUI looking like legacy versions.
 
 **July 2026** — the project has been reorganized as a proper ASDF system (`src/`, `tests/`, `examples/`,
 `doc/`), with the code moved into its own `:neuromuse` package, a handful of long-standing bugs fixed
@@ -200,7 +202,7 @@ From 2006 to 2008, new Lisp developments by the author provided a stable real-ti
 
 After 2007, the project was also used as teaching material by the author at the Conservatoire de Montbéliard, in the context of computer music master classes.
 
-Even if this project is becoming quite old, it may be a good start for new developments since it's short, simple, easy to use and efficient enough for education and artistic productions.
+Even if this project is becoming quite old, it may be a good start for new developments since it's short, simple, easy to use and efficient enough for education and artistic productions (see for instance [neuromuse-ios](https://github.com/FredVoisin/neuromuse-ios) )
 
 ## Publications
 
