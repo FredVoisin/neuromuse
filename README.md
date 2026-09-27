@@ -21,10 +21,10 @@ Traditional AI frameworks treat neural networks as black boxes to be optimized. 
 ## Table of Contents
 
 1. [FAQ](#faq)
-2. [Quick Start]([#quick-start)
-3. [Requirements](https://github.com/FredVoisin/neuromuse#requirements)
-4. [What's New]([#whats-new)
-5. [Documentation]([#documentation)
+2. [Quick Start](#quick-start)
+3. [Requirements](#requirements)
+4. [What's New](#whats-new)
+5. [Documentation](#documentation)
 6. [Contributing & TO-DO](#contributing--to-do)
 7. [License](#license)
 
