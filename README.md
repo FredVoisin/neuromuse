@@ -14,8 +14,21 @@ Traditional AI frameworks treat neural networks as black boxes to be optimized. 
 
 - Learn from real human gesture and movement in real time
 - Adapt to incomplete, contradictory, or intuitive input without requiring perfect labeling
-- Remain interpretable—understand *why* a network makes a decision
-- Run on modest hardware (historically, a PowerPC laptop; today, even an iPhone 5s via neuromuse-ios)
+- Remain interpretable—understand *why* a network makes a decision, or not
+- Run on modest hardware (historically, a 68030 or PowerPC laptop; today - in 2026, even an iPhone 5s via neuromuse-ios)
+- It's opensource, no dependencies, diy
+
+## Table of Contents
+
+1. [Quick Start]([#quick-start)
+2. [Requirements](https://github.com/FredVoisin/neuromuse#requirements)
+3. [What's New]([#whats-new))
+4. [Documentation]([#documentation))
+5. [FAQ](#faq)
+6. [Contributing & TO-DO](#contributing--to-do)
+7. [License](#license)
+
+
 
 ## Quick Start
 
@@ -106,23 +119,35 @@ For a full walkthrough and more examples, see [EXAMPLES.md](doc/EXAMPLES.md).
 - **[GALLERY.md](doc/GALLERY.md)** — Visual history: early experiments, performances, research projects
 - **[PUBLICATIONS.md](doc/PUBLICATIONS.md)** — Academic papers and references
 
-## Architectures
+## Available Architectures
 
 - **MLP** — Multi-layer perceptron with backpropagation; classic supervised learning
 - **SOM** — Kohonen self-organizing maps for unsupervised clustering and pattern recognition
 - **ROSOM** — Recurrent oscillatory SOM (Elman-style feedback); captures temporal patterns
 - **Perceptron** — Single-layer classifier (minimal but complete)
+- ...
 
 ## FAQ
 
-**Is `rmlp` Elman or Jordan?**  
-Elman. Its recurrent feedback comes from a hidden layer's activation, not the output layer's. See [doc/rmlp-elman-vs-jordan.md](doc/rmlp-elman-vs-jordan.md) for a structural and behavioral test.
-
 **Can I use this for real-time music applications?**  
-Yes. The list-based matrix code is ~40× faster than GPU-accelerated alternatives at neuromuse's actual network sizes (a handful of neurons). See the benchmark in [examples/benchmark-mgl-mat.lisp](examples/benchmark-mgl-mat.lisp).
+Yes. The list-based matrix code is ~40× faster than GPU-accelerated alternatives at neuromuse's actual network sizes (a handful of neurons). See the benchmark in [examples/benchmark-mgl-mat.lisp](examples/benchmark-mgl-mat.lisp). If it runs on any CPU with large models, the code can also by easily adapted for GPU (see below, Contributing).
+
+**Can I use this for teaching AI?**
+Yes, you can. Freely. Suggestions and contributions are welcome (see [philosophy](doc/PHILOSOPHY.md))
 
 **Is the documentation only in code comments?**  
 Historically, yes. We're actively expanding it. Start with a 5-minute read of [PHILOSOPHY.md](doc/PHILOSOPHY.md) to understand the mindset, then dive into [EXAMPLES.md](doc/EXAMPLES.md).
+The 'we' being Fred - the author - with the help of claude.ia (Anthropic), since Sept. 27 - collaborators are welcome. When needed,
+to avoid confusion, the ai generated parts of the documentation or of the code are flagged or mention as being ai-generated (claude.ia).
+By the way, the [legacy code](https://github.com/FredVoisin/neuromuse/tree/master/legacy) was learned by claude.ai under the supervision of the author, who ensures that the contribution is relevant. And Fred know for 
+such an ai is the tool to explore and play such complex systems as the ones to be built with neuromuse, how big or small they can be.
+
+**Why Lisp?**
+Because it's the second mother language of the author, learned at Ircam undergound when underground when last was on the roof. But not only :)
+
+**Is `rmlp` Elman or Jordan?**  
+Elman. Its recurrent feedback comes from a hidden layer's activation, not the output layer's. See [doc/rmlp-elman-vs-jordan.md](doc/rmlp-elman-vs-jordan.md) for a structural and behavioral test. This question because the loops levels could be confusing while digging ;)
+
 
 ## Contributing & TO-DO
 
