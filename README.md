@@ -20,14 +20,33 @@ Traditional AI frameworks treat neural networks as black boxes to be optimized. 
 
 ## Table of Contents
 
-1. [Quick Start]([#quick-start)
-2. [Requirements](https://github.com/FredVoisin/neuromuse#requirements)
-3. [What's New]([#whats-new))
-4. [Documentation]([#documentation))
-5. [FAQ](#faq)
+1. [FAQ](#faq)
+2. [Quick Start]([#quick-start)
+3. [Requirements](https://github.com/FredVoisin/neuromuse#requirements)
+4. [What's New]([#whats-new)
+5. [Documentation]([#documentation)
 6. [Contributing & TO-DO](#contributing--to-do)
 7. [License](#license)
 
+## FAQ
+
+- **Can I use this for real-time music applications?**  
+Yes. The list-based matrix code is ~40× faster than GPU-accelerated alternatives at neuromuse's actual network sizes (a handful of neurons). See the benchmark in [examples/benchmark-mgl-mat.lisp](examples/benchmark-mgl-mat.lisp). If it runs on any CPU with large models, the code can also by easily adapted for GPU (see below, Contributing).
+
+- **Can I use this for teaching AI?**  
+Yes, you can. Freely. Suggestions and contributions are welcome.
+
+- **Is the documentation only in code comments?**  
+Historically, yes. We're actively expanding it. Start with a 5-minute read of [PHILOSOPHY.md](doc/PHILOSOPHY.md) to understand the mindset, then dive into [EXAMPLES.md](doc/EXAMPLES.md).
+
+- **Who is we?**  
+Since Sept. 27, the 'we' above is Fred - the author - with the help of claude.ia (Anthropic). Collaborators are welcome! To avoid confusion, the AI generated parts of the documentation or of the code are flagged or mentioned as being AI-generated. The [legacy code](https://github.com/FredVoisin/neuromuse/tree/master/legacy) which is the reference has been learned by claude.ai under the supervision of the author who ensures that all contributions are relevant and amended when needed. Fred knows from experience that AI can assist in exploring and working with complex systems like neuromuse — whether they grow large or stay small.
+
+- **Why Lisp?**  
+Because it's the second mother language of the author, learned at Ircam underground when the last was on the roof, but not only.
+
+- **Is `rmlp` Elman or Jordan?**   
+Elman. Its recurrent feedback comes from a hidden layer's activation, not the output layer's. See [doc/rmlp-elman-vs-jordan.md](doc/rmlp-elman-vs-jordan.md) for a structural and behavioral test. This question because the loops levels could be confusing while digging ;)
 
 
 ## Quick Start
@@ -126,26 +145,6 @@ For a full walkthrough and more examples, see [EXAMPLES.md](doc/EXAMPLES.md).
 - **ROSOM** — Recurrent oscillatory SOM (Elman-style feedback); captures temporal patterns
 - **Perceptron** — Single-layer classifier (minimal but complete)
 - ...
-
-## FAQ
-
-- **Can I use this for real-time music applications?**  
-Yes. The list-based matrix code is ~40× faster than GPU-accelerated alternatives at neuromuse's actual network sizes (a handful of neurons). See the benchmark in [examples/benchmark-mgl-mat.lisp](examples/benchmark-mgl-mat.lisp). If it runs on any CPU with large models, the code can also by easily adapted for GPU (see below, Contributing).
-
-- **Can I use this for teaching AI?**  
-Yes, you can. Freely. Suggestions and contributions are welcome.
-
-- **Is the documentation only in code comments?**  
-Historically, yes. We're actively expanding it. Start with a 5-minute read of [PHILOSOPHY.md](doc/PHILOSOPHY.md) to understand the mindset, then dive into [EXAMPLES.md](doc/EXAMPLES.md).
-
-- **Who is we?**
-The 'we' above is Fred - the author - with the help of claude.ia (Anthropic), since Sept. 27 - collaborators are welcome. T avooid confusion, the AI generated parts of the documentation or of the code are flagged or mentioned as being ai-generated (claude.ia). The [legacy code](https://github.com/FredVoisin/neuromuse/tree/master/legacy) was learned by claude.ai under the supervision of the author, who ensures that all contributions are relevant and amended when needed. Fred knows from experience that AI can assist in exploring and working with complex systems like neuromuse — whether they grow large or stay small.
-
-- **Why Lisp?**  
-Because it's the second mother language of the author, learned at Ircam underground when the last was on the roof, but not only.
-
-- **Is `rmlp` Elman or Jordan?**   
-Elman. Its recurrent feedback comes from a hidden layer's activation, not the output layer's. See [doc/rmlp-elman-vs-jordan.md](doc/rmlp-elman-vs-jordan.md) for a structural and behavioral test. This question because the loops levels could be confusing while digging ;)
 
 
 ## Contributing & TO-DO
