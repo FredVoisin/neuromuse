@@ -14,6 +14,11 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
 
 **Frédéric Voisin, Nice, mai 2005**
 
+<p align="center">
+  <img src="../img/wwwneuromuse2005.png" alt="Page d'accueil du site neuromuse.net en 2005" width="500"><br>
+  <sub>Le site neuromuse.net tel qu'il se présentait en 2005, hébergé au CIRM (Nice).</sub>
+</p>
+
 ---
 
 ## Presentation (English translation)

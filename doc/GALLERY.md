@@ -11,7 +11,7 @@ A selection of images spanning 25 years of development, artistic applications, a
       <sub>MLP topology (2002): Nodes are neurons, links are synapses, color represents weight magnitude.</sub>
     </td>
     <td align="center" width="33%">
-      <img src="https://fredvoisin.com/images/gallery/avatit-puredata-ui.png" alt="Avatit agent SOM visualization" width="280"><br>
+      <img src="../img/avatit_pd2004.png" alt="Avatit agent SOM visualization" width="280"><br>
       <sub>Avatit agent (2004): Two SOMs (content and context) visualized in Pure Data.</sub>
     </td>
     <td align="center" width="33%">
@@ -91,11 +91,11 @@ A selection of images spanning 25 years of development, artistic applications, a
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="https://fredvoisin.com/images/gallery/rosom_pouillot-fitis_1.png" alt="ROSOM before learning" width="380"><br>
+      <img src="../img/rosom_pouillot-fitis_1.png" alt="ROSOM before learning" width="380"><br>
       <sub>ROSOM before learning the willow warbler (pouillot fitis) song.</sub>
     </td>
     <td align="center" width="50%">
-      <img src="https://fredvoisin.com/images/gallery/rosom_pouillot-fitis_2.png" alt="ROSOM after learning" width="380"><br>
+      <img src="../img/rosom_pouillot-fitis_2.png" alt="ROSOM after learning" width="380"><br>
       <sub>Same ROSOM after hundreds of epochs of learning.</sub>
     </td>
   </tr>
@@ -110,7 +110,7 @@ A selection of images spanning 25 years of development, artistic applications, a
       <sub>Neural activation decoder: rows of Darth Vader helmet sculptures, Palais de Tokyo, Paris, 2008.</sub>
     </td>
     <td align="center" width="50%">
-      <img src="https://fredvoisin.com/images/gallery/mimercjouer-sche_ma2lou.png" alt="System diagram" width="360"><br>
+      <img src="../img/m4lmd-005.png" alt="System diagram" width="360"><br>
       <sub>System diagram: MIR, SOM-based analysis, multi-agent neural control, decoder.</sub>
     </td>
   </tr>
@@ -125,6 +125,19 @@ A selection of images spanning 25 years of development, artistic applications, a
     <td align="center" width="50%">
       <img src="https://fredvoisin.com/images/gallery/neuromuse-avatit-arms.jpg" alt="Avatit robot control" width="360"><br>
       <sub>Avatit agent controlling a robot arm at IRCAM (photo 2025).</sub>
+    </td>
+  </tr>
+</table>
+
+## neuromuse-ios
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://raw.githubusercontent.com/FredVoisin/neuromuse-ios/master/img/neuromuse-iphone5.png" alt="perceptron.l running on an iPhone 5s" width="300"><br>
+      <sub>An iPhone 5s running <code>perceptron.l</code> on a Lisp interpreter built on Gregory Chaitin's
+      lisp.c, training a perceptron on XOR — see
+      <a href="https://github.com/FredVoisin/neuromuse-ios">neuromuse-ios</a>.</sub>
     </td>
   </tr>
 </table>
