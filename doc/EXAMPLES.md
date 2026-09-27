@@ -157,6 +157,24 @@ it needs (`history-error`, `epoch`, a fresh forward pass per pattern, ...) — s
 strategies can be tried and compared directly, rather than baking one fixed (and, as shown above, not
 even self-consistent) rule into the training loop.
 
+### Watching it train live: neuromuse-gui and the noisy-XOR demos
+
+`examples/xor-noisy-train.lisp` and `examples/xor4-noisy-train.lisp` train on XOR (and its 4-input
+variant) with slightly noisy inputs and a pause between trials — made to be watched, not run silently.
+Pair either with the `neuromuse-gui` window (see `src/gui.lisp`), and run the training loop in its own
+thread so the REPL stays free:
+
+```lisp
+(load "examples/xor4-noisy-train.lisp")
+(neuromuse-gui:gui 'xor4 :view :graph)
+(mk-process "train-xor4" #'train-xor4-noisy)
+```
+
+<p align="center">
+  <img src="../img/XOR4.png" alt="neuromuse-gui watching a 4-2-1 network train on XOR4, next to the SLIME REPL that launched it" width="700"><br>
+  <sub>The graph view tracking a 4-2-1 network training on XOR4, launched from SLIME with <code>mk-process</code> so the REPL stays free to adjust <code>latence</code> or set <code>*stop*</code> mid-run.</sub>
+</p>
+
 ---
 
 ## 2. Accelerometer Data (6D Input)
