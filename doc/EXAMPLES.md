@@ -46,7 +46,10 @@ This creates a multi-layer perceptron with:
 ```
 
 - **`learn-fact`** (learning rate): Controls how much weights change per epoch. Default is 0.0 (no learning), so you must set it.
-- **`temp`** (temperature): Adds stochastic noise to prevent local minima.
+- **`temp`** (temperature): *Not* what it sounds like — `logistic`'s `:temp` makes a neuron output pure
+  `(random 1.0)` noise with probability `temp` on every call (see `temp-value` in `src/maths.lisp`), it
+  doesn't nudge gradients to help escape local minima. `net-temp` (jittering the *weights* a little
+  during training) is the one that actually helps with that — see the box below.
 - **`verbose`**: Print progress during training.
 - **`threshold`**: Stop training when error drops below this.
 
@@ -87,6 +90,72 @@ Expected output:
 (0 1) : 1
 (1 1) : 0
 ```
+
+In practice this "expected output" isn't reliable as the code stands above — see the investigation below.
+
+### Why the "expected output" isn't reliable, and how the README's Quick Start fixes it
+
+*The following is Claude's (Anthropic's AI coding assistant) investigation and fix, done at Fred's
+request after the README's own XOR Quick Start turned out to be flaky in the same way. Fred's own,
+more general fix — described at the end — is still to come.*
+
+Running the training loop above (or the near-identical one in `examples/mlp-test.lisp` and the
+README's original Quick Start) with a fresh random seed each time, and checking the final predictions
+against the XOR truth table, essentially never actually reproduces `(1 1) : 0`. Two separate problems
+compound here:
+
+**1. The stopping criterion only checks the easiest pattern.** The README's original Quick Start used
+`(loop ... minimize e ... until (< e (threshold net)))` — `e` is the *smallest* per-pattern error seen
+in the epoch, so the loop stops the moment the easiest pattern (usually `(0 0)`, which many random
+initial weight sets already get roughly right) drops below the threshold, whether or not the other
+three have learned anything. Switching to `maximize e` (stop only once the *worst* pattern is below
+threshold, which is what "converged" should actually mean) doesn't fix it either — tested over 20,000
+epochs, it simply never converges, for any of several random seeds tried.
+
+**2. Two hidden units, no noise, fixed presentation order: XOR's classic local minimum.** Whatever the
+stopping rule, an even more direct experiment shows the real obstacle: train a network for a large
+fixed number of epochs (20,000), cycling through the 4 patterns in the same order every time, with no
+`net-temp` jitter, and print the raw outputs instead of rounding them. Tried across 7 different
+`sb-ext:seed-random-state` seeds (1, 2, 3, 7, 42, 99, 123) with 2 hidden units, and again across 8 seeds
+(same list plus 2024) with 3 — checked in both cases to actually produce distinct initial weight
+matrices, not a seeding artifact — *every single run* gets `(0 0)` confidently right and then gets
+stuck: `(1 1)` never moves far from ~0.5 (as close as 0.50 to as far as 0.57, but never near 0), and in
+about half the runs `(1 0)` and `(0 1)` additionally end up with near-identical outputs, meaning the
+network can no longer tell the two apart at all. Adding the third hidden unit alone didn't change this
+picture. This is the well-documented "XOR local minimum": plain gradient descent in a fixed presentation
+order is prone to converging to a saddle point that is symmetric under swapping the two inputs — which
+XOR's own truth table is invariant under, so the fixed point is a genuine attractor, not just bad luck.
+More epochs alone don't help once a run is caught in it.
+
+**The fix** used in the README's Quick Start (verified to reproduce byte-for-byte across independent
+runs, taking well under a second): a third hidden unit, a little synaptic noise via `net-temp` during
+training to perturb the network out of the symmetric saddle, a fixed number of training epochs instead
+of a per-epoch error threshold, and a seeded random state so the exact same run — and the exact promised
+output — happens every time on SBCL:
+
+```lisp
+(setf *random-state* (sb-ext:seed-random-state 123))
+(make-mlp xor 2 1 3)
+(setf (learn-fact xor) 0.4
+      (net-temp xor) 0.05)
+(dotimes (epoch 20000)
+  (dotimes (i (length *xor-in*))
+    (setf (input xor) (nth i *xor-in*)
+          (goal xor) (nth i *xor-goal*))
+    (backpropagate xor)))
+(setf (net-temp xor) 0)  ; run-mlp jitters weights by net-temp too — turn it off before testing
+```
+
+Of 10 seeds tried with 3 hidden units and `net-temp .05`, 4 converged correctly and 6 didn't — seed
+`123` is simply one of the ones that does, picked and hard-coded for reproducibility, not because 3
+hidden units reliably solves the underlying problem in general.
+
+**Still open — Fred's solution, to follow:** the stopping criterion itself needs a proper fix, checking
+error aggregated over *all* four patterns (worst-case or mean) rather than a single one. The plan is to
+make the stopping test itself a caller-supplied argument — a lambda closing over whatever `mlp` accessors
+it needs (`history-error`, `epoch`, a fresh forward pass per pattern, ...) — so different stopping
+strategies can be tried and compared directly, rather than baking one fixed (and, as shown above, not
+even self-consistent) rule into the training loop.
 
 ---
 

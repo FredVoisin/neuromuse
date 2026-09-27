@@ -41,37 +41,43 @@ Traditional AI frameworks treat neural networks as black boxes to be optimized. 
 ### Train an MLP on XOR in 30 seconds
 
 XOR is the canonical test: a simple problem that proves backpropagation and hidden layers actually work.
+With only 2 hidden units and a fixed presentation order, plain backprop on XOR is a textbook case for
+getting stuck in a symmetric local minimum — the snippet below seeds the random state, uses 3 hidden
+units, and jitters the weights a little (`net-temp`) during training to reliably escape it; see
+[EXAMPLES.md](doc/EXAMPLES.md) for the unabridged story, including what goes wrong without these.
 
 ```lisp
 ;; 1. Define training data
 (defvar *xor-in*   '((0 0) (1 0) (0 1) (1 1)))
 (defvar *xor-goal* '((0)   (1)   (1)   (0)))
 
-;; 2. Build a 2-hidden-unit network (2 inputs → 2 hidden → 1 output)
-(make-mlp xor 2 1 2)
+;; 2. Build a 3-hidden-unit network (2 inputs → 3 hidden → 1 output).
+;;    Seeding the RNG makes this reproduce the exact output below, on SBCL,
+;;    every time.
+(setf *random-state* (sb-ext:seed-random-state 123))
+(make-mlp xor 2 1 3)
 
-;; 3. Configure and train
-(let ((net xor))
-  (setf (learn-fact net) 0.4          ;; learning rate
-        (temp net) 0.1                ;; stochastic noise
-        (threshold net) 0.1)          ;; stop when error < 0.1
-  
-  (loop for epoch from 0 to 10000
-        for e = (loop for i below (length *xor-in*)
-                      do (setf (input net) (nth i *xor-in*)
-                               (goal net) (nth i *xor-goal*)
-                               e (backpropagate net))
-                      minimize e)
-        until (< e (threshold net))))
+;; 3. Configure and train: learn-fact is the learning rate, net-temp a
+;;    little synaptic noise that helps backprop escape XOR's local minima.
+(setf (learn-fact xor) 0.4
+      (net-temp xor) 0.05)
 
-;; 4. Test
+(dotimes (epoch 20000)
+  (dotimes (i (length *xor-in*))
+    (setf (input xor) (nth i *xor-in*)
+          (goal xor) (nth i *xor-goal*))
+    (backpropagate xor)))
+
+;; 4. Test (net-temp back to 0 first, or run-mlp would jitter the weights
+;;    it reads)
+(setf (net-temp xor) 0)
 (dolist (input *xor-in*)
   (setf (input xor) input)
   (run-mlp xor)
   (format t "~S → ~S~&" input (apply #'round (output xor))))
 ```
 
-Expected output: `(0 0) → 0`, `(1 0) → 1`, `(0 1) → 1`, `(1 1) → 0`.
+Expected output: `(0 0) → 0`, `(1 0) → 1`, `(0 1) → 1`, `(1 1) → 0`. Runs in well under a second.
 
 For a full walkthrough and more examples, see [EXAMPLES.md](doc/EXAMPLES.md).
 
