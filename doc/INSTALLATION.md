@@ -3,9 +3,30 @@
 ## Requirements
 
 - **SBCL** 2.0+ ([http://www.sbcl.org](http://www.sbcl.org)) — tested on Linux, macOS, Windows
-- **Quicklisp** ([https://www.quicklisp.org](https://www.quicklisp.org)) — Common Lisp package manager
+- **Quicklisp** ([https://www.quicklisp.org](https://www.quicklisp.org)) — *recommended*, not strictly
+  required; see [With or without Quicklisp](#with-or-without-quicklisp) below for what it buys you and
+  how to skip it
 - **Emacs** with **SLIME** ([https://slime.common-lisp.dev/](https://slime.common-lisp.dev/)) — recommended for interactive development
 - **Git** — to clone the repository
+
+### With or without Quicklisp
+
+The core library (`:neuromuse` — MLP, SOM, ROSOM, perceptron, UDP) depends on nothing but SBCL itself:
+`neuromuse.asd` lists only `:sb-bsd-sockets`, a contrib module built into SBCL and resolved via `require`,
+not fetched from anywhere. Plain ASDF (also built into SBCL) is enough to load it — no Quicklisp needed.
+
+Quicklisp is what gets you three things beyond that, each pulled in on demand, not up front:
+- **The test suite** — `neuromuse-test` depends on `:prove`, a real third-party library that has to come
+  from somewhere; Quicklisp is that somewhere.
+- **The optional GUI** — `neuromuse/gui` depends on `:ltk`, likewise fetched via Quicklisp.
+- **Convenience** — symlink the repo into `~/quicklisp/local-projects/` once (step 4 below) and
+  `(ql:quickload :neuromuse)` finds it by name from any directory, no path to remember or push onto
+  `asdf:*central-registry*` by hand.
+
+Skip Quicklisp entirely and you still get the full core library at the REPL — `make-mlp`, `backpropagate`,
+`run-mlp`, everything in `examples/mlp-test.lisp` — just not the test suite or the GUI window, short of
+fetching `:prove` and `:ltk` by some other means and registering them with ASDF yourself. Steps 4 and 5
+below show both paths side by side.
 
 ## Step-by-Step Installation
 
@@ -23,7 +44,7 @@ sudo apt-get install sbcl
 
 **Windows & others:** See [http://www.sbcl.org/platform-table.html](http://www.sbcl.org/platform-table.html)
 
-### 2. Install Quicklisp
+### 2. Install Quicklisp (recommended — skip to step 3 if you're going without)
 
 ```bash
 curl -O https://beta.quicklisp.org/quicklisp.lisp
@@ -60,28 +81,37 @@ cd ~/projects/neuromuse
 
 ### 4. Make neuromuse visible to ASDF
 
-**Option A: Symlink (recommended)**
+**Option A: Symlink (if you installed Quicklisp)**
 ```bash
 ln -s ~/projects/neuromuse ~/quicklisp/local-projects/neuromuse
 ```
 
-**Option B: Manual registry** (from SBCL REPL):
+**Option B: Manual registry (works either way — required if you skipped Quicklisp)**, from the SBCL REPL:
 ```lisp
+(require :asdf)   ;; built into SBCL, but not auto-loaded without Quicklisp around to have required it
 (push #P"~/projects/neuromuse/" asdf:*central-registry*)
 ```
 
 ### 5. Load the system
 
-From the REPL:
+**With Quicklisp** (found automatically via the step 4 symlink):
 ```lisp
 (ql:quickload :neuromuse)
 (in-package :neuromuse)
 ```
 
-Or test the suite. Plain `asdf:test-system` does *not* fetch missing dependencies on its own — the
-first time, prime `:prove` via Quicklisp before running it, or you'll get `Component :PROVE not found`:
+**Without Quicklisp** (needs the step 4 Option B registry push first, this session or every session):
 ```lisp
-(ql:quickload :prove)          ;; first time only
+(require :asdf)                  ;; built into SBCL, no Quicklisp involved
+(asdf:load-system :neuromuse)
+(in-package :neuromuse)
+```
+
+Either way you land in the same place — same package, same `make-mlp`/`backpropagate`/`run-mlp`. The
+test suite and the GUI, though, both need something Quicklisp fetches (`:prove`, `:ltk`) and so only
+work with Quicklisp installed:
+```lisp
+(ql:quickload :prove)          ;; first time only -- asdf:test-system won't fetch it on its own
 (asdf:test-system :neuromuse)
 ```
 
