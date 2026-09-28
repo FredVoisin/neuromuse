@@ -32,14 +32,19 @@ sbcl --load quicklisp.lisp --eval '(quicklisp-quickstart:install)' --quit
 
 This installs Quicklisp to `~/quicklisp/`. To have it available in every future SBCL session, load it
 from SBCL's own init file — **not** a shell init file, and not as a shell command (`sbcl --load ...` in
-`.bashrc`/`.zshrc` would try to start an interactive SBCL REPL every time you open a terminal). Either
-add this one line to `~/.sbclrc` yourself:
-```lisp
-(load "~/quicklisp/setup.lisp")
-```
-or, right after the install above, let Quicklisp do it for you from the SBCL session that just installed it:
+`.bashrc`/`.zshrc` would try to start an interactive SBCL REPL every time you open a terminal). Right
+after the install above, from the same SBCL session, let Quicklisp add itself to `~/.sbclrc`:
 ```lisp
 (ql:add-to-init-file)
+```
+This appends the standard, defensive form — guarded so it's a no-op if Quicklisp isn't installed on a
+given machine, and safe to copy verbatim to `~/.sbclrc` by hand instead if you'd rather not run it:
+```lisp
+#-quicklisp
+(let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp"
+                                       (user-homedir-pathname))))
+  (when (probe-file quicklisp-init)
+    (load quicklisp-init)))
 ```
 Skipping this step is the most common way "starting from scratch" breaks: every command below that
 starts with `ql:` (`ql:quickload`, `ql:add-to-init-file`, ...) needs Quicklisp loaded first, in *that*
