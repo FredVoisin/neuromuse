@@ -162,9 +162,17 @@ even self-consistent) rule into the training loop.
 `examples/xor-noisy-train.lisp` and `examples/xor4-noisy-train.lisp` train on XOR (and its 4-input
 variant) with slightly noisy inputs and a pause between trials — made to be watched, not run silently.
 Pair either with the `neuromuse-gui` window (see `src/gui.lisp`), and run the training loop in its own
-thread so the REPL stays free:
+thread so the REPL stays free.
+
+`neuromuse-gui` is its own ASDF system, `neuromuse/gui`, kept separate so the core library never
+depends on Ltk — load it once per session, *after* `:neuromuse` itself, and before the first
+`neuromuse-gui:...` call, or you'll get `Package "NEUROMUSE-GUI" not found`. Needs Tk itself installed
+(Debian/Ubuntu: `sudo apt install tk`):
 
 ```lisp
+(ql:quickload :ltk)                  ; once per session; needs Tk installed, see above
+(asdf:load-system "neuromuse/gui")   ; note the string, not a keyword -- see src/gui.lisp
+
 (load "examples/xor4-noisy-train.lisp")
 (neuromuse-gui:gui 'xor4 :view :graph)
 (mk-process "train-xor4" #'train-xor4-noisy)

@@ -18,7 +18,11 @@ not fetched from anywhere. Plain ASDF (also built into SBCL) is enough to load i
 Quicklisp is what gets you three things beyond that, each pulled in on demand, not up front:
 - **The test suite** — `neuromuse-test` depends on `:prove`, a real third-party library that has to come
   from somewhere; Quicklisp is that somewhere.
-- **The optional GUI** — `neuromuse/gui` depends on `:ltk`, likewise fetched via Quicklisp.
+- **The optional GUI** — `neuromuse/gui` depends on `:ltk`, likewise fetched via Quicklisp. It's a
+  separate ASDF system on top of `:neuromuse`, loaded with `(ql:quickload :ltk)` then
+  `(asdf:load-system "neuromuse/gui")` (needs Tk itself too — Debian/Ubuntu: `sudo apt install tk`).
+  Calling `neuromuse-gui:gui` before that fails with `Package "NEUROMUSE-GUI" not found`. See
+  [EXAMPLES.md](EXAMPLES.md#watching-it-train-live-neuromuse-gui-and-the-noisy-xor-demos) for it in use.
 - **Convenience** — symlink the repo into `~/quicklisp/local-projects/` once (step 4 below) and
   `(ql:quickload :neuromuse)` finds it by name from any directory, no path to remember or push onto
   `asdf:*central-registry*` by hand.
