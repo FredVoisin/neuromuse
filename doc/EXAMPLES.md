@@ -185,7 +185,7 @@ depends on Ltk — load it once per session, *after* `:neuromuse` itself, and be
 
 
 The screenshot below illustrates a critical challenge in training robust neural networks for XOR: decision boundary stability under noise.
-Apart the clean convergence after 10,000 epochs with error dropping to 0.0, we got for input [1 1] the activation output 0.05741880, which is correctly near 0, but the simple noisy condition [1 0], represented as [0.9 0.1 0.8 0.2] makes 0.43895775 when it should stay near 0. This may question the stop criteria, or the architecture in its details or structure.
+Apart the clean convergence after 10,000 epochs with error dropping to 0.0, we got for input [1 1] the activation output 0.05741880, which is correctly near 0, but the simple noisy condition [1 0], represented as [0.9 0.1 0.8 0.2] makes 0.43895775 when it should stay near 0. This may question the stop criteria, or the architecture, such as adding a hidden unit (see above), or increasing the slope of the output neuron. Or even other solutions, depending on the context, **situated**.
 
 <p align="center">
   <img src="../img/XOR4b.png" alt="About challenges with XOR4 trained with noise" width="700"><br>
