@@ -30,10 +30,21 @@ curl -O https://beta.quicklisp.org/quicklisp.lisp
 sbcl --load quicklisp.lisp --eval '(quicklisp-quickstart:install)' --quit
 ```
 
-This installs Quicklisp to `~/quicklisp/`. Add it to your shell init (`.bashrc`, `.zshrc`, etc.):
-```bash
-sbcl --load ~/quicklisp/setup.lisp
+This installs Quicklisp to `~/quicklisp/`. To have it available in every future SBCL session, load it
+from SBCL's own init file — **not** a shell init file, and not as a shell command (`sbcl --load ...` in
+`.bashrc`/`.zshrc` would try to start an interactive SBCL REPL every time you open a terminal). Either
+add this one line to `~/.sbclrc` yourself:
+```lisp
+(load "~/quicklisp/setup.lisp")
 ```
+or, right after the install above, let Quicklisp do it for you from the SBCL session that just installed it:
+```lisp
+(ql:add-to-init-file)
+```
+Skipping this step is the most common way "starting from scratch" breaks: every command below that
+starts with `ql:` (`ql:quickload`, `ql:add-to-init-file`, ...) needs Quicklisp loaded first, in *that*
+SBCL session — a fresh `sbcl` with nothing loaded doesn't have the `QL` package and fails immediately
+with `Package QL does not exist`.
 
 ### 3. Clone neuromuse
 
@@ -62,9 +73,11 @@ From the REPL:
 (in-package :neuromuse)
 ```
 
-Or test the suite:
+Or test the suite. Plain `asdf:test-system` does *not* fetch missing dependencies on its own — the
+first time, prime `:prove` via Quicklisp before running it, or you'll get `Component :PROVE not found`:
 ```lisp
-(asdf:test-system :neuromuse)  ;; Quicklisp will auto-fetch :prove the first time
+(ql:quickload :prove)          ;; first time only
+(asdf:test-system :neuromuse)
 ```
 
 ## Emacs + SLIME Workflow
@@ -121,6 +134,16 @@ You should see training epochs and then a final test showing XOR results.
 
 ## Troubleshooting
 
+**`Package QL does not exist`**
+
+Quicklisp isn't loaded in this SBCL session. Either it was never added to `~/.sbclrc` (see step 2
+above — a shell init file doesn't do this), or you're running a mode that skips init files (e.g.
+`sbcl --script`, which always does, on purpose). Load it directly to confirm the diagnosis, then fix
+`~/.sbclrc` if that's the real cause:
+```lisp
+(load "~/quicklisp/setup.lisp")
+```
+
 **`Error: cannot find neuromuse` when loading**
 
 Make sure the symlink or registry path is correct:
@@ -139,10 +162,12 @@ Ensure `inferior-lisp-program` is set in Emacs:
 
 Then restart SLIME: `M-x slime-quit` followed by `M-x slime`.
 
-**Quicklisp can't find `:prove`**
+**`Component :PROVE not found` when testing**
 
-The first time you run the test suite, Quicklisp automatically fetches `:prove`. Make sure you're online:
+`asdf:test-system` doesn't fetch missing dependencies by itself. Prime `:prove` via Quicklisp first
+(needs to be online the first time):
 ```lisp
+(ql:quickload :prove)
 (asdf:test-system :neuromuse)
 ```
 
