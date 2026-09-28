@@ -183,6 +183,11 @@ depends on Ltk — load it once per session, *after* `:neuromuse` itself, and be
   <sub>The graph view tracking a 4-2-1 network training on XOR4, launched from SLIME with <code>mk-process</code> so the REPL stays free to adjust <code>latence</code> or set <code>*stop*</code> mid-run.</sub>
 </p>
 
+
+The screenshot below illustrates a critical challenge in training robust neural networks for XOR: decision boundary stability under noise.
+Appart the clean convergence after 10,000 epochs with error dropping to 0.0, we got for input [1 1] the activation output 0.05741880, which is correctly near 0, but the 'simple noisy condition [1 0], represented as [0.9 0.1 0.8 0.2] makes 0.43895775 when it should stay near 0. This may question the stop criteria, or the architecture in its details or structure.
+  <img src="../img/XOR4b.png" alt="About challenges with XOR4 trained with noise" width="700"><br>
+
 ---
 
 ## 2. Accelerometer Data (6D Input)
