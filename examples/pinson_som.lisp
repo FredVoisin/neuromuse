@@ -58,6 +58,67 @@ VECTOR (un vecteur d'intensite a *PINSON-SOM-INPUT* bandes)."
     (setf (input som) (coerce vector 'vector))
     (2d (car (id (car (find-winner som)))) (length (net som)))))
 
+;;; Comparaison des trajectoires : matrices de transition case -> case
+;;
+;; Plutot que comparer les gagnants successifs frame a frame (les 3 chants
+;; n'ont pas la meme longueur ni le meme tempo, cf. *PINSON-CHANTS*), ou
+;; qu'ignorer completement l'ordre comme INVENTAIRE/INVENTAIRE-H (qui ne
+;; comptent que les cases visitees, pas les enchainements), on compte ici
+;; les transitions d'une case a l'autre d'une frame a la suivante : la
+;; "grammaire" du trajet sur la carte plutot que sa position absolue dans le
+;; temps. Un DTW sur les sequences de gagnants resterait la methode a
+;; essayer si cette comparaison-ci ne suffit pas a distinguer les chants.
+
+(defun winner-sequence (chant &optional (net 'pinson-som))
+  "Indice (0..N-1, PAS les coordonnees (colonne ligne) de PINSON-SOM-WINNER)
+du neurone gagnant de NET pour chaque frame de CHANT, dans l'ordre -- la
+trajectoire brute avant toute conversion en coordonnees de grille."
+  (let ((som (if (symbolp net) (symbol-value net) net)))
+    (mapcar (lambda (frame)
+              (setf (input som) (coerce frame 'vector))
+              (car (id (car (find-winner som)))))
+            chant)))
+
+(defun transition-matrix (winners &optional (size *pinson-som-size*))
+  "Matrice SIZE x SIZE des comptes de transition : (aref m a b) = nombre de
+fois ou le gagnant est passe de la case A a la case B d'une frame a la
+suivante, dans WINNERS (une sequence d'indices de neurones, cf.
+WINNER-SEQUENCE)."
+  (let ((m (make-array (list size size) :initial-element 0)))
+    (loop for (a b) on winners while b
+          do (incf (aref m a b)))
+    m))
+
+(defun compare-transitions (m1 m2)
+  "Similarite cosinus entre deux matrices de transition de meme taille,
+vues comme deux vecteurs aplatis -- insensible au nombre total de
+transitions (donc a la longueur des chants compares), contrairement a une
+comparaison directe des comptes bruts. 1.0 = memes proportions de
+transitions, 0.0 = aucune transition en commun."
+  (let ((dims (array-dimensions m1))
+        (dot 0) (n1 0) (n2 0))
+    (dotimes (i (first dims))
+      (dotimes (j (second dims))
+        (let ((a (aref m1 i j)) (b (aref m2 i j)))
+          (incf dot (* a b))
+          (incf n1 (* a a))
+          (incf n2 (* b b)))))
+    (if (or (zerop n1) (zerop n2))
+        0.0
+        (float (/ dot (sqrt (* n1 n2)))))))
+
+(defun compare-pinson-chants-transitions (&optional (net 'pinson-som))
+  "Similarite cosinus (matrices de transition, cf. COMPARE-TRANSITIONS) entre
+chaque paire des 3 chants de *PINSON-CHANTS*, sur l'etat courant de NET (pas
+de reentrainement declenche ici) : ((0 1) sim01) ((0 2) sim02) ((1 2) sim12)."
+  (let* ((seqs (mapcar (lambda (chant) (winner-sequence chant net))
+		       *pinson-chants*))
+         (mats (mapcar #'transition-matrix seqs)))
+    (loop for i from 0 below (length mats)
+          append (loop for j from (1+ i) below (length mats)
+                       collect (list (list i j)
+                                     (compare-transitions (nth i mats) (nth j mats)))))))
+
 ;; petit test de sanite : le premier vecteur de chaque chant, avant et apres
 ;; apprentissage -- pas cense converger vers une carte topologiquement fine
 ;; en si peu d'epoques, juste montrer que la boucle tourne et que
@@ -69,116 +130,51 @@ VECTOR (un vecteur d'intensite a *PINSON-SOM-INPUT* bandes)."
 ;;   (dolist (chant *pinson-chants*)
 ;;     (format t "~&gagnant (apres) : ~S~%" (pinson-som-winner (first chant))))
 
-;(init pinson-som :input 18 :size 144)
-					;(net pinson-som)
-
 #|
-(setf *w-chant1*
-      (let ((w ))
-	(dolist (frame (first *pinson-chants*) (reverse w))
-	  (push (pinson-som-winner frame) w)))
-      *w-chant2*
-      (let ((w ))
-	(dolist (frame (second *pinson-chants*) (reverse w))
-	  (push (pinson-som-winner frame) w)))      
-      *w-chant3*
-      (let ((w ))
-	(dolist (frame (third *pinson-chants*) (reverse w))
-	  (push (pinson-som-winner frame) w)))
-      )
-(describe pinson-som)
-(train-pinson-som :epochs 100)
-
-(setf *w100-chant1*
-      (let ((w ))
-	(dolist (frame (first *pinson-chants*) (reverse w))
-	  (push (pinson-som-winner frame) w)))
-      *w100-chant2*
-      (let ((w ))
-	(dolist (frame (second *pinson-chants*) (reverse w))
-	  (push (pinson-som-winner frame) w)))      
-      *w100-chant3*
-      (let ((w ))
-	(dolist (frame (third *pinson-chants*) (reverse w))
-	  (push (pinson-som-winner frame) w)))
-      )
-
-|#
-
-;;; ANALYSE
-
-;; INVENTAIRE et INVENTAIRE-H vivent maintenant dans src/maths.lisp
-;; (bibliotheque coeur) : deja disponibles ici sans rien redefinir.
 
 
-;(sort (inventaire l) #'> :key #'second)
+(compare-pinson-chants-transitions)
 
-(sort (inventaire *w-chant1*) #'> :key #'second)
-(sort (inventaire *w100-chant1*) #'> :key #'second)
-
-(sort (inventaire *w-chant2*) #'> :key #'second)
-(sort (inventaire *w100-chant2*) #'> :key #'second)
-
-(sort (inventaire *w-chant3*) #'> :key #'second)
-(sort (inventaire *w100-chant3*) #'> :key #'second)
-)
-
-(length (intersection (inventaire *w-chant1*)  (inventaire *w-chant2*)
-:test #'(lambda (x y) (equalp (car x) (car y)))))
-
-(length (intersection (inventaire *w100-chant1*)  (inventaire *w100-chant2*)
-:test #'(lambda (x y) (equalp (car x) (car y)))))
-
-
-(describe pinson-som)
-(setf (learn-fact pinson-som) .0)
+;(time 
 (train-pinson-som :epochs 200)
+;; 146 seconds i7-6700HQ CPU @ 2.60GHz
+;)					
 
-(epoch pinson-som)
+(setf (learn-fact pinson-som) .3)
+(train-pinson-som :epochs 300)
+(setf (learn-fact pinson-som) .2)
+(train-pinson-som :epochs 300)
 
-(setf *w200-chant1*
-      (let ((w ))
-	(dolist (frame (first *pinson-chants*) (reverse w))
-	  (push (pinson-som-winner frame) w)))
-      *w200-chant2*
-      (let ((w ))
-	(dolist (frame (second *pinson-chants*) (reverse w))
-	  (push (pinson-som-winner frame) w)))      
-      *w200-chant3*
-      (let ((w ))
-	(dolist (frame (third *pinson-chants*) (reverse w))
-	  (push (pinson-som-winner frame) w)))
+;; chants originaux
+(print 
+(compare-pinson-chants-transitions)
+; Il manque une ligne de base pour savoir ce qui est "proche" ou "différent" en absolu
+ ; => (((0 1) 0.9249053) ((0 2) 0.9022291) ((1 2) 0.96922594)) ;
 )
 
-
-(- (length (inventaire *w-chant1*))
-(length (intersection (inventaire *w-chant1*)  (inventaire *w-chant2*)
-		      :test #'(lambda (x y) (equalp (car x) (car y))))))
-
-(- (length (inventaire *w-chant1*))
-(length (intersection (inventaire *w-chant1*)  (inventaire *w-chant3*)
-		      :test #'(lambda (x y) (equalp (car x) (car y))))))
-
-(- (length (inventaire *w-chant1*))
-(length (intersection (inventaire *w-chant2*)  (inventaire *w-chant3*)
-		      :test #'(lambda (x y) (equalp (car x) (car y))))))
-
-
-
-(- (length (inventaire *w-chant1*))
-(length (intersection (inventaire *w200-chant1*)  (inventaire *w200-chant2*)
-		      :test #'(lambda (x y) (equalp (car x) (car y))))))
-
-(- (length (inventaire *w200-chant1*))
-(length (intersection (inventaire *w200-chant1*)  (inventaire *w200-chant3*)
-		      :test #'(lambda (x y) (equalp (car x) (car y))))))
-
-(- (length (inventaire *w200-chant1*))
-(length (intersection (inventaire *w200-chant2*)  (inventaire *w200-chant3*)
-		      :test #'(lambda (x y) (equalp (car x) (car y))))))
-;;=> ~65
-
-
 |#
+
+;(defvar *stop* NIL)
+(neuromuse-gui:gui 'pinson-som)
+
+;;; Trace de l'activation, SANS apprentissage : un fichier par chant
+
+(defun trace-pinson-chants (&key (net 'pinson-som) (prefix "pinson-trace-chant"))
+  "Parcourt chacun des 3 chants de *PINSON-CHANTS*, SANS apprentissage
+(FIND-WINNER seulement, pas LEARN -- NET reste tel quel), et journalise
+l'activation de NET a chaque frame via TRACE-ACTIVATION (src/read-write.lisp) :
+un fichier par chant, PREFIX1.lisp, PREFIX2.lisp, PREFIX3.lisp -- chacun
+ecrase au debut de l'appel (pas de :append d'un appel sur l'autre), puis
+rempli frame par frame. Relire un fichier avec READ-ACTIVATION-TRACE."
+  (let ((som (if (symbolp net) (symbol-value net) net)))
+    (loop for chant in *pinson-chants*
+          for i from 1
+          do (let ((path (format nil "~A~D.lisp" prefix i)))
+               (ignore-errors (delete-file path))
+               (dolist (frame chant)
+                 (setf (input som) (coerce frame 'vector))
+                 (find-winner som)
+                 (trace-activation som path))))
+    (values som)))
 
 ;; EOF
