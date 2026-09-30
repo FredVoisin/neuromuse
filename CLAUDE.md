@@ -143,6 +143,12 @@ reaches it; it exports its own entry points from its `defpackage`.)
   ...)` yourself (see `examples/mlp-test.lisp` or the `tests/neuromuse.lisp` MLP subtest).
 - SOM topology/neighborhood helpers: `2d`/`d2`, `3d`/`d3` (index <-> spatial coordinate conversion),
   `voisins` (neighborhood lookup), `gaussian-hat` (Mexican-hat-style learning rate falloff).
+- `inventaire` / `inventaire-h` — generic tally: distinct elements of a list and their occurrence counts,
+  in first-seen order (`inventaire-h` is the same thing via a hash table, O(n) instead of `inventaire`'s
+  O(n^2) `assoc` scan on large lists). Not neural-net-specific; moved here from `examples/pinson_som.lisp`,
+  where they were first written to summarize which grid cell a SOM's winner lands on across many inputs.
+  Neither is called from any `learn`/`train-*` method yet — they're post-hoc analysis tools invoked from
+  the REPL/examples; wire one in directly if a training method ever needs this kind of counting internally.
 
 `src/misc.lisp` — generic Lisp utilities and UDP wire-format conversion, loaded *before* `maths.lisp`
 since `maths.lisp`'s matrix functions (`add-2-matrices`, `hadamar-product`) default-call `make-listarray`

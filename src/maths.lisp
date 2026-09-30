@@ -751,4 +751,34 @@ returns
 (defun gaussian-hat (learn error distance)
   (* learn (exp (/ (- (expt distance 2)) (expt (* 2 error) 2)))))
 
+;;************         DIVERS      ********************************
+
+(defun inventaire (liste &key (test #'equal))
+  "Renvoie ((element n) ...) : chaque élément distinct de LISTE et son
+nombre d'occurrences, dans l'ordre de première apparition."
+  (let ((inv '()))
+    (dolist (x liste (nreverse inv))
+      (let ((e (assoc x inv :test test)))
+        (if e
+            (incf (second e))
+            (push (list x 1) inv))))))
+
+;; variante hash-table de INVENTAIRE (memes entrees/sorties, O(n) au lieu de
+;; O(n^2) sur de grandes listes grace a la table au lieu d'ASSOC) -- deplacee
+;; ici en meme temps qu'INVENTAIRE depuis examples/pinson_som.lisp, ou elle
+;; servait deja au meme usage (compter les cases gagnantes d'un SOM sur un
+;; grand nombre de presentations). A reinjecter dans les methodes
+;; d'apprentissage (LEARN/TRAIN-*) le jour ou l'une d'elles a besoin de ce
+;; genre de comptage en interne -- pour l'instant aucune n'appelle INVENTAIRE
+;; ni INVENTAIRE-H, ce sont des outils d'analyse post-hoc appeles depuis le
+;; REPL/les exemples.
+(defun inventaire-h (liste &key (test #'equal))
+  "Comme INVENTAIRE, via une hash-table : chaque élément distinct de LISTE et
+son nombre d'occurrences, dans l'ordre de première apparition."
+  (let ((h (make-hash-table :test test)) (ordre '()))
+    (dolist (x liste)
+      (unless (gethash x h) (push x ordre))
+      (incf (gethash x h 0)))
+    (mapcar (lambda (x) (list x (gethash x h))) (nreverse ordre))))
+
 ; eof

@@ -107,29 +107,12 @@ VECTOR (un vecteur d'intensite a *PINSON-SOM-INPUT* bandes)."
 
 ;;; ANALYSE
 
-(defun inventaire (liste &key (test #'equal))
-  "Renvoie ((element n) ...) : chaque élément distinct de LISTE et son
-nombre d'occurrences, dans l'ordre de première apparition."
-  (let ((inv '()))
-    (dolist (x liste (nreverse inv))
-      (let ((e (assoc x inv :test test)))
-        (if e
-            (incf (second e))
-            (push (list x 1) inv))))))
-
-(inventaire '((1 2) (3) (1 2) (1 2) (3) (4)))
-;; => (((1 2) 3) ((3) 2) ((4) 1))
-
-(defun inventaire-h (liste &key (test #'equal))
-  (let ((h (make-hash-table :test test)) (ordre '()))
-    (dolist (x liste)
-      (unless (gethash x h) (push x ordre))
-      (incf (gethash x h 0)))
-    (mapcar (lambda (x) (list x (gethash x h))) (nreverse ordre))))
+;; INVENTAIRE et INVENTAIRE-H vivent maintenant dans src/maths.lisp
+;; (bibliotheque coeur) : deja disponibles ici sans rien redefinir.
 
 
 ;(sort (inventaire l) #'> :key #'second)
-#|
+
 (sort (inventaire *w-chant1*) #'> :key #'second)
 (sort (inventaire *w100-chant1*) #'> :key #'second)
 
@@ -140,21 +123,62 @@ nombre d'occurrences, dans l'ordre de première apparition."
 (sort (inventaire *w100-chant3*) #'> :key #'second)
 )
 
-(train-pinson-som :epochs 400)
+(length (intersection (inventaire *w-chant1*)  (inventaire *w-chant2*)
+:test #'(lambda (x y) (equalp (car x) (car y)))))
 
-(setf *w500-chant1*
+(length (intersection (inventaire *w100-chant1*)  (inventaire *w100-chant2*)
+:test #'(lambda (x y) (equalp (car x) (car y)))))
+
+
+(describe pinson-som)
+(setf (learn-fact pinson-som) .0)
+(train-pinson-som :epochs 200)
+
+(epoch pinson-som)
+
+(setf *w200-chant1*
       (let ((w ))
 	(dolist (frame (first *pinson-chants*) (reverse w))
 	  (push (pinson-som-winner frame) w)))
-      *w500-chant2*
+      *w200-chant2*
       (let ((w ))
 	(dolist (frame (second *pinson-chants*) (reverse w))
 	  (push (pinson-som-winner frame) w)))      
-      *w500-chant3*
+      *w200-chant3*
       (let ((w ))
 	(dolist (frame (third *pinson-chants*) (reverse w))
 	  (push (pinson-som-winner frame) w)))
-      )
+)
+
+
+(- (length (inventaire *w-chant1*))
+(length (intersection (inventaire *w-chant1*)  (inventaire *w-chant2*)
+		      :test #'(lambda (x y) (equalp (car x) (car y))))))
+
+(- (length (inventaire *w-chant1*))
+(length (intersection (inventaire *w-chant1*)  (inventaire *w-chant3*)
+		      :test #'(lambda (x y) (equalp (car x) (car y))))))
+
+(- (length (inventaire *w-chant1*))
+(length (intersection (inventaire *w-chant2*)  (inventaire *w-chant3*)
+		      :test #'(lambda (x y) (equalp (car x) (car y))))))
+
+
+
+(- (length (inventaire *w-chant1*))
+(length (intersection (inventaire *w200-chant1*)  (inventaire *w200-chant2*)
+		      :test #'(lambda (x y) (equalp (car x) (car y))))))
+
+(- (length (inventaire *w200-chant1*))
+(length (intersection (inventaire *w200-chant1*)  (inventaire *w200-chant3*)
+		      :test #'(lambda (x y) (equalp (car x) (car y))))))
+
+(- (length (inventaire *w200-chant1*))
+(length (intersection (inventaire *w200-chant2*)  (inventaire *w200-chant3*)
+		      :test #'(lambda (x y) (equalp (car x) (car y))))))
+;;=> ~65
+
+
 |#
 
 ;; EOF
