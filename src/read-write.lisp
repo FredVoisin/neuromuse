@@ -68,6 +68,50 @@
   (format t "~& MLP ~S saved to file ~S !" (name self) path)
   (values))
 
+(defmethod save ((self som) &optional path)
+  "Serialise l'etat APPRIS de SELF (pas toutes ses slots) dans PATH (par
+defaut ~S.lisp), sous une forme rechargeable avec LOAD. Contrairement a SAVE
+pour un mlp, ne dumpe pas bêtement toutes les slots via
+STRUCTURE-SLOT-NAMES : (net self) est une liste d'instances NEURON, pas de
+nombres, et (neighbourhood self) une fonction (#'VOISINS par defaut) -- ni
+l'une ni l'autre ne se relit avec ~S. A la place, un unique MAKE-INSTANCE
+reconstruit la grille a la bonne taille (declenchant INIT, donc de nouveaux
+NEURON correctement cables -- NN, ID -- comme a la construction d'origine),
+puis les reglages vraiment utiles (TOPOLOGY, RADIUS, LEARN-FACT, TEMP,
+NET-TEMP, DISTANCE, EPOCH) et, pour chaque neurone, son NET -- les poids
+synaptiques appris, la seule partie de l'etat d'un neurone qui compte pour
+l'usage du SOM (AGE, OUTPUT, DISTANCE d'un neurone restent a leurs valeurs
+par defaut ; NEIGHBOURHOOD aussi, laisse a #'VOISINS -- le seul jamais
+utilise dans ce depot). Tout est ecrit a l'interieur d'un seul LET, pas
+plusieurs formes qui referenceraient (NAME SELF) par symbole : si ce nom est
+deja lie au moment du rechargement, INITIALIZE-INSTANCE en choisit un autre
+(cf. MAKE-NEW-SYMBOL), et des formes separees rateraient alors l'instance
+reellement creee -- LET lie IT a ce que MAKE-INSTANCE renvoie vraiment, et
+tout le reste opere sur IT."
+  (when (not path) (setf path (format nil "~S.lisp" (name self))))
+  (with-open-file (stream path
+			  :direction :output
+			  :if-exists :supersede
+			  :if-does-not-exist :create)
+    (format stream "(in-package :neuromuse)~%")
+    (format stream "(let ((it (make-instance 'som :name '~S :size ~D :input ~D)))~%"
+	    (name self) (length (net self)) (length (input self)))
+    (format stream "  (setf (topology it) '~S (radius it) ~S (learn-fact it) ~S~%        (temp it) ~S (net-temp it) ~S (distance it) '~S (epoch it) ~D)~%"
+	    (topology self) (radius self) (learn-fact self)
+	    (temp self) (net-temp self) (distance self) (epoch self))
+    (dolist (n (net self))
+      (format stream "  (setf (net (nth ~D (net it))) '~S)~%" (car (id n)) (net n)))
+    (format stream "  it)~%"))
+  (format t "~& SOM ~S saved to file ~S !" (name self) path)
+  (values))
+
+(defmethod save ((self rosom) &optional path)
+  (declare (ignore path))
+  (error "SAVE ne gere pas encore ROSOM : (net rosom) est (neurones-contenu
+neurones-contexte), pas une liste plate de neurones comme pour SOM -- a
+ecrire si besoin (methode dediee, comme pour GUI-SNAPSHOT dans src/gui.lisp
+et ACTIVATION-STATE plus haut, plutot que d'etendre celle-ci)."))
+
 ;;; ------------------------------------------------------------------
 ;;; TRACE-ACTIVATION : journal d'activation au fil d'une boucle
 ;;; ------------------------------------------------------------------

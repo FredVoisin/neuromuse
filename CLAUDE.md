@@ -99,7 +99,18 @@ for each instance via `make-new-symbol` and bind the instance as that symbol's v
 uses `eval`/`symbol-value` to dereference them; keep this in mind when reading or writing methods that
 take a "network" argument, since it may be a symbol, a `neuron`/`ANN` instance, or a list depending on
 the generic function (see the `net`/`id` generic methods in `src/neuromuse-main.lisp` for the
-symbol/list dispatch pattern used throughout).
+symbol/list dispatch pattern used throughout). This naming is `ANN`'s own `:after` method's job; `som`
+and `rosom` each only add their own `:after` for what `ANN`'s doesn't already do (triggering `init` for
+`som`; nothing extra for `rosom`, beyond a fallback name for anonymous construction — see below). They
+used to *also* redo the naming unconditionally, which is actively wrong, not just redundant: CLOS runs
+every applicable `:after` method, least-specific first, so `ANN`'s ran first and correctly bound e.g.
+`PINSON-SOM`, then `som`'s ran again and, seeing that name already taken, gensymed `PINSON-SOM-129`
+instead and overwrote `(name self)` with it — the original global stayed correctly bound (so ordinary
+`(learn-fact pinson-som)`-style code never noticed), but `(name pinson-som)` itself, and anything reading
+it (the GUI status line, `save` — see "Reading and writing a network to a file" below), was wrong for
+*every* `som`/`rosom` ever given an explicit `:name`. Fixed by only redoing the naming when no `:name`
+was given (anonymous construction still needs it, or an anonymous `som`/`rosom` would end up called
+`ANN-n`/`SOM-n` instead of `SOM-n`/`ROSOM-n`).
 
 Networks are constructed via macros, not `make-instance` directly: `make-perceptron`, `make-MLP`,
 `make-rMLP`. Each expands to code that builds the instance at load/run time (a `defvar`/`setf` wrapping
@@ -172,6 +183,20 @@ from `neuromuse-main.lisp`/`mlp.lisp`, where its methods used to be split across
 reason tied to what they do) and `trace-activation` (below), added together with this file as a single
 place for "write a network's state to disk" rather than splitting that concern by which file a class
 happens to be defined in.
+
+`save` for a `som` can't just dump every slot via `structure-slot-names` the way `mlp`'s does: `net` is a
+list of `neuron` instances, not numbers, and `neighbourhood` a function (`#'voisins` by default) —
+neither reads back with `~S`. Instead it writes one `(let ((it (make-instance 'som ...))) ...)` form:
+`make-instance` (re-triggering `init`, so freshly and correctly wired `neuron`s) for the topology, then
+`setf`s for the actually-useful config (`topology`, `radius`, `learn-fact`, `temp`, `net-temp`,
+`distance`, `epoch`) and each neuron's `net` (its learned weights — the only part of a neuron's own state
+that matters for reuse; `age`/`output`/`distance` are left at their defaults). Everything operates on the
+`it` binding rather than on a form referencing `(name self)` by symbol a second time, deliberately: if
+that name is already taken when the file is reloaded, `initialize-instance` picks a different one (see
+above), and separate top-level forms built around the original name would silently miss the instance
+actually created. `rosom` gets a guard method that errors clearly instead of misreading its
+`(content-neurons context-neurons)` net the same way `som`'s does, matching `gui-snapshot`'s and
+`activation-state`'s `rosom` methods.
 
 `trace-activation` lets any training/running loop log a network's activation over time without
 changing the loop itself: `(trace-activation ann &optional path)` appends one Lisp form (one call, one

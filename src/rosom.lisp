@@ -33,13 +33,20 @@
    (:documentation "rosom: recurrent oscillatory self-organising map")
    )
 
+;; Naming an explicitly-named instance is ANN's job (neuromuse-main.lisp);
+;; INIT is triggered by SOM's INITIALIZE-INSTANCE :AFTER (som.lisp, since
+;; ROSOM is a SOM), which dispatches to ROSOM's own INIT method just below
+;; via ordinary polymorphism, SELF being a ROSOM. This method used to redo
+;; the naming unconditionally, a second time -- see the comment on SOM's
+;; INITIALIZE-INSTANCE :AFTER for why that's actively harmful when NAME is
+;; given, not just wasted work. Only the anonymous case still needs a method
+;; here : left to ANN and SOM alone, an anonymous ROSOM would end up called
+;; SOM-n rather than ROSOM-n.
 (defmethod initialize-instance :after ((self rosom) &key name)
-  (let ((name-of-rosom (if name 
-                          (make-new-symbol name)
-                          (make-new-symbol 'rosom))))
-     (setf (slot-value self 'name) name-of-rosom
-	      (symbol-value name-of-rosom) self)
-	name-of-rosom))
+  (unless name
+    (let ((n (make-new-symbol 'rosom)))
+      (setf (slot-value self 'name) n
+	    (symbol-value n) self))))
 
 (defmethod print-object ((self rosom) stream)
   (format stream "<ROSOM ~S>" (name self) ))

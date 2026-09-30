@@ -24,13 +24,24 @@
     :initform 0.0 :initarg :temp :accessor temp :type number))
   (:documentation "som"))
 
+;; Naming an explicitly-named instance (binding SELF to NAME itself, cf.
+;; MAKE-NEW-SYMBOL) is ANN's own INITIALIZE-INSTANCE :AFTER's job
+;; (neuromuse-main.lisp) -- :AFTER methods for every applicable class all
+;; run (least-specific first, so ANN's runs before this one), not just the
+;; most specific, and redoing the SAME thing here unconditionally used to
+;; make it run TWICE when NAME was given : ANN's call succeeds and binds
+;; e.g. PINSON-SOM, then this one ran again, saw that name now already
+;; bound, and gensymed PINSON-SOM-129 instead -- silently leaving (NAME
+;; self) wrong (though the original global, still correctly bound by ANN's
+;; call, kept working) for every SOM ever given an explicit :NAME. Only the
+;; anonymous case still needs this method's own naming : left to ANN alone,
+;; an anonymous SOM would end up called ANN-n rather than SOM-n.
 (defmethod initialize-instance :after ((self som) &key name (size 16) (input 8))
-  (let ((name-of-som (if name
-                          (make-new-symbol name)
-                          (make-new-symbol 'som))))
-     (setf (slot-value self 'name) name-of-som
-	   (symbol-value name-of-som) self)
-     (init self :size size :input input) ))
+  (unless name
+    (let ((n (make-new-symbol 'som)))
+      (setf (slot-value self 'name) n
+	    (symbol-value n) self)))
+  (init self :size size :input input))
 
 (defmethod print-object ((self som) stream)
   (format stream "<SOM ~S>" (name self) ))
