@@ -69,7 +69,8 @@ avant toute vraie convergence."
       (destructuring-bind (in goal) (nth (random 4) *xor-patterns*)
         (setf (input mlp) (noisy in noise)
               (goal mlp) goal)
-        (let ((e (backpropagate mlp)))
+        (backpropagate mlp)  ;; renvoie mlp ; l'erreur du pas est dans (current-error mlp)
+        (let ((e (current-error mlp)))
           (push e (history-error mlp))
           (incf (epoch mlp))
           (when verbose

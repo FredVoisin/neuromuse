@@ -69,8 +69,9 @@ accel641-R
 		       (<= e (threshold rmlp))))
      do
        (setf (input rmlp) (nth (mod i l) *in*)
-	     (goal rmlp) (nth (mod i l) *goal*)
-	     e (backpropagate rmlp))
+	     (goal rmlp) (nth (mod i l) *goal*))
+       (backpropagate rmlp)  ;; renvoie rmlp ; l'erreur du pas est dans (current-error rmlp)
+       (setf e (current-error rmlp))
        (push e (history-error rmlp))
        (setf (epoch rmlp) (floor (/ i l))
 	     i (1+ i))

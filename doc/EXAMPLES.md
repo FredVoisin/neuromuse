@@ -60,13 +60,24 @@ This creates a multi-layer perceptron with:
   (loop until (< e (threshold net))
         do (loop for i from 0 to (- (length in) 2)
                  do (setf (input net) (nth i in)
-                          (goal net) (nth i goal)
-                          e (backpropagate net))
+                          (goal net) (nth i goal))
+                    (backpropagate net)
+                    (setf e (current-error net))
                     (format t "~&epoch ~S, e = ~S" (epoch net) e))))
 ```
 
-- **`backpropagate`**: One forward pass + one weight update. Returns the error for the current input/goal pair.
+- **`backpropagate`**: One forward pass + one weight update. Returns `net` itself (same convention as
+  `learn` for a SOM, `rosom-learn`, and `train-perceptron` -- see the note below), not the error; read
+  the error for the step off `(current-error net)` afterward.
 - **`epoch`**: Number of training iterations so far.
+
+*Note on return values:* every architecture's "one learning step" function -- `backpropagate` here,
+`learn` for a `som`, `rosom-learn`, `train-perceptron` -- returns only the network instance itself, so
+any of them can be dropped straight into another function (`(f (backpropagate net))`,
+`(f (learn som))`, ...). Whatever numeric feedback that step produced lives on the instance instead:
+`(current-error net)` for the step just taken, `(history-error net)` for everything accumulated so far
+(pushed newest-first) -- `backpropagate` itself doesn't push onto `history-error`; that's still up to
+the caller, as in the loop above.
 
 *Note:* The inner loop bound `(- (length in) 2)` visits only 3 of 4 patterns per epoch (a quirk to know about if comparing curves).
 
@@ -284,13 +295,14 @@ To train a network on *your* problem:
 
 4. **Train:** Loop until error is acceptable.
    ```lisp
-   (let ((net mynet))
+   (let ((net mynet) (e 999999))
      (setf (learn-fact net) 0.1 (threshold net) 0.05)
      (loop until (< e (threshold net))
            do (loop for i below (length *my-inputs*)
                     do (setf (input net) (nth i *my-inputs*)
-                             (goal net) (nth i *my-goals*)
-                             e (backpropagate net)))))
+                             (goal net) (nth i *my-goals*))
+                       (backpropagate net)
+                       (setf e (current-error net)))))
    ```
 
 5. **Test:** Run without learning.
@@ -334,8 +346,9 @@ The examples above use *online* learning (update after each sample). For *batch*
       do (let ((total-error 0.0))
            (loop for i below (length *inputs*)
                  do (setf (input net) (nth i *inputs*)
-                          (goal net) (nth i *goals*)
-                          total-error (+ total-error (backpropagate net))))
+                          (goal net) (nth i *goals*))
+                    (backpropagate net)
+                    (incf total-error (current-error net)))
            (when (< total-error threshold)
              (return))))
 ```

@@ -234,7 +234,8 @@
 							out-signal-error
 							learn)
 	  e (check-error output-answer-cell goal thresh))
-    (values e)))
+    (setf (current-error mlp) e)  ;; l'erreur du pas, homogeneite : backpropagate ne renvoie que mlp
+    (values mlp)))
 
 (defmethod run-mlp ((mlp mlp) &key in)  ;in pour method rmlp...
     (let ((hidden-answer-cell (list))
@@ -400,7 +401,8 @@
 							out-signal-error
 							learn)
 	  e (check-error output-answer-cell goal thresh))
-    (values e)))
+    (setf (current-error mlp) e)  ;; l'erreur du pas, homogeneite : backpropagate ne renvoie que mlp
+    (values mlp)))
 
 (defmethod run-mlp ((mlp rmlp) &key in)  ;in pour method rmlp...
     (let ((hidden-answer-cell (list))

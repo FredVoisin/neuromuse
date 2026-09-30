@@ -64,7 +64,7 @@
   (values self))
 
 (defgeneric activation (self &key n)
-  (:documentation "Cacul l'activation de 'self'."))
+  (:documentation "Calcul l'activation de 'self'."))
 
 (defmethod activation ((ann som) &key (n nil))
   (let ((input (input ann))  ;; descendre la variable au niveau neuron
@@ -155,7 +155,8 @@
 	      (let ((synapse (nth i (net vn))))
 		(setf (cadr synapse)
 		      (+ (cadr synapse) (* correction (- (elt input i) (cadr synapse)))))))))
-    (values)))
+    (setf (epoch ann) (1+ (epoch ann)))
+    (values ann)))  ;; le som appris, pour pouvoir le reinjecter dans une fonction
 
 #|
 (defmethod nnsave ((self som) &optional (path "saved-som.lisp"))

@@ -266,4 +266,4 @@
 	 (format t "~2D : ~S~%"
 		 (car winner)
 		 (mapcar #'(lambda (x) (if (< x max) 0 1)) winner-rep)))
-       ))
+       (values rosom)))  ;; le rosom appris, pour pouvoir le reinjecter dans une fonction

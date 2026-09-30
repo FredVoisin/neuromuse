@@ -45,8 +45,9 @@
        (loop for i from 0 to (- (length in) 2)
 	  do
 	    (setf (input mlp) (nth i in)
-		  (goal mlp) (nth i goal)
-		  e (backpropagate mlp))
+		  (goal mlp) (nth i goal))
+	    (backpropagate mlp)  ;; renvoie mlp ; l'erreur du pas est dans (current-error mlp)
+	    (setf e (current-error mlp))
 	    (push e (history-error mlp))
 	    (setf (epoch mlp) (incf (epoch mlp) 1))
 	    (when (verbose mlp)

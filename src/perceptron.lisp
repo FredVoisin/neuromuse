@@ -173,19 +173,19 @@ Renvoie le nombre de sorties erronées AVANT correction."
   "Apprentissage par époques de la liste de STIMULI vers la liste de GOALS,
 jusqu'à ce que le taux d'erreur d'une époque (fraction des stimuli mal classés)
 soit <= (threshold self), ou après (stop self) époques.
-Chaque taux d'erreur est empilé dans (history-error self).
-Renvoie deux valeurs : le perceptron et la liste des taux d'erreur par époque."
+Chaque taux d'erreur est empilé dans (history-error self), le dernier restant
+lisible dans (current-error self). Renvoie SELF (le perceptron appris), pour
+pouvoir le réinjecter dans une fonction -- même convention que BACKPROPAGATE,
+LEARN (som) et ROSOM-LEARN."
   (assert (= (length stimuli) (length goals)))
   (setf (previous self) (copy-tree (net self)))
-  (let ((rates '())
-        (n (length stimuli)))
+  (let ((n (length stimuli)))
     (dotimes (k (stop self))
       (let* ((wrong (loop for in in stimuli
                           for goal in goals
                           count (plusp (learn-perceptron self :in in :goal goal))))
              (rate (float (/ wrong n))))
         (incf (epoch self))
-        (push rate rates)
         (push rate (history-error self))
         (setf (last-error self) (current-error self)
               (current-error self) rate)
@@ -195,12 +195,12 @@ Renvoie deux valeurs : le perceptron et la liste des taux d'erreur par époque."
           (setf (last-stop self) (list (epoch self) 'completed))
           (when verbose
             (format t "~&>> Fin de l'apprentissage à l'époque ~D.~%" (epoch self)))
-          (return-from train-perceptron (values self (nreverse rates))))))
+          (return-from train-perceptron (values self)))))
     (setf (last-stop self) (list (epoch self) 'interrupted))
     (when verbose
       (format t "~&>> Apprentissage interrompu à l'époque ~D (taux d'erreur ~,1F %).~%"
               (epoch self) (* 100 (current-error self))))
-    (values self (nreverse rates))))
+    (values self)))
 
 (defmethod clear ((self perceptron))
   (setf (previous self) (net self)
