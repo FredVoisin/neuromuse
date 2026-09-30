@@ -156,16 +156,21 @@ ailleurs, par exemple :
     (find-winner som)               ; met a jour (output neuron) de chaque case
     (trace-activation som \"trace.lisp\"))
 
-Chaque appel ajoute UN etat ; la sequence est l'ordre des appels dans le
-fichier, relue par READ-ACTIVATION-TRACE. Renvoie ANN, comme BACKPROPAGATE,
-LEARN (som), ROSOM-LEARN et TRAIN-PERCEPTRON -- pour pouvoir l'imbriquer
-directement, par exemple (trace-activation (learn som))."
+Chaque appel ajoute UN etat, sur UNE ligne (*PRINT-PRETTY* NIL le temps de
+l'ecrire : sinon le pretty-printer de ~S replie les etats les plus larges --
+144 cases pour un som -- sur plusieurs lignes, ce qui rendrait le fichier
+plus penible a parcourir/grep ligne par ligne sans rien changer a ce qu'on
+relit avec READ). La sequence est l'ordre des appels dans le fichier, relue
+par READ-ACTIVATION-TRACE. Renvoie ANN, comme BACKPROPAGATE, LEARN (som),
+ROSOM-LEARN et TRAIN-PERCEPTRON -- pour pouvoir l'imbriquer directement, par
+exemple (trace-activation (learn som))."
   (let ((ann (if (symbolp ann) (symbol-value ann) ann)))
     (with-open-file (stream path :direction :output
                                   :if-exists :append :if-does-not-exist :create)
-      (format stream "~S~%" (activation-state ann)))
+      (let ((*print-pretty* nil))
+        (format stream "~S~%" (activation-state ann))))
     (values ann)))
-
+ 
 (defun read-activation-trace (path)
   "Relit la sequence d'etats ecrite par TRACE-ACTIVATION dans PATH : une
 liste de formes Lisp, dans l'ordre d'ecriture (la plus ancienne en tete)."
@@ -173,5 +178,34 @@ liste de formes Lisp, dans l'ordre d'ecriture (la plus ancienne en tete)."
     (loop for form = (read stream nil :eof)
           until (eq form :eof)
           collect form)))
+
+
+(defun trace-output (ann &optional (path "output-trace.lisp"))
+  "Ajoute a la suite de PATH (mode APPEND ; un fichier de formes Lisp, une
+par ligne, cree si besoin) l'output courant de ANN (une instance,
+ou le symbole qui la nomme) -- cf. ACTIVATION-STATE pour ce qui est
+effectivement ecrit selon sa classe. Pensee pour s'inserer dans n'importe
+quelle boucle d'apprentissage ou d'execution sans rien y changer par
+ailleurs, par exemple :
+
+  (dolist (frame chant)
+    (setf (input som) (coerce frame 'vector))
+    (trace-output som \"trace.lisp\"))
+
+Chaque appel ajoute UN etat, sur UNE ligne (*PRINT-PRETTY* NIL le temps de
+l'ecrire : sinon le pretty-printer de ~S replie les etats les plus larges --
+144 cases pour un som -- sur plusieurs lignes, ce qui rendrait le fichier
+plus penible a parcourir/grep ligne par ligne sans rien changer a ce qu'on
+relit avec READ). La sequence est l'ordre des appels dans le fichier, relue
+par READ-ACTIVATION-TRACE. Renvoie ANN, comme BACKPROPAGATE, LEARN (som),
+ROSOM-LEARN et TRAIN-PERCEPTRON -- pour pouvoir l'imbriquer directement, par
+exemple (trace-activation (learn som))."
+  (let ((ann (if (symbolp ann) (symbol-value ann) ann)))
+    (with-open-file (stream path :direction :output
+                                  :if-exists :append :if-does-not-exist :create)
+      (let ((*print-pretty* nil))
+        (format stream "~S~%" (activation ann :neuron (find-winner ann)))))
+    (values ann)))
+
 
 ; eof

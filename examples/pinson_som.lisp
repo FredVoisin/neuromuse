@@ -177,4 +177,7 @@ rempli frame par frame. Relire un fichier avec READ-ACTIVATION-TRACE."
                  (trace-activation som path))))
     (values som)))
 
+; (trace-pinson-chants)
+
+
 ;; EOF
