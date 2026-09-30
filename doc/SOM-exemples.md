@@ -84,7 +84,13 @@ the current `(input som)`. Its grid position comes from `2d`, which needs the ne
 
 `examples/pinson_som.lisp` trains a 12×12 SOM (144 neurons) on 18-band FFT intensity vectors from 3
 chaffinch (*Fringilla coelebs*) song recordings (`examples/pinson_vecteurs.lisp`, ~4000 frames total
-across the 3 songs):
+across the 3 songs).
+
+**Source audio:** the species and its song — see
+[fr.wikipedia.org/wiki/Pinson_des_arbres](https://fr.wikipedia.org/wiki/Pinson_des_arbres) — for
+example [Fringilla_coelebs.ogg](https://upload.wikimedia.org/wikipedia/commons/f/f9/Fringilla_coelebs.ogg)
+(Wikimedia Commons, public domain): a chaffinch recorded singing in a spruce tree in southern Finland by
+Oona Räisänen.
 
 ```lisp
 (load "examples/pinson_vecteurs.lisp")   ; *pinson-freqs*, *pinson-chants*
