@@ -496,6 +496,13 @@ pas et le canal vers Tk reste court."
                  :lo-text (text *margin* (- bottom 11))
                  :n-text (text left (+ bottom 1))))))
 
+(defun format-plot-value (v)
+  "Comme le reste de DRAW-ERROR-PLOT (~,5F), sauf quand V est un entier --
+auquel cas l'affiche tel quel, sans decimales : la trace du gagnant du som
+(SOM-REFRESH) est une suite d'indices de neurone, pas d'erreurs, et 5
+decimales a zero (\"35.00000\") n'y ajoutent rien."
+  (if (= v (round v)) (format nil "~D" (round v)) (format nil "~,5F" v)))
+
 (defun draw-error-plot (plot series threshold)
   "Met a jour le trace : en ordonnee les erreurs reellement observees
 (min..max, affiches en clair pour que la pente ne soit pas trompeuse), en
@@ -529,8 +536,8 @@ abscisse toute l'histoire, decimee a un point par pixel."
                         (list left y (+ left plot-w) y))
                   (ltk:configure (plot-threshold plot) :state "normal"))
                 (ltk:configure (plot-threshold plot) :state "hidden")))
-          (ltk:configure (plot-hi-text plot) :text (format nil "~,5F" hi))
-          (ltk:configure (plot-lo-text plot) :text (format nil "~,5F" lo))
+          (ltk:configure (plot-hi-text plot) :text (format-plot-value hi))
+          (ltk:configure (plot-lo-text plot) :text (format-plot-value lo))
           (ltk:configure (plot-n-text plot)
                          :text (format nil "~D erreurs, de la plus ancienne a la plus recente"
                                        (length series)))))))
