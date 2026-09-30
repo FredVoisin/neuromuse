@@ -142,13 +142,12 @@
 	(topos (topology ann))
 	coord-w
 	voisins
-	f g h)
+	f h)
 		;correction du gagnant
     (setf f #'2d ;(read-from-string (format nil "~Sd" (cadr topos)))
 	  h #'d2 ;(read-from-string (format nil "d~S" (cadr topos)))
 	  coord-w (funcall f (car (id winner)) n)
-	  voisins (funcall (neighbourhood ann) coord-w radius (floor (expt n (/ 1 (cadr topos)))))
-	  g (car topos))
+	  voisins (funcall (neighbourhood ann) coord-w radius (floor (expt n (/ 1 (cadr topos))))))
     (when (verbose ann)
       (format t "~%win : ~S ~S" winner coord-w))
     (loop for voisin in voisins ;; winner inclu
