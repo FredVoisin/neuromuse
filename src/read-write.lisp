@@ -204,7 +204,7 @@ exemple (trace-activation (learn som))."
     (with-open-file (stream path :direction :output
                                   :if-exists :append :if-does-not-exist :create)
       (let ((*print-pretty* nil))
-        (format stream "~S~%" (activation ann :neuron (find-winner ann)))))
+        (format stream "~S~%"  (activation ann :n (car (id (car (find-winner ann))))))))
     (values ann)))
 
 
