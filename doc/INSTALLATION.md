@@ -22,7 +22,9 @@ Quicklisp is what gets you three things beyond that, each pulled in on demand, n
   separate ASDF system on top of `:neuromuse`, loaded with `(ql:quickload :ltk)` then
   `(asdf:load-system "neuromuse/gui")` (needs Tk itself too — Debian/Ubuntu: `sudo apt install tk`).
   Calling `neuromuse-gui:gui` before that fails with `Package "NEUROMUSE-GUI" not found`. See
-  [EXAMPLES.md](EXAMPLES.md#watching-it-train-live-neuromuse-gui-and-the-noisy-xor-demos) for it in use.
+  [MLP-exemples.md](MLP-exemples.md#watching-it-train-live-neuromuse-gui-and-the-noisy-xor-demos) for
+  it in use, or [SOM-exemples.md](SOM-exemples.md#5-watching-it-train-live-the-som-viewer) for the SOM
+  viewer.
 - **Convenience** — symlink the repo into `~/quicklisp/local-projects/` once (step 4 below) and
   `(ql:quickload :neuromuse)` finds it by name from any directory, no path to remember or push onto
   `asdf:*central-registry*` by hand.

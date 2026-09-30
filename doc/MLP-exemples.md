@@ -1,0 +1,258 @@
+# MLP Examples: Training Multi-Layer Perceptrons with neuromuse
+
+Detailed walkthroughs for `mlp` and `rmlp` (recurrent MLP). Split out of
+[EXAMPLES.md](EXAMPLES.md), which now covers the general, architecture-agnostic workflow and
+Tips & Tricks — see there for SOM-specific examples ([SOM-exemples.md](SOM-exemples.md)) and for
+anything not specific to MLP.
+
+## 1. Training an MLP on XOR
+
+**File:** `examples/mlp-test.lisp`
+
+XOR (exclusive OR) is a classic problem: given two binary inputs, output 1 if exactly one is 1, else 0. It's linearly inseparable, so a single-layer network fails—you need hidden units and backpropagation.
+
+### The Data
+
+```lisp
+(defvar *xor-in*   '((0 0) (1 0) (0 1) (1 1)))
+(defvar *xor-goal* '((0)   (1)   (1)   (0)))
+```
+
+Each input is a list (e.g., `(1 0)`), each goal is its target output.
+
+### Build the Network
+
+```lisp
+(make-mlp xor 2 1 2)
+```
+
+Expands to:
+```lisp
+(defvar xor (make-instance 'mlp :in-size 2 :out-size 1 :hidden-sizes '(2)))
+```
+
+This creates a multi-layer perceptron with:
+- 2 input neurons
+- 1 hidden layer of 2 neurons
+- 1 output neuron
+
+### Configure Learning Parameters
+
+```lisp
+(let ((net xor))
+  (setf (learn-fact net) 0.4
+        (temp net) 0.1
+        (verbose net) t
+        (threshold net) 0.1
+        (input net) (car *xor-in*)
+        (goal net) (car *xor-goal*)))
+```
+
+- **`learn-fact`** (learning rate): Controls how much weights change per epoch. Default is 0.0 (no learning), so you must set it.
+- **`temp`** (temperature): *Not* what it sounds like — `logistic`'s `:temp` makes a neuron output pure
+  `(random 1.0)` noise with probability `temp` on every call (see `temp-value` in `src/maths.lisp`), it
+  doesn't nudge gradients to help escape local minima. `net-temp` (jittering the *weights* a little
+  during training) is the one that actually helps with that — see the box below.
+- **`verbose`**: Print progress during training.
+- **`threshold`**: Stop training when error drops below this.
+
+### Train the Network
+
+```lisp
+(let ((net xor) (in *xor-in*) (goal *xor-goal*) (e 999999))
+  (loop until (< e (threshold net))
+        do (loop for i from 0 to (- (length in) 2)
+                 do (setf (input net) (nth i in)
+                          (goal net) (nth i goal))
+                    (backpropagate net)
+                    (setf e (current-error net))
+                    (format t "~&epoch ~S, e = ~S" (epoch net) e))))
+```
+
+- **`backpropagate`**: One forward pass + one weight update. Returns `net` itself (same convention as
+  `learn` for a SOM, `rosom-learn`, and `train-perceptron` -- see the note below), not the error; read
+  the error for the step off `(current-error net)` afterward.
+- **`epoch`**: Number of training iterations so far.
+
+*Note on return values:* every architecture's "one learning step" function -- `backpropagate` here,
+`learn` for a `som`, `rosom-learn`, `train-perceptron` -- returns only the network instance itself, so
+any of them can be dropped straight into another function (`(f (backpropagate net))`,
+`(f (learn som))`, ...). Whatever numeric feedback that step produced lives on the instance instead:
+`(current-error net)` for the step just taken, `(history-error net)` for everything accumulated so far
+(pushed newest-first) -- `backpropagate` itself doesn't push onto `history-error`; that's still up to
+the caller, as in the loop above.
+
+*Note:* The inner loop bound `(- (length in) 2)` visits only 3 of 4 patterns per epoch (a quirk to know about if comparing curves).
+
+### Test the Result
+
+```lisp
+(dolist (input *xor-in*)
+  (setf (input xor) input)
+  (run-mlp xor)
+  (format t "~S : ~S~&" input (apply #'round (output xor))))
+```
+
+- **`run-mlp`**: Forward pass only (no learning).
+- **`output`**: Result after forward pass, a list like `(0.98)` or `(0.02)`.
+- **`round`**: Convert to nearest integer.
+
+Expected output:
+```
+(0 0) : 0
+(1 0) : 1
+(0 1) : 1
+(1 1) : 0
+```
+
+In practice this "expected output" isn't reliable as the code stands above — see the investigation below.
+
+### Why the "expected output" isn't reliable, and how the README's Quick Start fixes it
+
+*The following is Claude's (Anthropic's AI coding assistant) investigation and fix, done at Fred's
+request after the README's own XOR Quick Start turned out to be flaky in the same way. Fred's own,
+more general fix — described at the end — is still to come.*
+
+Running the training loop above (or the near-identical one in `examples/mlp-test.lisp` and the
+README's original Quick Start) with a fresh random seed each time, and checking the final predictions
+against the XOR truth table, essentially never actually reproduces `(1 1) : 0`. Two separate problems
+compound here:
+
+**1. The stopping criterion only checks the easiest pattern.** The README's original Quick Start used
+`(loop ... minimize e ... until (< e (threshold net)))` — `e` is the *smallest* per-pattern error seen
+in the epoch, so the loop stops the moment the easiest pattern (usually `(0 0)`, which many random
+initial weight sets already get roughly right) drops below the threshold, whether or not the other
+three have learned anything. Switching to `maximize e` (stop only once the *worst* pattern is below
+threshold, which is what "converged" should actually mean) doesn't fix it either — tested over 20,000
+epochs, it simply never converges, for any of several random seeds tried.
+
+**2. Two hidden units, no noise, fixed presentation order: XOR's classic local minimum.** Whatever the
+stopping rule, an even more direct experiment shows the real obstacle: train a network for a large
+fixed number of epochs (20,000), cycling through the 4 patterns in the same order every time, with no
+`net-temp` jitter, and print the raw outputs instead of rounding them. Tried across 7 different
+`sb-ext:seed-random-state` seeds (1, 2, 3, 7, 42, 99, 123) with 2 hidden units, and again across 8 seeds
+(same list plus 2024) with 3 — checked in both cases to actually produce distinct initial weight
+matrices, not a seeding artifact — *every single run* gets `(0 0)` confidently right and then gets
+stuck: `(1 1)` never moves far from ~0.5 (as close as 0.50 to as far as 0.57, but never near 0), and in
+about half the runs `(1 0)` and `(0 1)` additionally end up with near-identical outputs, meaning the
+network can no longer tell the two apart at all. Adding the third hidden unit alone didn't change this
+picture. This is the well-documented "XOR local minimum": plain gradient descent in a fixed presentation
+order is prone to converging to a saddle point that is symmetric under swapping the two inputs — which
+XOR's own truth table is invariant under, so the fixed point is a genuine attractor, not just bad luck.
+More epochs alone don't help once a run is caught in it.
+
+**The fix** used in the README's Quick Start (verified to reproduce byte-for-byte across independent
+runs, taking well under a second): a third hidden unit, a little synaptic noise via `net-temp` during
+training to perturb the network out of the symmetric saddle, a fixed number of training epochs instead
+of a per-epoch error threshold, and a seeded random state so the exact same run — and the exact promised
+output — happens every time on SBCL:
+
+```lisp
+(setf *random-state* (sb-ext:seed-random-state 123))
+(make-mlp xor 2 1 3)
+(setf (learn-fact xor) 0.4
+      (net-temp xor) 0.05)
+(dotimes (epoch 20000)
+  (dotimes (i (length *xor-in*))
+    (setf (input xor) (nth i *xor-in*)
+          (goal xor) (nth i *xor-goal*))
+    (backpropagate xor)))
+(setf (net-temp xor) 0)  ; run-mlp jitters weights by net-temp too — turn it off before testing
+```
+
+Of 10 seeds tried with 3 hidden units and `net-temp .05`, 4 converged correctly and 6 didn't — seed
+`123` is simply one of the ones that does, picked and hard-coded for reproducibility, not because 3
+hidden units reliably solves the underlying problem in general.
+
+**Still open — Fred's solution, to follow:** the stopping criterion itself needs a proper fix, checking
+error aggregated over *all* four patterns (worst-case or mean) rather than a single one. The plan is to
+make the stopping test itself a caller-supplied argument — a lambda closing over whatever `mlp` accessors
+it needs (`history-error`, `epoch`, a fresh forward pass per pattern, ...) — so different stopping
+strategies can be tried and compared directly, rather than baking one fixed (and, as shown above, not
+even self-consistent) rule into the training loop.
+
+### Watching it train live: neuromuse-gui and the noisy-XOR demos
+
+`examples/xor-noisy-train.lisp` and `examples/xor4-noisy-train.lisp` train on XOR (and its 4-input
+variant) with slightly noisy inputs and a pause between trials — made to be watched, not run silently.
+Pair either with the `neuromuse-gui` window (see `src/gui.lisp`), and run the training loop in its own
+thread so the REPL stays free.
+
+`neuromuse-gui` is its own ASDF system, `neuromuse/gui`, kept separate so the core library never
+depends on Ltk — load it once per session, *after* `:neuromuse` itself, and before the first
+`neuromuse-gui:...` call, or you'll get `Package "NEUROMUSE-GUI" not found`. Needs Tk itself installed
+(Debian/Ubuntu: `sudo apt install tk`):
+
+```lisp
+(ql:quickload :ltk)                  ; once per session; needs Tk installed, see above
+(asdf:load-system "neuromuse/gui")   ; note the string, not a keyword -- see src/gui.lisp
+
+(load "examples/xor4-noisy-train.lisp")
+(neuromuse-gui:gui 'xor4 :view :graph)
+(mk-process "train-xor4" #'train-xor4-noisy)
+```
+
+<p align="center">
+  <img src="../img/XOR4.png" alt="neuromuse-gui watching a 4-2-1 network train on XOR4, next to the SLIME REPL that launched it" width="700"><br>
+  <sub>The graph view tracking a 4-2-1 network training on XOR4, launched from SLIME with <code>mk-process</code> so the REPL stays free to adjust <code>latence</code> or set <code>*stop*</code> mid-run.</sub>
+</p>
+
+
+The screenshot below illustrates a critical challenge in training robust neural networks for XOR: decision boundary stability under noise.
+Apart the clean convergence after 10,000 epochs with error dropping to 0.0, we got for input [1 1] the activation output 0.05741880, which is correctly near 0, but the simple noisy condition [1 0], represented as [0.9 0.1 0.8 0.2] makes 0.43895775 when it should stay near 0. This may question the stop criteria, or the architecture, such as adding a hidden unit (see above), or increasing the slope of the output neuron. Or even other solutions, depending on the context, **situated**.
+
+<p align="center">
+  <img src="../img/XOR4b.png" alt="About challenges with XOR4 trained with noise" width="700"><br>
+  <sub>Epoch 10000, error at 0 — yet a noisy version of [1 0] activates far from the trained, noise-free [1 1 1 1] response.</sub>
+</p>
+
+---
+
+## 2. Accelerometer Data (6D Input)
+
+**File:** `examples/mlp-test2.lisp`
+
+For problems with more inputs, the structure is identical—just change the data and network shape.
+
+```lisp
+(defvar *accel-in*   '((0.1 0.2 0.0 ...) ...))  ;; 6-dimensional vectors
+(defvar *accel-goal* '((1) (0) (1) ...))        ;; Binary labels (e.g., "gesture detected")
+
+(make-mlp accel 6 1 8)  ;; 6 inputs → 8 hidden → 1 output
+```
+
+All training/testing code above applies unchanged. Swap in accelerometer data, resize the network, and you're training a 6D classifier.
+
+---
+
+## 3. Recurrent MLP (rMLP)
+
+Recurrent networks have feedback connections, letting them process temporal sequences.
+
+**Elman architecture (feedback from hidden layer):**
+
+```lisp
+(make-rmlp rnet 2 1 4)  ;; Similar signature to make-mlp
+```
+
+Train on a sequence:
+
+```lisp
+(let ((net rnet))
+  (setf (learn-fact net) 0.3)
+  (loop for t from 0 to (length sequence)
+        do (setf (input net) (nth t sequence)
+                 (goal net) (nth (+ t 1) sequence))  ;; Predict next step
+            (backpropagate net)))
+```
+
+The recurrent connections let the network "remember" recent inputs when predicting the next one. See [doc/rmlp-elman-vs-jordan.md](../doc/rmlp-elman-vs-jordan.md) for details.
+
+---
+
+## Further Reading
+
+- See `src/mlp.lisp` for the full MLP implementation and docstrings.
+- See [EXAMPLES.md](EXAMPLES.md) for the general, architecture-agnostic workflow and Tips & Tricks.
+- See [SOM-exemples.md](SOM-exemples.md) for Self-Organizing Maps.
+- See [PHILOSOPHY.md](../doc/PHILOSOPHY.md) for the conceptual framework.
