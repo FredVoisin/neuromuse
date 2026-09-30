@@ -32,12 +32,17 @@ Load the system via ASDF from an SBCL REPL started in this directory (or with th
 this order: `neuromuse` (package definition), `neuromuse-main` (core classes/generics), `misc` (generic
 Lisp/wire-format utilities), `maths` (transfer functions, matrix/vector algebra, SOM topology math —
 depends on `make-listarray` from `misc`, hence loading after it), `mlp`, `perceptron`, `som`, `rosom`,
-`udp`. Load order matters — later files depend on classes/functions (e.g. `ANN`, `make-new-symbol`,
-matrix helpers) defined earlier. `maths.lisp` and `misc.lisp` used to be one file, `maths&misc.lisp`;
-split along the line the old name already implied (numerical/matrix code vs. generic utilities), with
-the duplicate `make-new-symbol` definition (also in `neuromuse-main.lisp`) dropped rather than carried
-into either half. `src/perceptron.lisp` is part of the `:components` list, loaded right after `mlp`;
-the upstream "unfinished ?, see mlp" comment is about the class being superseded, not about the build.
+`read-write`, `udp`. Load order matters — later files depend on classes/functions (e.g. `ANN`,
+`make-new-symbol`, matrix helpers) defined earlier. `maths.lisp` and `misc.lisp` used to be one file,
+`maths&misc.lisp`; split along the line the old name already implied (numerical/matrix code vs. generic
+utilities), with the duplicate `make-new-symbol` definition (also in `neuromuse-main.lisp`) dropped
+rather than carried into either half. `src/perceptron.lisp` is part of the `:components` list, loaded
+right after `mlp`; the upstream "unfinished ?, see mlp" comment is about the class being superseded, not
+about the build. `src/read-write.lisp` loads after `mlp`/`som`/`rosom` (its `save` and `activation-state`
+methods specialize on those classes, so they must already exist) and before `udp.lisp` (see the
+`do-symbols` export-sweep note further down — it has to precede `udp.lisp` in `:components` for the same
+reason any
+new top-level file does).
 
 Run the test suite with:
 
@@ -76,8 +81,10 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   in a comment, superseded by MLP. Loaded by the `.asd` after `mlp`.
 - `mlp` (`src/mlp.lisp`, subclass of `ANN`) — multi-layer perceptron with backpropagation. `net` is a
   list of weight matrices (one per layer transition), each matrix a list-of-lists. `hidden-fun`/
-  `out-fun` are activation functions (default `logistic`). Has `activation`, `clear`, and `save`
-  methods (`save` replaces the old `nnsave`).
+  `out-fun` are activation functions (default `logistic`). Has `activation` and `clear` methods in
+  `mlp.lisp` itself; its `save` method (replacing the old `nnsave`) moved to `src/read-write.lisp`
+  alongside the `neuron`/`list`/`t` `save` methods it used to sit next to in `neuromuse-main.lisp` — see
+  "Reading and writing a network to a file (read-write.lisp)" below.
 - `rmlp` (`src/mlp.lisp`, subclass of `mlp`) — recurrent MLP (Elman style): one hidden layer's
   activation feeds back into the input on the next step via `recurrent-layer-activation`.
 - `som` (`src/som.lisp`, subclass of `ANN`) — self-organizing (Kohonen) map. `net` is a flat list of
@@ -107,7 +114,7 @@ object literal in the expansion. `copy-MLP`/`duplicate` (also in `mlp.lisp`) are
 called an undefined `copy-net` and referenced a nonexistent `:parent` initarg; shelved rather than
 half-fixed, since net-copying was never actually designed.
 
-`structure-slot-names` (`src/neuromuse-main.lisp`) — used by `mlp`'s and `neuron`'s `save` methods to
+`structure-slot-names` (`src/read-write.lisp`) — used by `mlp`'s and `neuron`'s `save` methods to
 list a class's slots — is implemented via `sb-mop:class-slots`/`sb-mop:slot-definition-name` (SBCL-only;
 the upstream version was commented out and had `+sbcl` instead of `#+sbcl`, so it never actually ran).
 `save`'s output isn't a perfect round-trip yet: `mlp`'s `save` method only wraps list-valued slots in a
@@ -156,6 +163,36 @@ from here:
 - `make-listarray`, `ldlp`/`ldvp`, `round1`, `test-t`, `get-time`.
 - String/wire-format conversion for the UDP layer: `st2v`, `st2list`, `vector2string`/`v2st`,
   `list2string`, `buf2string`, `split`.
+
+### Reading and writing a network to a file (read-write.lisp)
+
+`src/read-write.lisp` holds the library's file I/O for a network: `save` (serializing a `neuron`/`mlp`
+instance to a reloadable Lisp form, together with its one helper `structure-slot-names` — moved here
+from `neuromuse-main.lisp`/`mlp.lisp`, where its methods used to be split across the two files for no
+reason tied to what they do) and `trace-activation` (below), added together with this file as a single
+place for "write a network's state to disk" rather than splitting that concern by which file a class
+happens to be defined in.
+
+`trace-activation` lets any training/running loop log a network's activation over time without
+changing the loop itself: `(trace-activation ann &optional path)` appends one Lisp form (one call, one
+line) to `path` — a pure read of `ann`'s current state, like `gui-snapshot` in `src/gui.lisp` — and
+returns `ann` (same "returns only itself" convention as `backpropagate`/`learn`/`rosom-learn`/
+`train-perceptron`, so it drops straight into a chain, e.g. `(trace-activation (learn som))`).
+`read-activation-trace path` reads the whole sequence back as a list, oldest first. What actually gets
+written is `activation-state ann`, one generic with one method per class rather than a type-dispatch
+inside `trace-activation` itself:
+- The default method, on `ann` itself, is just `(output ann)` — works unchanged for `mlp`, `rmlp`, and
+  `perceptron` (all three write their current output to that same ANN-level slot), so none of them needs
+  its own method.
+- `som` gets its own method: `(mapcar #'output (net ann))`, one list per grid cell (`output` here is
+  each *neuron's* own slot, set by `activation`/`find-winner` as a per-input-dimension list — not the
+  SOM's own `output` slot, which `init` sets once to zeroes and nothing afterwards ever updates). Like
+  the SOM viewer in `src/gui.lisp`, this reads values already computed as a side effect of `find-winner`
+  (or a bare `activation` call) rather than recomputing anything itself — call one of those first in the
+  loop, or the trace just repeats stale state.
+- `rosom` inherits `som`, but `(net rosom)` is `(content-neurons context-neurons)`, not a flat neuron
+  list, so it has its own method that signals a clear error instead of silently misreading that
+  structure — same pattern as `gui-snapshot`'s `rosom` method in `src/gui.lisp`.
 
 ### Real-time control (UDP)
 

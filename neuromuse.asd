@@ -17,6 +17,7 @@
 		 (:file "perceptron")
 		 (:file "som")
 		 (:file "rosom")
+		 (:file "read-write")
 		 (:file "udp"))))
   :description "Neural nets for experiments in music prod by Fred Voisin, since 1999."
   :long-description

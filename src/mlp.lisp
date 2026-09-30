@@ -273,25 +273,8 @@
    (format t "~%MLP ~S cleared.~%" (name self))
    self)
 
-(defmethod save ((self mlp) &optional path)
-  (when (not path) (setf path (format nil "~S.lisp" (name self))))
-  (let ((slots (structure-slot-names (type-of self))))
-    (with-open-file (stream path
-			    :direction :output
-			    :if-exists :supersede
-			    :if-does-not-exist :create)
-      (format stream "(in-package :neuromuse)")
-      (format stream "~&(make-instance 'mlp")
-      (loop for s in slots
-	 do
-	   (let ((slot-value (funcall s self)))
-	     (if (listp slot-value)
-		 (format stream " :~S '~S~&" s slot-value)
-		 (format stream " :~S ~S~&" s slot-value))))
-      (format stream ")~%")))
-  (format t "~& MLP ~S saved to file ~S !" (name self) path)
-  (values))
-
+;; SAVE for mlp moved to src/read-write.lisp, alongside its NEURON/LIST/T
+;; counterparts and STRUCTURE-SLOT-NAMES (its one helper).
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Elman recurrent MLP

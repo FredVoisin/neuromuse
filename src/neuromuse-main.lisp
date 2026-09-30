@@ -196,47 +196,14 @@
 (defun warning-msg (string &optional (port t))
   (format port (concatenate 'string "~% WARNING : " string)))
 
-(defun structure-slot-names (s-name)
-  "Given a class name such as a neural net's, returns the list of the slots for the class."
-  #+sbcl (mapcar #'sb-mop:slot-definition-name
-		 (sb-mop:class-slots
-		  (find-class s-name)))
-  #-sbcl
-  (error "structure-slot-names is not defined for this lisp dialect,
- some features won't work (as save...)"))
-
 (defgeneric init (self &key size input)
   (:documentation "To initialize some object - ann, som, etc.- work in progress"))
 
-(defgeneric save (self &optional path)
-  (:documentation "Save neural net <self> to <path>."))
-
-(defmethod save ((self neuron) &optional (path "ann.lisp"))
-  (let ((slots (structure-slot-names (type-of self))))
-    (with-open-file (stream path
-			    :direction :output
-			    :if-exists :append
-			    :if-does-not-exist :create)
-      (format stream "(in-package :neuromuse)")
-      (format stream "~&(make-instance 'neuron")
-      (loop for s in slots
-	    do
-	    (format stream " :~S \'~S" s (funcall s self)))
-      (format stream ")~%"))))
-
-(defmethod save ((self list) &optional (path "ann.lisp"))
-  (with-open-file (stream path
-			  :direction :output
-			  :if-exists :append
-			  :if-does-not-exist :create)
-    (if (atom (car self))
-	(format stream " ~S~&" self)
-	(save self path)))
-  (values))
-
-(defmethod save ((self t) &optional (path "ann.lisp"))
-  (declare (ignore path))
-  (format t "~&No method for saving ~S !~&" self))
+;; STRUCTURE-SLOT-NAMES and SAVE (generic + its NEURON/LIST/T/MLP methods)
+;; moved to src/read-write.lisp, with TRACE-ACTIVATION and the other
+;; read/write-to-file utilities -- structure-slot-names had no other caller,
+;; and SAVE's methods (bar this file's own NEURON one) already lived
+;; elsewhere (src/mlp.lisp), so nothing but this comment stays here.
 
 ;**************** Threading ****************
 

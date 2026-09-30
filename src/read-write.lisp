@@ -1,0 +1,133 @@
+;;;; read-write.lisp - Lire et ecrire un ANN dans un fichier : SAVE
+;;;; serialise l'etat (quasi-)complet d'un neuron/mlp en une forme Lisp
+;;;; rechargeable ; TRACE-ACTIVATION, plus bas, journalise juste son
+;;;; activation au fil d'une boucle d'apprentissage ou d'execution, comme une
+;;;; sequence de formes Lisp, une par appel.
+
+(in-package :neuromuse)
+
+;;; ------------------------------------------------------------------
+;;; SAVE : serialisation d'un neuron/mlp vers un fichier rechargeable
+;;; ------------------------------------------------------------------
+
+(defun structure-slot-names (s-name)
+  "Given a class name such as a neural net's, returns the list of the slots for the class."
+  #+sbcl (mapcar #'sb-mop:slot-definition-name
+		 (sb-mop:class-slots
+		  (find-class s-name)))
+  #-sbcl
+  (error "structure-slot-names is not defined for this lisp dialect,
+ some features won't work (as save...)"))
+
+(defgeneric save (self &optional path)
+  (:documentation "Save neural net <self> to <path>."))
+
+(defmethod save ((self neuron) &optional (path "ann.lisp"))
+  (let ((slots (structure-slot-names (type-of self))))
+    (with-open-file (stream path
+			    :direction :output
+			    :if-exists :append
+			    :if-does-not-exist :create)
+      (format stream "(in-package :neuromuse)")
+      (format stream "~&(make-instance 'neuron")
+      (loop for s in slots
+	    do
+	    (format stream " :~S \'~S" s (funcall s self)))
+      (format stream ")~%"))))
+
+(defmethod save ((self list) &optional (path "ann.lisp"))
+  (with-open-file (stream path
+			  :direction :output
+			  :if-exists :append
+			  :if-does-not-exist :create)
+    (if (atom (car self))
+	(format stream " ~S~&" self)
+	(save self path)))
+  (values))
+
+(defmethod save ((self t) &optional (path "ann.lisp"))
+  (declare (ignore path))
+  (format t "~&No method for saving ~S !~&" self))
+
+(defmethod save ((self mlp) &optional path)
+  (when (not path) (setf path (format nil "~S.lisp" (name self))))
+  (let ((slots (structure-slot-names (type-of self))))
+    (with-open-file (stream path
+			    :direction :output
+			    :if-exists :supersede
+			    :if-does-not-exist :create)
+      (format stream "(in-package :neuromuse)")
+      (format stream "~&(make-instance 'mlp")
+      (loop for s in slots
+	 do
+	   (let ((slot-value (funcall s self)))
+	     (if (listp slot-value)
+		 (format stream " :~S '~S~&" s slot-value)
+		 (format stream " :~S ~S~&" s slot-value))))
+      (format stream ")~%")))
+  (format t "~& MLP ~S saved to file ~S !" (name self) path)
+  (values))
+
+;;; ------------------------------------------------------------------
+;;; TRACE-ACTIVATION : journal d'activation au fil d'une boucle
+;;; ------------------------------------------------------------------
+;;;
+;;; Pensee pour etre appelee a chaque pas d'une boucle d'apprentissage ou
+;;; d'execution sans rien y changer par ailleurs -- comme GUI-SNAPSHOT dans
+;;; src/gui.lisp, une lecture pure qui n'affecte jamais le reseau, elle aussi
+;;; generique via une seule methode par classe (ACTIVATION-STATE) plutot que
+;;; des tests de type disperses.
+
+(defgeneric activation-state (ann)
+  (:documentation "Etat d'activation de ANN a tracer par TRACE-ACTIVATION :
+la couche de sortie, (OUTPUT ANN), pour un mlp/rmlp/perceptron -- ou toute
+autre classe qui tient son activation courante dans ce meme emplacement,
+d'ou la methode par defaut sur ANN plutot qu'une par classe. Pour un som,
+une liste par case de la grille : (OUTPUT neuron) de chaque neurone de
+(NET ann), dans cet ordre -- c'est-a-dire l'ordre de (ID neuron), la
+position sur la grille (cf. 2D, src/maths.lisp)."))
+
+(defmethod activation-state ((ann ann))
+  (output ann))
+
+(defmethod activation-state ((ann som))
+  (mapcar #'output (net ann)))
+
+(defmethod activation-state ((ann rosom))
+  (error "ACTIVATION-STATE ne gere pas encore ROSOM : (net rosom) est
+(neurones-contenu neurones-contexte), pas une liste plate de neurones comme
+pour SOM -- a ecrire si besoin (methode dediee, comme pour GUI-SNAPSHOT dans
+src/gui.lisp, plutot que d'etendre celle-ci)."))
+
+(defun trace-activation (ann &optional (path "activation-trace.lisp"))
+  "Ajoute a la suite de PATH (mode APPEND ; un fichier de formes Lisp, une
+par ligne, cree si besoin) l'etat d'activation courant de ANN (une instance,
+ou le symbole qui la nomme) -- cf. ACTIVATION-STATE pour ce qui est
+effectivement ecrit selon sa classe. Pensee pour s'inserer dans n'importe
+quelle boucle d'apprentissage ou d'execution sans rien y changer par
+ailleurs, par exemple :
+
+  (dolist (frame chant)
+    (setf (input som) (coerce frame 'vector))
+    (find-winner som)               ; met a jour (output neuron) de chaque case
+    (trace-activation som \"trace.lisp\"))
+
+Chaque appel ajoute UN etat ; la sequence est l'ordre des appels dans le
+fichier, relue par READ-ACTIVATION-TRACE. Renvoie ANN, comme BACKPROPAGATE,
+LEARN (som), ROSOM-LEARN et TRAIN-PERCEPTRON -- pour pouvoir l'imbriquer
+directement, par exemple (trace-activation (learn som))."
+  (let ((ann (if (symbolp ann) (symbol-value ann) ann)))
+    (with-open-file (stream path :direction :output
+                                  :if-exists :append :if-does-not-exist :create)
+      (format stream "~S~%" (activation-state ann)))
+    (values ann)))
+
+(defun read-activation-trace (path)
+  "Relit la sequence d'etats ecrite par TRACE-ACTIVATION dans PATH : une
+liste de formes Lisp, dans l'ordre d'ecriture (la plus ancienne en tete)."
+  (with-open-file (stream path :direction :input)
+    (loop for form = (read stream nil :eof)
+          until (eq form :eof)
+          collect form)))
+
+; eof
