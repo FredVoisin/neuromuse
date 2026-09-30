@@ -114,10 +114,20 @@
             	(when (funcall equality dist (cadar win))
 		  (setf win (append win (list (list k dist)) )) )
 		(setf win (list (list k dist))))))
-    (if (> (length win) 1)
-    	(let ((w (random (length win))))
-	  (list (nth w (net ann))) (cadar (nth w win))))
-    (list (nth (caar win) (net ann)) (cadar win))))
+    ;; En cas d'egalite exacte entre plusieurs neurones (WIN a plus d'un
+    ;; element), tire le gagnant au hasard parmi eux plutot que de toujours
+    ;; prendre le premier trouve -- c'etait deja l'intention (l'appel a
+    ;; RANDOM ci-dessous), mais son resultat n'etait jamais reinjecte dans
+    ;; la valeur de retour, et en prime (CADAR (NTH W WIN)) faisait un CAR
+    ;; de trop : (NTH W WIN) est deja une paire (indice distance), pas une
+    ;; liste de paires, donc (CADAR ...) appliquait CAR a un entier (l'indice
+    ;; du neurone) -- exactement le "N is not of type LIST" que ce genre
+    ;; d'egalite provoquait, rarissime donc invisible avant des dizaines de
+    ;; milliers d'appels (cf. train-pinson-som).
+    (let ((chosen (if (> (length win) 1)
+                       (nth (random (length win)) win)
+                       (car win))))
+      (list (nth (car chosen) (net ann)) (cadr chosen)))))
 
 ;;*******************************************
 ;;********* apprentissage *******************
