@@ -47,7 +47,11 @@
            #:demo
            #:gui-snapshot
            #:make-snapshot
-           #:*interval*))
+           #:*interval*
+           #:som-gui
+           #:launch-som-gui
+           #:demo-som
+           #:make-som-snapshot))
 
 (in-package :neuromuse-gui)
 
@@ -694,10 +698,17 @@ REPL."
     (values)))
 
 (defun gui (source &rest args)
-  "Comme LAUNCH-GUI, mais dans son propre thread (mk-process) : le REPL
-reste libre pour lancer l'apprentissage et regarder la fenetre le suivre.
-Retourne le thread ; (neuromuse-gui::*viewer*) donne la fenetre ouverte."
-  (mk-process "neuromuse-gui" (lambda () (apply #'launch-gui source args))))
+  "Ouvre la fenetre adaptee a SOURCE : LAUNCH-GUI (poids + erreur) pour un
+mlp/rmlp, LAUNCH-SOM-GUI (carte d'activite + trace du gagnant, section 7 plus
+bas) pour un som -- dans son propre thread (mk-process) : le REPL reste
+libre pour lancer l'apprentissage et regarder la fenetre le suivre. Retourne
+le thread ; (neuromuse-gui::*viewer*) / (neuromuse-gui::*som-viewer*) donne
+la derniere fenetre ouverte de chaque sorte."
+  (let ((net (network source)))
+    (mk-process "neuromuse-gui"
+                (lambda ()
+                  (apply (if (typep net 'som) #'launch-som-gui #'launch-gui)
+                         source args)))))
 
 ;;; ------------------------------------------------------------------
 ;;; 6. Demonstration sans reseau
@@ -748,5 +759,321 @@ verifier l'affichage seul (cf. DEMO)."))
   "Ouvre la fenetre sur des poids factices : verifie Tk, Ltk et l'affichage
 sans toucher a un reseau."
   (gui (make-instance 'demo-source :sizes sizes)))
+
+;;; ------------------------------------------------------------------
+;;; 7. SOM : carte d'activite, entree / sortie du gagnant, trace du gagnant
+;;; ------------------------------------------------------------------
+;;;
+;;; (net som) est une liste PLATE de NEURON, une par case de la grille (cf.
+;;; src/som.lisp), sans rapport avec la structure en couches d'un mlp : la
+;;; heatmap et le graphe des sections 3/3bis ne s'y appliquent donc pas, et
+;;; cette section leur est parallele plutot que d'en reutiliser le dessin --
+;;; mais reutilise telles quelles leurs briques generiques (ACTIVITY->GRAY,
+;;; PAINT-NEURON-ROW, BUILD-ERROR-PLOT, DRAW-ERROR-PLOT, CLAMP, NETWORK,
+;;; SOURCE-TITLE, VECTOR-STRING).
+;;;
+;;; Ce que chaque case de la grille montre : PAS l'activation brute (une
+;;; liste, une valeur par entree, cf. ACTIVATION dans som.lisp) mais la
+;;; DISTANCE du neurone a l'entree courante, deja calculee et memorisee par
+;;; FIND-WINNER dans (distance neuron) -- a chaque LEARN comme a chaque appel
+;;; de PINSON-SOM-WINNER par exemple. Lire ce champ, comme GUI-SNAPSHOT lit
+;;; (output mlp) pour le mlp, evite de recalculer une passe dans le thread
+;;; graphique : la fenetre reste un lecteur pur, jamais concurrente du thread
+;;; d'apprentissage sur les memes objets neuron. La distance minimale designe
+;;; le gagnant, normalisee ici en activite 1.0 (noir) ; la plus eloignee en
+;;; 0.0 (blanc) -- comme ACTIVITY->GRAY partout ailleurs dans ce fichier.
+;;;
+;;; La rangee d'entree (en haut) montre (input som) ; la rangee de sortie
+;;; (en bas) montre (output neuron) du gagnant SEULEMENT -- meme champ
+;;; ACTIVATION que ci-dessus, mis a jour par le meme FIND-WINNER, une valeur
+;;; par entree. La trace du bas est l'historique de l'indice (CAR (ID
+;;; winner)) du gagnant au fil des rafraichissements : rien de tel n'existe
+;;; dans som.lisp (contrairement a HISTORY-ERROR pour le mlp, deja alimentee
+;;; par BACKPROPAGATE), donc c'est SOM-REFRESH -- pas GUI-SNAPSHOT, qui reste
+;;; une photographie instantanee sans effet de bord -- qui l'accumule dans
+;;; WINNER-HISTORY, un champ du SOM-VIEWER lui-meme : jamais ecrit dans le
+;;; reseau, cf. plus haut. La courbe reutilise BUILD-ERROR-PLOT /
+;;; DRAW-ERROR-PLOT telles quelles (generiques sur n'importe quelle serie
+;;; numerique), sans seuil (NIL).
+;;;
+;;; ROSOM herite de SOM mais (net rosom) est (neurones-contenu
+;;; neurones-contexte), pas une liste plate : non gere ici (cf. la methode
+;;; GUI-SNAPSHOT dediee plus bas, qui le signale clairement).
+
+(defstruct som-snapshot
+  "Photographie de l'etat d'un som a dessiner, prise en une passe."
+  (side 0)              ; cote de la grille carree (SIDE x SIDE = (length (net som)))
+  (activity '())        ; activite normalisee (0..1) de chaque neurone, indices 0..N-1
+  (winner nil)           ; indice (0..N-1) du neurone gagnant courant, ou NIL si indetermine
+  (inputs '())           ; (input som), en liste
+  (winner-output '())    ; (output neuron-gagnant) : son activation, une valeur par entree
+  (status "")
+  (signals ""))
+
+(defmethod gui-snapshot ((source som))
+  (let* ((neurons (net source))
+         (n (length neurons))
+         (side (round (sqrt (max 1 n))))
+         (distances (mapcar #'distance neurons))
+         ;; PAS d'initial-value 0.0 ici : les distances sont toujours >= 0,
+         ;; donc un plancher a 0.0 s'imposerait systematiquement comme le
+         ;; "minimum" au lieu de la vraie distance la plus faible -- MIN-D ne
+         ;; matcherait alors (quasiment) jamais une distance reelle de la
+         ;; liste, et WINNER ci-dessous resterait NIL en permanence.
+         (min-d (if distances (reduce #'min distances) 0.0))
+         (max-d (if distances (reduce #'max distances) 0.0))
+         (range (max 1.0d-9 (- max-d min-d)))
+         (winner (position min-d distances :test #'=))
+         (in (coerce (input source) 'list)))
+    (make-som-snapshot
+     :side side
+     :activity (mapcar (lambda (d) (- 1.0 (/ (- d min-d) range))) distances)
+     :winner winner
+     :inputs in
+     :winner-output (when winner (output (nth winner neurons)))
+     :status (format nil "~A : ~Dx~D neurones (~D), ~D entrees | learn ~,3F | radius ~D | temp ~,2F / net-temp ~,2F"
+                      (name source) side side n (length in)
+                      (learn-fact source) (radius source) (temp source) (net-temp source))
+     :signals (format nil "epoch ~D | gagnant ~@[#~D ~A~] | in ~A"
+                       (epoch source) winner (when winner (2d winner n))
+                       (vector-string in)))))
+
+(defmethod gui-snapshot ((source rosom))
+  (error "GUI-SNAPSHOT / SOM-GUI ne gerent pas encore ROSOM : (net rosom) est
+(neurones-contenu neurones-contexte), pas une liste plate de neurones comme
+pour SOM -- a ecrire si besoin (methode GUI-SNAPSHOT dediee, comme pour SOM,
+plutot que d'etendre celle-ci)."))
+
+(defparameter *som-canvas-width* 420)
+(defparameter *som-canvas-height-max* 420 "Hauteur maximum du canevas de la
+carte ; au-dela, les cellules se resserrent plutot que la fenetre ne
+grandisse -- meme principe que *GRAPH-HEIGHT-MAX* pour la vue graphe du mlp.")
+(defparameter *som-cell-max* 30 "Cote maximum d'une cellule de la carte SOM, en pixels.")
+(defparameter *som-cell-min* 4 "Cote minimum d'une cellule de la carte SOM, en pixels.")
+
+(defun som-geometry (side n-io width height-max)
+  "Rayon des cercles d'entree/sortie, cote de cellule de la grille, et les 3
+ordonnees Y utiles (rangee d'entree, haut de la grille, rangee de sortie),
+pour que tout tienne dans WIDTH x HEIGHT-MAX. 6e valeur : hauteur totale."
+  (let* ((radius (max *neuron-radius-min*
+                      (min *neuron-radius-max*
+                           (floor (max 1 (- width (* 2 *margin*))) (* 2 (max 1 n-io))))))
+         (row-h (+ *margin* (* 2 radius) *margin*))
+         (cell (max *som-cell-min*
+                    (min *som-cell-max*
+                         (floor (max 1 (- width (* 2 *margin*))) (max 1 side))
+                         (floor (max 1 (- height-max (* 2 row-h))) (max 1 side)))))
+         (input-y (+ *margin* radius))
+         (grid-top (+ input-y radius *margin*))
+         (grid-bottom (+ grid-top (* cell side)))
+         (output-y (+ grid-bottom *margin* radius)))
+    (values radius cell input-y grid-top output-y (+ output-y radius *margin*))))
+
+(defstruct somgrid
+  "Les items Tk de la vue SOM : une rangee de cercles d'entree, le vecteur
+des cellules de la carte (indexable par indice de neurone 0..N-1, cf.
+BUILD-SOM-VIEW), et une rangee de cercles de sortie (celle du gagnant)."
+  inputs cells outputs)
+
+(defun build-neuron-row (canvas n y radius width)
+  "Une rangee de N cercles espaces sur WIDTH, centres a la hauteur Y --
+comme la rangee d'entree ou de sortie de la vue graphe du mlp (BUILD-GRAPH),
+mais isolee ici : la vue SOM n'a pas de couches intermediaires a relier."
+  (let ((spacing (/ width (max 1 n))))
+    (loop for i below n
+          collect (let ((x (* (+ i 0.5) spacing)))
+                    (ltk:make-oval canvas (- x radius) (- y radius)
+                                   (+ x radius) (+ y radius))))))
+
+(defun build-som-view (canvas side n-io)
+  "Cree une fois les cercles d'entree/sortie et les cellules SIDE x SIDE de
+la carte (une par indice de neurone, positionnee par (2D k n)), et retourne
+la structure SOMGRID correspondante. Le canevas prend la hauteur juste
+necessaire a ce contenu."
+  (ltk:clear canvas)
+  (multiple-value-bind (radius cell input-y grid-top output-y total-h)
+      (som-geometry side n-io *som-canvas-width* *som-canvas-height-max*)
+    (ltk:configure canvas :height (min *som-canvas-height-max* total-h))
+    (let* ((n (* side side))
+           (inputs (build-neuron-row canvas n-io input-y radius *som-canvas-width*))
+           (cells (make-array n))
+           (left (floor (- *som-canvas-width* (* cell side)) 2)))
+      (dotimes (k n)
+        (destructuring-bind (col row) (2d k (max 1 n))
+          (let* ((x (+ left (* col cell)))
+                 (y (+ grid-top (* row cell)))
+                 (r (ltk:make-rectangle canvas x y (+ x cell) (+ y cell))))
+            (ltk:configure r :outline "#bbbbbb")
+            (setf (aref cells k) r))))
+      (let ((outputs (build-neuron-row canvas n-io output-y radius *som-canvas-width*)))
+        (dolist (c (append inputs outputs))
+          (ltk:configure c :fill "white" :outline "#333333"))
+        (make-somgrid :inputs inputs :cells cells :outputs outputs)))))
+
+(defun paint-som-view (g activity winner inputs outputs)
+  "Reconfigure les couleurs des items deja crees, sans toucher a la
+geometrie : cellules de la carte d'apres ACTIVITY (une valeur 0..1 par
+neurone, 1 = le plus proche de l'entree courante), avec le gagnant marque
+d'un contour rouge ; cercles d'entree d'apres INPUTS et cercles de sortie
+d'apres OUTPUTS (le gagnant seul), comme PAINT-GRAPH pour le mlp."
+  (dotimes (k (length (somgrid-cells g)))
+    (let ((cell (aref (somgrid-cells g) k)))
+      (ltk:configure cell :fill (activity->gray (nth k activity)))
+      (ltk:configure cell :outline (if (eql k winner) "#dd3333" "#bbbbbb"))))
+  (paint-neuron-row (somgrid-inputs g) inputs)
+  (paint-neuron-row (somgrid-outputs g) outputs))
+
+(defstruct som-viewer
+  source
+  grid-canvas items built          ; ITEMS = SOMGRID ; BUILT = (side . n-io) deja dessine(e)
+  trace-canvas trace-plot (winner-history '())  ; plus RECENT en tete, comme history-error
+  status-label signals-label auto-button
+  (auto t)
+  (interval *interval*)
+  (running t))
+
+(defvar *som-viewer* nil "Derniere fenetre SOM ouverte, pour inspection au REPL.")
+
+(defun som-refresh (v)
+  "Relit le som et met tout a jour : carte d'activite, cercles d'entree/de
+sortie du gagnant, trace de son indice, lignes d'etat. Accumule l'indice du
+gagnant courant dans WINNER-HISTORY -- la seule ecriture de cette fenetre,
+et elle reste entierement locale au SOM-VIEWER, jamais dans le reseau."
+  (let* ((snap (gui-snapshot (som-viewer-source v)))
+         (side (som-snapshot-side snap))
+         (n-io (length (som-snapshot-inputs snap)))
+         (key (cons side n-io)))
+    (unless (equal key (som-viewer-built v))
+      (setf (som-viewer-items v) (build-som-view (som-viewer-grid-canvas v) side n-io)
+            (som-viewer-built v) key))
+    (paint-som-view (som-viewer-items v) (som-snapshot-activity snap)
+                    (som-snapshot-winner snap)
+                    (som-snapshot-inputs snap) (som-snapshot-winner-output snap))
+    (when (som-snapshot-winner snap)
+      (push (som-snapshot-winner snap) (som-viewer-winner-history v)))
+    (draw-error-plot (som-viewer-trace-plot v)
+                     (reverse (som-viewer-winner-history v))
+                     nil)
+    (setf (ltk:text (som-viewer-status-label v)) (som-snapshot-status snap)
+          (ltk:text (som-viewer-signals-label v)) (som-snapshot-signals snap))
+    v))
+
+(defun som-guarded-refresh (v)
+  "SOM-REFRESH en protegeant la fenetre, comme GUARDED-REFRESH pour le mlp."
+  (handler-case (som-refresh v)
+    (error (c)
+      (ignore-errors
+       (setf (ltk:text (som-viewer-signals-label v)) (format nil "! ~A" c))))))
+
+(defun som-tick (v)
+  (when (som-viewer-auto v) (som-guarded-refresh v))
+  (when (som-viewer-running v)
+    (ltk:after (som-viewer-interval v) (lambda () (som-tick v)))))
+
+(defun update-som-auto-button (v)
+  (setf (ltk:text (som-viewer-auto-button v))
+        (if (som-viewer-auto v) "auto : marche" "auto : arret")))
+
+(defun toggle-som-auto (v)
+  (setf (som-viewer-auto v) (not (som-viewer-auto v)))
+  (update-som-auto-button v)
+  (when (som-viewer-auto v) (som-guarded-refresh v)))
+
+(defun reset-som-trace (v)
+  "Vide WINNER-HISTORY et rafraichit : la trace repart a vide immediatement,
+sans attendre le prochain tic -- comme RESET-ERRORS pour le mlp."
+  (setf (som-viewer-winner-history v) nil)
+  (som-guarded-refresh v))
+
+(defun launch-som-gui (source &key (auto t) (interval *interval*))
+  "Ouvre la fenetre sur SOURCE (instance som, ou le symbole qui la nomme) et
+entre dans la boucle d'evenements Tk : BLOQUANT, a n'appeler que depuis le
+thread ou tournera la fenetre. Voir SOM-GUI pour la version non bloquante,
+celle a utiliser au REPL."
+  (let ((source (network source))
+        (v nil))
+    (ltk:with-ltk ()
+      (ltk:wm-title ltk:*tk* (format nil "neuromuse - ~A" (source-title source)))
+      (let* ((status (make-instance 'ltk:label :master ltk:*tk* :text ""
+                                    :wraplength *som-canvas-width*))
+             (signals (make-instance 'ltk:label :master ltk:*tk* :text ""
+                                     :wraplength *som-canvas-width*))
+             (gcanvas (make-instance 'ltk:canvas :master ltk:*tk*
+                                     :width *som-canvas-width*
+                                     :height *som-canvas-height-max*
+                                     :background "white"))
+             (tcanvas (make-instance 'ltk:canvas :master ltk:*tk*
+                                     :width *error-width* :height *error-height*
+                                     :background "white"))
+             (controls (make-instance 'ltk:frame :master ltk:*tk*))
+             (refresh-button (make-instance 'ltk:button :master controls
+                                            :text "rafraichir"))
+             (auto-button (make-instance 'ltk:button :master controls :text ""))
+             (reset-button (make-instance 'ltk:button :master controls
+                                          :text "effacer trace")))
+        (setf v (make-som-viewer :source source
+                                 :grid-canvas gcanvas
+                                 :trace-canvas tcanvas :trace-plot (build-error-plot tcanvas)
+                                 :status-label status :signals-label signals
+                                 :auto-button auto-button
+                                 :auto auto :interval interval)
+              *som-viewer* v)
+        (setf (ltk:command refresh-button) (lambda () (som-guarded-refresh v))
+              (ltk:command auto-button) (lambda () (toggle-som-auto v))
+              (ltk:command reset-button) (lambda () (reset-som-trace v)))
+        (update-som-auto-button v)
+        (ltk:pack status :side :top :anchor :w :padx 8 :pady 3)
+        (ltk:pack signals :side :top :anchor :w :padx 8)
+        (ltk:pack gcanvas :side :top :padx 8 :pady 4)
+        (ltk:pack tcanvas :side :top :padx 8 :pady 4)
+        (ltk:pack controls :side :top :pady 4)
+        (ltk:pack refresh-button :side :left :padx 4)
+        (ltk:pack auto-button :side :left :padx 4)
+        (ltk:pack reset-button :side :left :padx 4)
+        (ltk:bind ltk:*tk* "<Destroy>"
+                  (lambda (event) (declare (ignore event))
+                    (setf (som-viewer-running v) nil)))
+        (som-guarded-refresh v)
+        (som-tick v)))
+    (when v (setf (som-viewer-running v) nil))
+    (values)))
+
+(defun som-gui (source &rest args)
+  "Comme LAUNCH-SOM-GUI, mais dans son propre thread (mk-process) : le REPL
+reste libre pour lancer l'apprentissage et regarder la fenetre le suivre.
+Retourne le thread ; (neuromuse-gui::*som-viewer*) donne la fenetre ouverte."
+  (mk-process "neuromuse-gui-som" (lambda () (apply #'launch-som-gui source args))))
+
+;;; ------------------------------------------------------------------
+;;; 8. Demonstration SOM sans reseau
+;;; ------------------------------------------------------------------
+
+(defclass demo-som-source ()
+  ((side :initform 8 :initarg :side :accessor demo-som-side)
+   (n-inputs :initform 5 :initarg :n-inputs :accessor demo-som-n-inputs)
+   (frames :initform 0 :accessor demo-som-frames))
+  (:documentation "Source factice pour SOM-GUI : ni som ni apprentissage,
+juste de quoi verifier l'affichage seul, comme DEMO-SOURCE pour le mlp."))
+
+(defmethod gui-snapshot ((source demo-som-source))
+  (let* ((side (demo-som-side source))
+         (n (* side side))
+         (n-io (demo-som-n-inputs source))
+         (winner (random (max 1 n))))
+    (incf (demo-som-frames source))
+    (make-som-snapshot
+     :side side
+     :activity (loop for k below n collect (if (= k winner) 1.0 (random 0.6)))
+     :winner winner
+     :inputs (loop repeat n-io collect (random 1.0))
+     :winner-output (loop repeat n-io collect (random 1.0))
+     :status (format nil "demo-som (aucun reseau) : grille ~Dx~D, ~D entrees" side side n-io)
+     :signals (format nil "image ~D | gagnant aleatoire #~D"
+                       (demo-som-frames source) winner))))
+
+(defun demo-som (&key (side 8) (n-inputs 5))
+  "Ouvre la fenetre SOM sur une activite et un gagnant aleatoires : verifie
+Tk, Ltk et l'affichage sans toucher a un reseau."
+  (som-gui (make-instance 'demo-som-source :side side :n-inputs n-inputs)))
 
 ;; EOF

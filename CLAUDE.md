@@ -208,11 +208,13 @@ would not:
 
 Design points worth preserving if you extend it:
 - One generic, `gui-snapshot`, is the only tie between the window and a network class: it returns a
-  `snapshot` struct (weights, error series, the two status lines, error threshold). To visualise a
-  `som`/`rosom`, add one method rather than spreading accessor calls through the drawing code.
-  `(net mlp)` is already exactly the structure both the heatmap and the graph view want, so the `mlp`
-  method is essentially `(copy-list (net source))` — the `copy-list` freezes the list's spine, because
-  `backpropagate` replaces the layer matrices in place while the window is reading them.
+  `snapshot` struct (weights, error series, the two status lines, error threshold) for `mlp`/`rmlp`, or a
+  separate `som-snapshot` struct (grid side, per-neuron activity, winner index, winner's output, the two
+  status lines — see below) for `som`. Add one more method rather than spreading accessor calls through
+  the drawing code. `(net mlp)` is already exactly the structure both the heatmap and the graph view
+  want, so the `mlp` method is essentially `(copy-list (net source))` — the `copy-list` freezes the
+  list's spine, because `backpropagate` replaces the layer matrices in place while the window is reading
+  them.
 - The heatmap and the graph view are two independent renderers of that same `weights` structure — see
   `layer-sizes` for how the graph derives each layer's neuron count from the matrices alone (no mlp
   slots involved), so it works unchanged on `demo`'s fake weights too. `viewer-view` (`:heatmap` or
@@ -236,6 +238,34 @@ Design points worth preserving if you extend it:
   is not thread-safe: the REPL's training loop only mutates the network, never the widgets. Each
   refresh runs inside a `handler-case` that writes the condition into the window instead of opening a
   debugger in a background thread.
+
+`(net som)` is a *flat* list of `neuron`, one per grid cell — structurally nothing like an mlp's list of
+weight matrices — so the som viewer (section 7 of `gui.lisp`) is a parallel implementation (own
+`som-viewer`/`som-snapshot` structs, `som-refresh`/`launch-som-gui`/`som-gui`), not a second
+`gui-snapshot` branch bolted onto the heatmap/graph code. `(neuromuse-gui:gui some-som)` dispatches to it
+automatically (`typep ... 'som`); `(neuromuse-gui:demo-som)` is the fake-data equivalent of `demo`. It
+draws a `side x side` grid of cells (one per neuron, positioned by `2d`) shaded by *activity*, a row of
+grey input circles above it, and a row of grey circles below showing the winning neuron's `output` —
+plus a curve (reusing `build-error-plot`/`draw-error-plot` verbatim) tracing the winner's index over
+time. Two things worth knowing if you touch this:
+- "Activity" is read, not recomputed: `find-winner` already writes each neuron's distance-to-input into
+  `(distance neuron)`, and its per-input weighted terms into `(output neuron)`, every time it's called
+  (from `learn` during training, or from a REPL call like `pinson-som-winner`) — `gui-snapshot` just
+  normalises `(distance neuron)` across all neurons (1.0 = winner, 0.0 = furthest) and reads
+  `(output winner-neuron)` for the bottom row, rather than calling `find-winner` itself from the display
+  thread, which would race the training thread's own writes to those same neuron slots. When computing
+  the normalised min, do *not* pass `:initial-value 0.0` to the `reduce` finding the minimum distance —
+  distances are never negative, so a 0.0 floor wins over every real distance and `(position min-d
+  distances)` then never matches anything, leaving `winner` permanently `nil` (caught via `gui-snapshot`
+  called directly and inspected, not via the Tk window itself — reading a live `ltk:label`'s text from
+  a thread other than the GUI's own throws, since Ltk's output stream is bound only within that thread).
+- Unlike `history-error` for the mlp, nothing in `som.lisp` accumulates a history of past winners, so the
+  trace is built by the window itself: `som-refresh` (not `gui-snapshot`, which stays a stateless,
+  side-effect-free read like its mlp counterpart) pushes each snapshot's winner index onto
+  `(som-viewer-winner-history v)`, a field of the viewer struct — never written to the network itself.
+  `rosom` inherits `som` but `(net rosom)` is `(content-neurons context-neurons)`, not a flat neuron
+  list, so it has its own `gui-snapshot` method that just signals a clear error (caught by
+  `som-guarded-refresh` same as any other) rather than silently misreading that structure.
 
 ### Examples
 
