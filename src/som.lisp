@@ -13,26 +13,37 @@
     :initform 0 :initarg :winner :accessor winner :type integer)
    (distance ;; distance input > memoire, pour ne pas etre recalculee
     :initform 'euclidian :initarg :distance :accessor distance :type symbol)
-   (topology ;; '(espace nombredimension autresdescripteurs)
+   (topology ;; '(taille-du-net nombredimension autresdescripteurs) une fois
+    ;; INIT passe (toujours le cas : INITIALIZE-INSTANCE :AFTER l'appelle) --
+    ;; le premier element devient le nombre total de neurones, le second la
+    ;; dimension de la grille pour 2D/D2 (VOISINS, LEARN). L'initform
+    ;; ci-dessous ('euclidian 2) ne survit donc jamais telle quelle : seul son
+    ;; second element (la dimension) est repris par INIT.
     :initform '(euclidian 2) :initarg :topology :accessor topology :type list)
    (temp
     :initform 0.0 :initarg :temp :accessor temp :type number))
   (:documentation "som"))
 
-(defmethod initialize-instance :after ((self som) &key name)
+(defmethod initialize-instance :after ((self som) &key name (size 16) (input 8))
   (let ((name-of-som (if name
                           (make-new-symbol name)
                           (make-new-symbol 'som))))
      (setf (slot-value self 'name) name-of-som
 	   (symbol-value name-of-som) self)
-     (init self) ))
+     (init self :size size :input input) ))
 
 (defmethod print-object ((self som) stream)
   (format stream "<SOM ~S>" (name self) ))
 
 (defmethod init ((self som) &key (size 16) (input 8))
+   ;; NB : garder (cdr (topology self)) -- la dimension de grille (2 par
+   ;; defaut) et tout descripteur ulterieur -- au lieu d'ecraser toute la
+   ;; liste : LEARN lit (cadr (topology self)) pour construire le
+   ;; voisinage (voir plus bas), et le perdre ici le faisait echouer des
+   ;; qu'on rappelait INIT avec une taille explicite (ce que fait
+   ;; systematiquement tout code appelant, cf. les exemples et les tests).
    (if size
-      (setf (topology self) (list size))
+      (setf (topology self) (list* size (cdr (topology self))))
      (setf size (car (topology self))))
   (setf (net self) (list))
   (dotimes (k size (setf (net self) (nreverse (net self))))
