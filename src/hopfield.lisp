@@ -72,18 +72,31 @@ que de compter dessus.)"
 (defmethod learn ((self hopfield))
   "Un pas d'apprentissage hebbien : presente (input self) (un vecteur/une
 liste bipolaire, 0/1 par cellule) et renforce chaque synapse i<j selon la
-coincidence des deux cellules (regle de Hebb normalisee par IN-SIZE) --
-meme regle que TRAIN-HOPFIELD en 2001. Renvoie SELF, comme tout LEARN."
+coincidence des deux cellules (regle de Hebb, la contribution de ce pas
+normalisee par IN-SIZE puis ajoutee au poids existant -- cf. le fix plus
+bas pour ce qui a change par rapport a TRAIN-HOPFIELD en 2001). Renvoie
+SELF, comme tout LEARN."
   (let ((input (input self))
         (tnet (net self)))
     (dotimes (i (length input))
       (dotimes (j (length input))
         (when (< i j)
+          ;; FIX : le code de 2001 divisait (+ ancien-poids contribution) par
+          ;; IN-SIZE -- donc l'ancien poids ETAIT LUI AUSSI redivise a chaque
+          ;; apprentissage, pas seulement la nouvelle contribution. Avec des
+          ;; appels repetes (plusieurs motifs, ou plusieurs epoques), cela
+          ;; fait decroitre geometriquement les motifs appris plus tot, bien
+          ;; avant la limite de capacite habituelle d'un Hopfield standard
+          ;; (mesure : 1/5 motifs aleatoires rappeles exactement sur 100
+          ;; cellules, la limite ~0.138*N en prevoyant ~13). La regle de Hebb
+          ;; normalise la CONTRIBUTION de chaque motif par IN-SIZE, pas le
+          ;; poids deja accumule par les motifs precedents -- seule la
+          ;; contribution est donc divisee ci-dessous, avant d'etre ajoutee.
           (setf (aref (net self) i j)
-                (float (* (/ 1 (length input))
-                          (+ (aref tnet i j)
-                             (* (- (* 2 (elt input i)) 1)
-                                (- (* 2 (elt input j)) 1)))))
+                (float (+ (aref tnet i j)
+                          (/ (* (- (* 2 (elt input i)) 1)
+                                (- (* 2 (elt input j)) 1))
+                             (length input))))
                 (aref (net self) j i)
                 (aref (net self) i j)))))
     (setf (epoch self) (1+ (epoch self)))

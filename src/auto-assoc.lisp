@@ -83,42 +83,41 @@ le maintient symetrique a chaque mise a jour."))
 (defmethod learn ((self auto-assoc))
   "Un pas d'apprentissage : presente (input self), et corrige chaque
 synapse par la regle de Widrow-Hoff (WIDROW-HOFF, maths.lisp) a partir de
-l'activation de chaque cellule -- meme regle que TRAIN-AA en 2001, AVEC LA
-MEME PARTICULARITE : la somme d'activation et la correction utilisent
-toutes deux (ELT INPUT I), pas (ELT INPUT J), dans la boucle sur J -- donc
-l'activation de la cellule I vaut INPUT[I] * (somme de sa ligne de poids),
-pas la somme ponderee usuelle sur les entrees. Code de 2001 fidelement
-repris tel quel ; a verifier si c'etait l'intention ou un bug jamais
-remarque -- cf. RUN-AUTO-ASSOC plus bas, qui a la meme particularite.
+l'activation de chaque cellule : activation_i = somme_j NET[i][j] * IN[j]
+(FIX : le code de 2001, TRAIN-AA, utilisait (ELT INPUT I) au lieu de
+(ELT INPUT J) dans cette somme et dans le XI de WIDROW-HOFF -- l'activation
+de la cellule I valait alors IN[I] * (somme de sa ligne de poids), qui ne
+depend pas du reste de l'entree ; cf. RUN-AUTO-ASSOC plus bas, meme fix).
 Renvoie SELF, comme tout LEARN."
   (let ((input (input self))
         (l (learn-fact self)))
     (dotimes (i (length input))
       (let ((activation 0))
         (dotimes (j (length input))
-          (incf activation (* (aref (net self) i j) (elt input i))))
+          (incf activation (* (aref (net self) i j) (elt input j))))
         (dotimes (j (length input))
           (setf (aref (net self) i j)
                 (widrow-hoff (aref (net self) i j) (elt input i)
-                             (logistic activation) (elt input i) l)
+                             (logistic activation) (elt input j) l)
                 (aref (net self) j i)
                 (aref (net self) i j)))))
     (setf (epoch self) (1+ (epoch self)))
     (values self)))
 
 (defmethod run-auto-assoc ((self auto-assoc) &key in (fct #'tanh))
-  "Rappel : pour chaque cellule i, (FCT (somme_j NET[i][j] * IN[I])) -- IN
-par defaut (input self). Meme particularite qu'en 2001 que LEARN ci-dessus
-: (ELT INPUT I) dans la boucle sur J, pas (ELT INPUT J). Ecrit et renvoie
-(output self), comme RUN-MLP/RUN-PERCEPTRON/RUN-HOPFIELD -- mais ici une
-LISTE (comme (output mlp)), pas un vecteur (RUN-HOPFIELD renvoie un
-vecteur ; meme asymetrie qu'en 2001, non harmonisee ici)."
+  "Rappel : pour chaque cellule i, (FCT (somme_j NET[i][j] * IN[j])) -- IN
+par defaut (input self) (FIX : le code de 2001, RUN-AA, utilisait
+(ELT INPUT I) au lieu de (ELT INPUT J) ici, meme probleme que LEARN
+ci-dessus). Ecrit et renvoie (output self), comme
+RUN-MLP/RUN-PERCEPTRON/RUN-HOPFIELD -- mais ici une LISTE (comme
+(output mlp)), pas un vecteur (RUN-HOPFIELD renvoie un vecteur ; meme
+asymetrie qu'en 2001, non harmonisee ici)."
   (let ((input (or in (input self)))
         (answer (list)))
     (dotimes (i (length input))
       (let ((temp (list)))
         (dotimes (j (length input))
-          (push (* (aref (net self) i j) (elt input i)) temp))
+          (push (* (aref (net self) i j) (elt input j)) temp))
         (push (funcall fct (apply #'+ temp)) answer)))
     (setf (output self) (nreverse answer))))
 

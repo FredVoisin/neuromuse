@@ -100,15 +100,21 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   by Widrow-Hoff instead (same rule as `perceptron`, reusing `widrow-hoff`/`logistic` from
   `maths.lisp`) to reproduce/associate `(input self)` to itself — the file is named `auto-assoc.lisp`
   for what it is now usually called (a single-layer linear auto-encoder, no bottleneck), but the class
-  keeps its original, more exact 2001 name. Two things carried over unexamined from the 2001 code,
-  flagged in both files' docstrings rather than silently changed: `hopfield`'s `learn` divides the
-  *entire* existing weight by `in-size` on every call (not just each new contribution), which compounds
-  across repeated training and measurably hurts recall well before the standard capacity limit should
-  bite (5 random patterns on 100 cells: only 1 recalled exactly in testing, where the limit predicts
-  ~13); and `auto-assoc`'s `learn`/`run-auto-assoc` both index with `(elt input i)` inside their loop
-  over `j`, not `(elt input j)`, so each cell's activation is `input[i]` times a sum that doesn't
-  actually depend on the rest of the input — mathematically not the usual weighted-sum formula, though
-  it still produced a working-looking recall in a quick test. Neither has a `save`, `gui-snapshot`, or
+  keeps its original, more exact 2001 name. `hopfield`'s `learn` originally divided the *entire*
+  existing weight by `in-size` on every call, not just the new contribution — a bug carried over from
+  2001, since fixed: only the new contribution is normalized by `in-size` now, same as the standard
+  Hebbian rule, before being *added* to the existing weight. The old scaling compounded across repeated
+  training and measurably hurt recall well before the standard capacity limit should bite (5 random
+  patterns on 100 cells: only 1 recalled exactly before the fix, 5/5 after — right at the ~0.138 x
+  in-size capacity limit itself, recall still degrades sharply, which is expected Hopfield behaviour,
+  not a bug). `auto-assoc`'s `learn`/`run-auto-assoc` originally indexed with `(elt input i)` inside
+  their loop over `j` instead of `(elt input j)` — another 2001 bug, since fixed: each cell's
+  activation is now the proper weighted sum over the whole input, `sum_j net[i][j] * input[j]`, not
+  `input[i]` times a sum that didn't depend on the rest of the input. Confirmed by testing: trained on
+  a few bipolar patterns, `run-auto-assoc` now recalls each one almost exactly (`tanh` output close to
+  ±1 matching the pattern), and completes a partial cue (one bit zeroed out) back to the full trained
+  pattern — proper auto-associative pattern completion, which the pre-fix version could not do. Neither
+  class has a `save`, `gui-snapshot`, or
   `activation-state` method yet (so no file saving, no `neuromuse-gui` window, no `trace-activation`
   support) — not ported, since nothing asked for it and both would need real design decisions (a 2D
   array doesn't serialize or trace the way `som`'s neuron list or `mlp`'s weight-matrix list do). The
