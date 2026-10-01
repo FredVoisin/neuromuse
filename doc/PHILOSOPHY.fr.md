@@ -23,9 +23,11 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
 
 ---
 
+
+*Note de l'auteur : ce qui suit a été ajouté par claude.ia en Sept. 2026, traduit de la [version anglaise](PHILOSOPHY.md) très discutable, éventuellement superflue, à corriger !*
+
 ## Principes fondamentaux
 
-*Section ajoutée depuis 2005 ; traduite de l'anglais, à relire.*
 
 ### 1. **L'art est le processus, pas seulement le produit**
 
