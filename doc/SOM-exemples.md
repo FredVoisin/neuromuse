@@ -120,11 +120,15 @@ happens to be in when called (it doesn't retrain), and there's no baseline yet f
 "close" versus "different" in absolute terms — a useful next step would be comparing a single song's
 two halves against each other, to calibrate the scale. A DTW (Dynamic Time Warping) alignment of the
 raw winner sequences is the natural follow-up if this comparison turns out not to discriminate the
-songs well enough.
+songs well enough. Other methods to compare trajectories, when seen as musical profiles, can be also be
+adapted from the [Morphologie](https://github.com/FredVoisin/Morphologie) project.
 
 ## 5. Watching it train live: the SOM viewer
 
-`neuromuse-gui` also has a SOM-specific window (`src/gui.lisp`), separate from the MLP heatmap/graph
+As well as the other archtectures, one can pragmatically overcome the difficulty of systematically 
+computing trajectory differences through dual observation: listening to the audio synthesis of output 
+activations and visually inspecting the self-organizing map's cell activations.
+So, `neuromuse-gui` also has a SOM-specific window (`src/gui.lisp`), separate from the MLP heatmap/graph
 view since a SOM's `net` is a flat list of neurons, not layered weight matrices. It shows the map as a
 grid shaded by each neuron's activity (darker = closer to the current input, the winner outlined in
 red), the current input as a row of circles above, the winning neuron's output as a row below, and a
@@ -142,6 +146,11 @@ trace of the winner's index over time at the bottom.
   <sub>The SOM viewer on <code>pinson-som</code>: 12×12 activity map (winner outlined in red), input row
   on top, winner's output row and winner-index trace below.</sub>
 </p>
+
+And as with the others, observation often suggests adapting learning parameters such as learning rate `(learn-fact)`,
+synaptic temperature `(net-temp)`, and radius `(radius)`. The Lisp code also permits—and this is worth 
+emphasizing—reshaping the self-organizing map on the fly during training, for example by adding cells, provided 
+one carefully considers the SOM's geometry and topology.
 
 ## Further Reading
 
