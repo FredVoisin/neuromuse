@@ -146,8 +146,8 @@ trace of the winner's index over time at the bottom.
   on top, winner's output row and winner-index trace below.</sub>
 </p>
 
-And as with the others, observation often suggests adapting learning parameters such as learning rate (learn-fact),
-synaptic temperature (net-temp), and radius (radius). The Lisp code also permits—and this is worth 
+And as with the others, observation often suggests adapting learning parameters such as learning rate `(learn-fact)`,
+synaptic temperature `(net-temp)`, and radius `(radius)`. The Lisp code also permits—and this is worth 
 emphasizing—reshaping the self-organizing map on the fly during training, for example by adding cells, provided 
 one carefully considers the SOM's geometry and topology.
 
