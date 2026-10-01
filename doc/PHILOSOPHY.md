@@ -22,8 +22,8 @@ It was within the framework of choreographic research, in 2000, that I came to w
 
 **Note to the reader:**
 
-*The following has been generated in English by Claude.ia - sonnet 5, in Sept. 2026, as a draft to be amended by the autor.* 
-*The autor take it here as is, to keep a trace of what a LLM may infer by itself from the legacy code and the presentation above*
+*The following has been generated in English by Claude.ia - sonnet 5, in Sept. 2026, as a draft to be amended by the author.* 
+*We take it here as is, to keep a trace of what a LLM could infer - or paraphrase - the 'code philosophy' from the code and the presentation above translated from the legacy [French version](PHILOSOPHY.fr.md)*
 
 ### 1. **Art is the Process, Not Just the Product**
 
