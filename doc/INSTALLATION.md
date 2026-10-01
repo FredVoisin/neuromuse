@@ -29,7 +29,7 @@ Quicklisp is what gets you three things beyond that, each pulled in on demand, n
   `(ql:quickload :neuromuse)` finds it by name from any directory, no path to remember or push onto
   `asdf:*central-registry*` by hand.
 
-Skip Quicklisp entirely and you still get the full core library at the REPL — `make-mlp`, `backpropagate`,
+Skip Quicklisp entirely and you still get the full core library at the REPL — `make-mlp`, `learn`,
 `run-mlp`, everything in `examples/mlp-test.lisp` — just not the test suite or the GUI window, short of
 fetching `:prove` and `:ltk` by some other means and registering them with ASDF yourself. Steps 4 and 5
 below show both paths side by side.
@@ -113,7 +113,7 @@ ln -s ~/projects/neuromuse ~/quicklisp/local-projects/neuromuse
 (in-package :neuromuse)
 ```
 
-Either way you land in the same place — same package, same `make-mlp`/`backpropagate`/`run-mlp`. The
+Either way you land in the same place — same package, same `make-mlp`/`learn`/`run-mlp`. The
 test suite and the GUI, though, both need something Quicklisp fetches (`:prove`, `:ltk`) and so only
 work with Quicklisp installed:
 ```lisp

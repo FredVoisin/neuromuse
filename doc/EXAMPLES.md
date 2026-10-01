@@ -40,7 +40,7 @@ To train a network on *your* problem:
            do (loop for i below (length *my-inputs*)
                     do (setf (input net) (nth i *my-inputs*)
                              (goal net) (nth i *my-goals*))
-                       (backpropagate net)
+                       (learn net)
                        (setf e (current-error net)))))
    ```
 
@@ -86,7 +86,7 @@ The examples above use *online* learning (update after each sample). For *batch*
            (loop for i below (length *inputs*)
                  do (setf (input net) (nth i *inputs*)
                           (goal net) (nth i *goals*))
-                    (backpropagate net)
+                    (learn net)
                     (incf total-error (current-error net)))
            (when (< total-error threshold)
              (return))))

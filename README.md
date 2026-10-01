@@ -98,7 +98,7 @@ units, and jitters the weights a little (`net-temp`) during training to reliably
   (dotimes (i (length *xor-in*))
     (setf (input xor) (nth i *xor-in*)
           (goal xor) (nth i *xor-goal*))
-    (backpropagate xor)))
+    (learn xor)))
 
 ;; 4. Test (net-temp back to 0 first, or run-mlp would jitter the weights
 ;;    it reads)

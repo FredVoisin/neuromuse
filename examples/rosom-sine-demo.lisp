@@ -82,16 +82,24 @@ on a sqrt(*rosom-size*) x sqrt(*rosom-size*) grid).")
                                  (entrainement-rate *entrainement-rate*)
                                  (temp-som 0) (temp-rosom 0))
   "One pass over SEQUENCE, learning on. Returns the list of winners (one per
-step), and suppresses ROSOM-LEARN's own per-step printing so training stays
-readable."
+step), and suppresses LEARN's own per-step printing so training stays
+readable. LEARN (src/rosom.lisp) reads RADIUS/LEARN-FACT/ENTRAINEMENT-RATE/
+TEMP-SOM/TEMP-ROSOM off ROSOM's own slots rather than taking them as
+arguments (the old ROSOM-LEARN function's convention), hence the SETF here
+instead of passing them through to the call below."
+  (setf (radius rosom) radius
+        (learn-fact rosom) learn
+        (entrainement-rate rosom) entrainement-rate
+        (temp-som rosom) temp-som
+        (temp-rosom rosom) temp-rosom
+        (verbose rosom) nil)
   (let ((null-out (make-broadcast-stream)))
     (loop for v in sequence
           collect
           (progn
             (setf (input rosom) v)
             (let ((*standard-output* null-out))
-              (rosom-learn v rosom radius learn entrainement-rate temp-som temp-rosom
-                           :verbose nil))
+              (learn rosom))
             (car (find-winner rosom))))))
 
 (format t "~&Training on ~a periods (~a steps each, ~a steps total)...~%"

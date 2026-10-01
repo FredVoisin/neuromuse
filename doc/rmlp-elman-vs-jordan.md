@@ -29,11 +29,11 @@ network's output layer.
   (:documentation "Elman Recurrent Multi-Layer Perceptron."))
 ```
 
-In both `run-mlp` and `backpropagate` for `rmlp`, the current input is the network's own `input`
+In both `run-mlp` and `learn` for `rmlp`, the current input is the network's own `input`
 slot concatenated with `recurrent-layer-activation` from the previous step:
 
 ```lisp
-(input (if in in (append (input mlp) (recurrent-layer-activation mlp))))
+(input (append (input mlp) (recurrent-layer-activation mlp)))
 ```
 
 and after computing each hidden layer's activation during the forward pass, the layer whose index
@@ -58,7 +58,7 @@ step, and compare vector lengths:
 (setf (learn-fact probe) 0.3
       (input probe) '(1 0 1 0 1 0)
       (goal probe) '(1))
-(backpropagate probe)
+(learn probe)
 
 (length (recurrent-layer-activation probe))  ; => 4  (matches hidden-size, not out-size)
 (out-size probe)                             ; => 1

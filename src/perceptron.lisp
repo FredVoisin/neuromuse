@@ -13,7 +13,8 @@
 ;;;;   perceptron-out       -> run-perceptron        (out-fun = #'binary)
 ;;;;   run-perceptron-B     -> run-perceptron        (out-fun = #'boltzmann, temp > 0)
 ;;;;   percept-learn,
-;;;;   percept-B-learn      -> learn-perceptron
+;;;;   percept-B-learn      -> learn (specialise sur perceptron ; ex LEARN-PERCEPTRON,
+;;;;                           renomme pour rejoindre le LEARN de mlp/rmlp/som/rosom)
 ;;;;   train-perceptron,
 ;;;;   train-perceptron-B   -> train-perceptron
 ;;;;   cell-output          -> binary              (maths.lisp)
@@ -141,14 +142,18 @@ met à jour (output self) et la renvoie sous forme de liste."
   "Nombre de cellules de sortie dont la valeur diffère du but."
   (count 1 (compare-vectors output goal)))
 
-(defmethod learn-perceptron ((self perceptron) &key in goal)
-  "Un pas d'apprentissage : présente le stimulus IN (défaut (input self)),
-compare la sortie au but GOAL (défaut (goal self)) et corrige chaque synapse
-par la règle de Widrow-Hoff, w_ij <- w_ij + l (t_j - o_j) x_i
-(avec x_i = 1 pour le poids de biais).
-Renvoie le nombre de sorties erronées AVANT correction."
-  (let* ((stimulus (or in (input self)))
-         (goal (or goal (goal self)))
+(defmethod learn ((self perceptron))
+  "Un pas d'apprentissage : présente le stimulus (input self), compare la
+sortie au but (goal self) et corrige chaque synapse par la règle de
+Widrow-Hoff, w_ij <- w_ij + l (t_j - o_j) x_i (avec x_i = 1 pour le poids
+de biais). Le nombre de sorties erronées AVANT correction est dans
+(current-error self) ensuite ; renvoie SELF, comme LEARN pour mlp/rmlp/som/
+rosom (voir TRAIN-PERCEPTRON plus bas pour la boucle multi-époques -- cette
+methode-ci, renommee depuis LEARN-PERCEPTRON, prenait avant IN/GOAL en
+mots-clefs plutot que de les lire sur SELF ; la boucle fait maintenant le
+SETF elle-meme a chaque stimulus)."
+  (let* ((stimulus (input self))
+         (goal (goal self))
          (output (run-perceptron self :in stimulus))
          (input (perceptron-input self stimulus))
          (l (learn-fact self))
@@ -167,7 +172,8 @@ Renvoie le nombre de sorties erronées AVANT correction."
                              collect (widrow-hoff w (elt goal j) (nth j output) xi l)))))
     (when (verbose self)
       (format t "~&~S : ~S <<< ~S, ~D erreur~:P" stimulus goal output e))
-    e))
+    (setf (current-error self) e)
+    (values self)))
 
 (defmethod train-perceptron ((self perceptron) stimuli goals &key verbose)
   "Apprentissage par époques de la liste de STIMULI vers la liste de GOALS,
@@ -175,15 +181,16 @@ jusqu'à ce que le taux d'erreur d'une époque (fraction des stimuli mal classé
 soit <= (threshold self), ou après (stop self) époques.
 Chaque taux d'erreur est empilé dans (history-error self), le dernier restant
 lisible dans (current-error self). Renvoie SELF (le perceptron appris), pour
-pouvoir le réinjecter dans une fonction -- même convention que BACKPROPAGATE,
-LEARN (som) et ROSOM-LEARN."
+pouvoir le réinjecter dans une fonction -- même convention que LEARN
+(mlp/rmlp/som/rosom)."
   (assert (= (length stimuli) (length goals)))
   (setf (previous self) (copy-tree (net self)))
   (let ((n (length stimuli)))
     (dotimes (k (stop self))
       (let* ((wrong (loop for in in stimuli
                           for goal in goals
-                          count (plusp (learn-perceptron self :in in :goal goal))))
+                          do (setf (input self) in (goal self) goal)
+                          count (plusp (current-error (learn self)))))
              (rate (float (/ wrong n))))
         (incf (epoch self))
         (push rate (history-error self))

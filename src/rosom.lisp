@@ -29,7 +29,18 @@
 (defclass rosom (SOM)
   ((input-context :initform nil :initarg :input-context :accessor input-context :type list)
    (content :initform nil :initarg :content :accessor content :type list)
-   (context :initform nil :initarg :context :accessor context :type list))
+   (context :initform nil :initarg :context :accessor context :type list)
+   ;; LEARN's own parameters, same role as SOM's inherited RADIUS/LEARN-FACT
+   ;; (read off the instance, set once with SETF rather than passed at every
+   ;; call) but with no equivalent slot anywhere above ROSOM -- added when
+   ;; ROSOM-LEARN (an ordinary function taking all of these as explicit
+   ;; arguments) was folded into LEARN as a proper method, so it could read
+   ;; them the same way SOM's LEARN does.
+   (entrainement-rate :initform 0.0 :initarg :entrainement-rate :accessor entrainement-rate :type number)
+   (temp-som :initform 0.0 :initarg :temp-som :accessor temp-som :type number)
+   (temp-rosom :initform 0.0 :initarg :temp-rosom :accessor temp-rosom :type number)
+   (content-on :initform 1 :initarg :content-on :accessor content-on :type number)
+   (context-on :initform 1 :initarg :context-on :accessor context-on :type number))
    (:documentation "rosom: recurrent oscillatory self-organising map")
    )
 
@@ -154,7 +165,25 @@
 
 ; (mapcar #'cadr (net (nth 0 (car (net titi)))))
 
-(defun rosom-learn (input rosom radius learn entrainement-rate temp-som temp-rosom &key (content-on 1) (context-on 1) (verbose t))
+;; Renamed from ROSOM-LEARN, an ordinary function taking RADIUS, the
+;; learning rate, ENTRAINEMENT-RATE, TEMP-SOM and TEMP-ROSOM as explicit
+;; arguments on every call (plus INPUT itself, never read from (input
+;; rosom)) -- unlike SOM's LEARN, which reads all of its own equivalents
+;; (RADIUS, LEARN-FACT) off the instance. Now a proper LEARN method: the
+;; outer LET below just renames SELF's slots (including the three new ones
+;; above, added for exactly this) back to the names the unchanged body
+;; already uses, so the actual algorithm is untouched by the rename.
+(defmethod learn ((self rosom))
+  (let ((input (input self))
+        (rosom self)
+        (radius (radius self))
+        (learn (learn-fact self))
+        (entrainement-rate (entrainement-rate self))
+        (temp-som (temp-som self))
+        (temp-rosom (temp-rosom self))
+        (content-on (content-on self))
+        (context-on (context-on self))
+        (verbose (verbose self)))
   (let ((netrosom (net rosom))
 	(n (cadr (topology rosom))) ;(n (array-dimension (car netrosom) 0))
 	distances
@@ -273,4 +302,4 @@
 	 (format t "~2D : ~S~%"
 		 (car winner)
 		 (mapcar #'(lambda (x) (if (< x max) 0 1)) winner-rep)))
-       (values rosom)))  ;; le rosom appris, pour pouvoir le reinjecter dans une fonction
+       (values rosom))))  ;; le rosom appris (= self), pour pouvoir le reinjecter dans une fonction

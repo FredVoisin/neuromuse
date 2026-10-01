@@ -690,6 +690,37 @@ returns
   (apply #'+ (loop for k from 0 to (1- (length a))
 		   collect (expt (- (elt a k) (elt b k)) 2))))
 
+(defun transition-matrix (sequence size)
+  "Matrice SIZE x SIZE des comptes de transition : (aref m a b) = nombre de
+fois ou SEQUENCE passe de l'etat A a l'etat B d'un indice au suivant --
+SEQUENCE une suite d'entiers dans [0, SIZE). Pas specifique aux SOM ni aux
+reseaux de neurones ; deplacee depuis examples/pinson_som.lisp, ou SEQUENCE
+etait une suite d'indices de neurones gagnants (cf. WINNER-SEQUENCE, restee
+sur place, qui la produit)."
+  (let ((m (make-array (list size size) :initial-element 0)))
+    (loop for (a b) on sequence while b
+          do (incf (aref m a b)))
+    m))
+
+(defun cos-similarity (m1 m2)
+  "Similarite cosinus entre deux matrices 2D de meme taille, vues comme deux
+vecteurs aplatis -- insensible a l'echelle absolue de leurs valeurs
+(contrairement a une comparaison directe des comptes/valeurs bruts). 1.0 =
+memes proportions, 0.0 = rien en commun. Deplacee depuis
+examples/pinson_som.lisp (COMPARE-TRANSITIONS), ou elle comparait des
+matrices de transition case-a-case d'un SOM, un usage qui n'a rien de
+specifique aux reseaux de neurones."
+  (let ((dims (array-dimensions m1))
+        (dot 0) (n1 0) (n2 0))
+    (dotimes (i (first dims))
+      (dotimes (j (second dims))
+        (let ((a (aref m1 i j)) (b (aref m2 i j)))
+          (incf dot (* a b))
+          (incf n1 (* a a))
+          (incf n2 (* b b)))))
+    (if (or (zerop n1) (zerop n2))
+        0.0
+        (float (/ dot (sqrt (* n1 n2)))))))
 
 ;;*************      TOPOLOGIE     **********************************
 

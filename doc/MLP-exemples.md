@@ -64,23 +64,25 @@ This creates a multi-layer perceptron with:
         do (loop for i from 0 to (- (length in) 2)
                  do (setf (input net) (nth i in)
                           (goal net) (nth i goal))
-                    (backpropagate net)
+                    (learn net)
                     (setf e (current-error net))
                     (format t "~&epoch ~S, e = ~S" (epoch net) e))))
 ```
 
-- **`backpropagate`**: One forward pass + one weight update. Returns `net` itself (same convention as
-  `learn` for a SOM, `rosom-learn`, and `train-perceptron` -- see the note below), not the error; read
-  the error for the step off `(current-error net)` afterward.
+- **`learn`**: One forward pass + one weight update (one step of backpropagation). Returns `net` itself
+  -- the same `learn` generic function as SOM/ROSOM/perceptron (see the note below), not the error;
+  read the error for the step off `(current-error net)` afterward.
 - **`epoch`**: Number of training iterations so far.
 
-*Note on return values:* every architecture's "one learning step" function -- `backpropagate` here,
-`learn` for a `som`, `rosom-learn`, `train-perceptron` -- returns only the network instance itself, so
-any of them can be dropped straight into another function (`(f (backpropagate net))`,
+*Note on return values:* every architecture's "one learning step" is the same generic function,
+`learn` -- `mlp`/`rmlp`, `som`/`rosom`, `perceptron` -- and it returns only the network instance
+itself, so any call can be dropped straight into another function (`(f (learn net))`,
 `(f (learn som))`, ...). Whatever numeric feedback that step produced lives on the instance instead:
 `(current-error net)` for the step just taken, `(history-error net)` for everything accumulated so far
-(pushed newest-first) -- `backpropagate` itself doesn't push onto `history-error`; that's still up to
-the caller, as in the loop above.
+(pushed newest-first) -- `learn` itself doesn't push onto `history-error`; that's still up to
+the caller, as in the loop above. (`train-perceptron` is a different kind of function -- a multi-epoch
+driver, like `train-pinson-som` for a SOM, that calls `learn` once per stimulus internally -- not
+another name for the same one-step primitive.)
 
 *Note:* The inner loop bound `(- (length in) 2)` visits only 3 of 4 patterns per epoch (a quirk to know about if comparing curves).
 
@@ -156,7 +158,7 @@ output — happens every time on SBCL:
   (dotimes (i (length *xor-in*))
     (setf (input xor) (nth i *xor-in*)
           (goal xor) (nth i *xor-goal*))
-    (backpropagate xor)))
+    (learn xor)))
 (setf (net-temp xor) 0)  ; run-mlp jitters weights by net-temp too — turn it off before testing
 ```
 
@@ -243,7 +245,7 @@ Train on a sequence:
   (loop for t from 0 to (length sequence)
         do (setf (input net) (nth t sequence)
                  (goal net) (nth (+ t 1) sequence))  ;; Predict next step
-            (backpropagate net)))
+            (learn net)))
 ```
 
 The recurrent connections let the network "remember" recent inputs when predicting the next one. See [doc/rmlp-elman-vs-jordan.md](../doc/rmlp-elman-vs-jordan.md) for details.

@@ -62,7 +62,7 @@
        (setf i (random l) 
 	     (input mlp) (nth i *in*)
 	     (goal mlp) (nth i *goal*))
-       (backpropagate mlp)  ;; renvoie mlp ; l'erreur du pas est dans (current-error mlp)
+       (learn mlp)  ;; renvoie mlp ; l'erreur du pas est dans (current-error mlp)
        (setf e (current-error mlp))
        (push e (history-error mlp))
        (setf (epoch mlp) (incf (epoch mlp) 1))
@@ -83,7 +83,7 @@
 	  do
 	    (setf (input mlp) (nth i *in*)
 		  (goal mlp) (nth i *goal*))
-	    (backpropagate mlp)  ;; renvoie mlp ; l'erreur du pas est dans (current-error mlp)
+	    (learn mlp)  ;; renvoie mlp ; l'erreur du pas est dans (current-error mlp)
 	    (setf e (current-error mlp))
 	    (push e (history-error mlp))
 	    (setf (epoch mlp) (incf (epoch mlp) 1))

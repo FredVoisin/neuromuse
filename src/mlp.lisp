@@ -177,10 +177,10 @@
         (setf (nth j (nth i dd)) (elt output-signal-error i))))
     (hadamar-product output-layer dd)))
 
-(defmethod backpropagate ((mlp mlp) &optional in)
+(defmethod learn ((mlp mlp))
   (let ((goal (goal mlp))
 	(net (noise mlp (* (learn-fact mlp) (net-temp mlp))))
-	(input (if in in (input mlp)))
+	(input (input mlp))
 	(learn (learn-fact mlp))
 	(hidden-func (hidden-fun mlp))
 	(out-func (out-fun mlp))
@@ -234,7 +234,7 @@
 							out-signal-error
 							learn)
 	  e (check-error output-answer-cell goal thresh))
-    (setf (current-error mlp) e)  ;; l'erreur du pas, homogeneite : backpropagate ne renvoie que mlp
+    (setf (current-error mlp) e)  ;; l'erreur du pas, homogeneite : learn ne renvoie que mlp
     (values mlp)))
 
 (defmethod run-mlp ((mlp mlp) &key in)  ;in pour method rmlp...
@@ -325,9 +325,9 @@
               :net (apply #'init-mlp-net (append (list (+ ,in (nth ,recurrent-layer ',hid)) ,out) ',hid))
               :creation-date (get-universal-time))))))
 
-(defmethod backpropagate ((mlp rmlp) &optional in)
+(defmethod learn ((mlp rmlp))
   (let ((goal (goal mlp))
-	(input (if in in (append (input mlp) (recurrent-layer-activation mlp))))
+	(input (append (input mlp) (recurrent-layer-activation mlp)))
 	(net (noise mlp (* (learn-fact mlp) (net-temp mlp))))
 	(learn (learn-fact mlp))
 	(hidden-func (hidden-fun mlp))
@@ -384,7 +384,7 @@
 							out-signal-error
 							learn)
 	  e (check-error output-answer-cell goal thresh))
-    (setf (current-error mlp) e)  ;; l'erreur du pas, homogeneite : backpropagate ne renvoie que mlp
+    (setf (current-error mlp) e)  ;; l'erreur du pas, homogeneite : learn ne renvoie que mlp
     (values mlp)))
 
 (defmethod run-mlp ((mlp rmlp) &key in)  ;in pour method rmlp...
@@ -478,7 +478,9 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; oldies....
+;; oldies.... all still inert (commented out below) -- note that LEARN is
+;; now a real, active method above (renamed from BACKPROPAGATE), separate
+;; from the shelved one further down with the same name.
 
 #|
 ;; run variante with inhibition

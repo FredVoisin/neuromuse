@@ -38,8 +38,9 @@ Like `mlp`, `learn-fact` defaults to `0.0` — a freshly-built SOM won't learn a
 ## 2. Training
 
 One learning step is `(learn som)`: present an input via `(setf (input som) ...)` (a vector, not a
-list), then call `learn`. Like `backpropagate` for an `mlp`, it returns the SOM itself, so it can be
-dropped straight into another function:
+list), then call `learn` -- the same generic function `learn` for an `mlp` (see
+[MLP-exemples.md](MLP-exemples.md)), it returns the SOM itself, so it can be dropped straight into
+another function:
 
 ```lisp
 (dotimes (epoch 100)

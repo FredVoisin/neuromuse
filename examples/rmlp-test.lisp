@@ -57,7 +57,7 @@ accel641-R
 
 (setf (input accel641-R) (car *in*)
       (goal accel641-R) (car *goal*))
-(backpropagate accel641-R)
+(learn accel641-R)
 
 ;; LEARNING loop 1 : playing a sequence of input values
 (let* ((rmlp accel641-r)
@@ -70,7 +70,7 @@ accel641-R
      do
        (setf (input rmlp) (nth (mod i l) *in*)
 	     (goal rmlp) (nth (mod i l) *goal*))
-       (backpropagate rmlp)  ;; renvoie rmlp ; l'erreur du pas est dans (current-error rmlp)
+       (learn rmlp)  ;; renvoie rmlp ; l'erreur du pas est dans (current-error rmlp)
        (setf e (current-error rmlp))
        (push e (history-error rmlp))
        (setf (epoch rmlp) (floor (/ i l))

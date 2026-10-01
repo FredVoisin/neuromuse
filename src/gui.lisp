@@ -116,9 +116,9 @@ qui vient d'etre faite a utilise la precedente, qui n'est pas conservee."
 
 (defmethod gui-snapshot ((source mlp))
   (make-snapshot
-   ;; copy-list : backpropagate remplace les matrices une a une dans
-   ;; (net mlp) ; on fige l'epine dorsale de la liste pour dessiner un etat
-   ;; coherent meme si l'apprentissage tourne dans un autre thread.
+   ;; copy-list : learn (ex-backpropagate) remplace les matrices une a une
+   ;; dans (net mlp) ; on fige l'epine dorsale de la liste pour dessiner un
+   ;; etat coherent meme si l'apprentissage tourne dans un autre thread.
    :weights (copy-list (net source))
    ;; history-error est empilee par push (la plus recente en tete) par les
    ;; boucles d'apprentissage : cf. examples/mlp-test.lisp.

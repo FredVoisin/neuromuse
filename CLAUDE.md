@@ -78,11 +78,21 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   last-activation)` triples), `fun` (activation function + args), `slope`, `bias`, `temp`. Used as the
   node type inside SOM/ROSOM nets.
 - `perceptron` (`src/perceptron.lisp`, subclass of `ANN`) — simple single-layer net; marked "unfinished"
-  in a comment, superseded by MLP. Loaded by the `.asd` after `mlp`.
-- `mlp` (`src/mlp.lisp`, subclass of `ANN`) — multi-layer perceptron with backpropagation. `net` is a
+  in a comment, superseded by MLP. Loaded by the `.asd` after `mlp`. Its one-step training method is
+  `learn`, same name and "returns only itself" convention as every other architecture's — renamed from
+  `learn-perceptron`, which took the stimulus/goal as `:in`/`:goal` keywords rather than reading
+  `(input self)`/`(goal self)` and returned an error count rather than `self`; `train-perceptron`'s
+  own multi-epoch loop (unrenamed — it's the driver, not the one-step primitive, same role as
+  `train-pinson-som`) now does the `setf` itself before each call, and reads that former return value
+  off `(current-error self)` instead.
+- `mlp` (`src/mlp.lisp`, subclass of `ANN`) — multi-layer perceptron. `net` is a
   list of weight matrices (one per layer transition), each matrix a list-of-lists. `hidden-fun`/
-  `out-fun` are activation functions (default `logistic`). Has `activation` and `clear` methods in
-  `mlp.lisp` itself; its `save` method (replacing the old `nnsave`) moved to `src/read-write.lisp`
+  `out-fun` are activation functions (default `logistic`). Has `learn` (one step; renamed from
+  `backpropagate` — dropped its `&optional in` override, so it always trains on `(input mlp)`, the
+  same way every other architecture's `learn` reads straight off the instance; a commented-out `learn`
+  method shelved years earlier for unrelated reasons, in the "oldies" block near the end of
+  `mlp.lisp`, happens to share the name now — see the note right above that block) and `clear` methods
+  in `mlp.lisp` itself; its `save` method (replacing the old `nnsave`) moved to `src/read-write.lisp`
   alongside the `neuron`/`list`/`t` `save` methods it used to sit next to in `neuromuse-main.lisp` — see
   "Reading and writing a network to a file (read-write.lisp)" below.
 - `rmlp` (`src/mlp.lisp`, subclass of `mlp`) — recurrent MLP (Elman style): one hidden layer's
@@ -91,7 +101,18 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   `neuron` instances; `topology` describes the map's spatial layout for neighborhood computation.
 - `rosom` (`src/rosom.lisp`, subclass of `som`) — "recurrent oscillatory SOM": pairs a content SOM with
   a context SOM (`net` is `(content-neurons context-neurons)`) plus phase/frequency-like state
-  (`input-context`) so winners synchronize over time.
+  (`input-context`) so winners synchronize over time. Its training step is a `learn` method, like
+  `som`'s — this used to be a separate plain function, `rosom-learn`, taking `radius`, the learning
+  rate, `entrainement-rate`, `temp-som` and `temp-rosom` as explicit arguments on every call (`input`
+  too, never read from `(input rosom)`), because none of those last three had a slot to read from
+  above `rosom`. Renamed into `learn` by adding `entrainement-rate`/`temp-som`/`temp-rosom`/
+  `content-on`/`context-on` slots to the `rosom` class (defaults `0.0`/`0.0`/`0.0`/`1`/`1`, same
+  "off until you set it" convention as `learn-fact`/`net-temp`) and wrapping the function's unchanged
+  body in a `let` that reads all of it — `radius`/`learn-fact`/`verbose` included — off `self` instead:
+  set them once with `setf`, then call `(learn a-rosom)` repeatedly, exactly like `som`. (Before this,
+  `(learn a-rosom)` fell through to `som`'s own method and failed deep inside `find-winner` with a
+  confusing "no applicable method for `ID`" error, since `(net rosom)` isn't a flat neuron list — same
+  problem `rosom`'s `gui-snapshot`/`activation-state`/`save` methods guard against explicitly, below.)
 
 Instances are not just returned values — `initialize-instance :after` methods intern a fresh symbol
 for each instance via `make-new-symbol` and bind the instance as that symbol's value (e.g. creating an
@@ -155,9 +176,9 @@ reaches it; it exports its own entry points from its `defpackage`.)
 - Distance/error: `euclidian`, `euclidian-fast`, `check-error` (returns a single summed error value, not
   a list), `compare-vectors`.
 - `noise` (replaces the old `noiser`) — random perturbation of a number/list/vector/`neuron`/`ann`;
-  `mlp`'s `backpropagate`/`run-mlp` call it on the net via `net-temp` to add weight jitter.
+  `mlp`'s `learn`/`run-mlp` call it on the net via `net-temp` to add weight jitter.
 - Gotcha: `ANN`'s `learn-fact` slot defaults to `0.0`, and `make-MLP`/`make-rMLP` don't override it — a
-  freshly-constructed net won't learn anything from `backpropagate` until you `(setf (learn-fact net)
+  freshly-constructed net won't learn anything from `learn` until you `(setf (learn-fact net)
   ...)` yourself (see `examples/mlp-test.lisp` or the `tests/neuromuse.lisp` MLP subtest).
 - SOM topology/neighborhood helpers: `2d`/`d2`, `3d`/`d3` (index <-> spatial coordinate conversion),
   `voisins` (neighborhood lookup), `gaussian-hat` (Mexican-hat-style learning rate falloff).
@@ -167,6 +188,12 @@ reaches it; it exports its own entry points from its `defpackage`.)
   where they were first written to summarize which grid cell a SOM's winner lands on across many inputs.
   Neither is called from any `learn`/`train-*` method yet — they're post-hoc analysis tools invoked from
   the REPL/examples; wire one in directly if a training method ever needs this kind of counting internally.
+- `transition-matrix` (sequence, size) and `cos-similarity` (two same-size 2D arrays, treated as
+  flattened vectors) — same story as `inventaire`: moved here from `examples/pinson_som.lisp`
+  (`cos-similarity` as `compare-transitions`), where they built and compared a SOM's per-song
+  transition matrices (`compare-pinson-chants-transitions`, still there, now just calling both) —
+  nothing about either computation is SOM- or neural-net-specific. Moving `transition-matrix` dropped
+  its `size` argument's pinson-specific default (`*pinson-som-size*`); callers now pass it explicitly.
 
 `src/misc.lisp` — generic Lisp utilities and UDP wire-format conversion, loaded *before* `maths.lisp`
 since `maths.lisp`'s matrix functions (`add-2-matrices`, `hadamar-product`) default-call `make-listarray`
@@ -201,8 +228,8 @@ actually created. `rosom` gets a guard method that errors clearly instead of mis
 `trace-activation` lets any training/running loop log a network's activation over time without
 changing the loop itself: `(trace-activation ann &optional path)` appends one Lisp form (one call, one
 line) to `path` — a pure read of `ann`'s current state, like `gui-snapshot` in `src/gui.lisp` — and
-returns `ann` (same "returns only itself" convention as `backpropagate`/`learn`/`rosom-learn`/
-`train-perceptron`, so it drops straight into a chain, e.g. `(trace-activation (learn som))`).
+returns `ann` (same "returns only itself" convention as `learn` itself, across every architecture that
+has one, so it drops straight into a chain, e.g. `(trace-activation (learn som))`).
 `read-activation-trace path` reads the whole sequence back as a list, oldest first. What actually gets
 written is `activation-state ann`, one generic with one method per class rather than a type-dispatch
 inside `trace-activation` itself:
@@ -275,7 +302,7 @@ Design points worth preserving if you extend it:
   status lines — see below) for `som`. Add one more method rather than spreading accessor calls through
   the drawing code. `(net mlp)` is already exactly the structure both the heatmap and the graph view
   want, so the `mlp` method is essentially `(copy-list (net source))` — the `copy-list` freezes the
-  list's spine, because `backpropagate` replaces the layer matrices in place while the window is reading
+  list's spine, because `learn` replaces the layer matrices in place while the window is reading
   them.
 - The heatmap and the graph view are two independent renderers of that same `weights` structure — see
   `layer-sizes` for how the graph derives each layer's neuron count from the matrices alone (no mlp
@@ -283,12 +310,12 @@ Design points worth preserving if you extend it:
   `:graph`) plus a `(view . topology)` cache key in `viewer-built` decide whether `refresh` has to
   rebuild the canvas items or can just recolour the ones already there.
 - What `(output mlp)` holds, since the graph view reads it instead of recomputing a forward pass:
-  `backpropagate` (and `run-mlp`) write it with the *current* `(input mlp)`, so it is always the
-  prediction for the state on screen. But after `backpropagate` it is the prediction made *before*
+  `learn` (and `run-mlp`) write it with the *current* `(input mlp)`, so it is always the
+  prediction for the state on screen. But after `learn` it is the prediction made *before*
   that step's weight update, computed with `(threshold mlp)` subtracted from every neuron's input
   (`logistic`'s `:thresh` — `run-mlp` passes 0, so the two disagree whenever `threshold` is non-zero,
   e.g. .51135 vs .53775 measured for threshold .1) and on weights jittered by `net-temp`. Hidden
-  activations are not kept anywhere (local variable in `backpropagate`), hence not drawn. For an
+  activations are not kept anywhere (local variable in `learn`), hence not drawn. For an
   `rmlp` the extra input circles show `recurrent-layer-activation`, which by then is the context that
   will feed the *next* step, not the one the displayed output was computed from.
 - Canvas items (weight rectangles or neuron circles/links, error curve, graduations) are created once

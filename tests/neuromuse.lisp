@@ -114,7 +114,7 @@
   (setf (learn-fact mlp-xor-test) 0.4
         (threshold mlp-xor-test) 0.01)
   (setf (input mlp-xor-test) (list 0 0) (goal mlp-xor-test) (list 0))
-  (backpropagate mlp-xor-test)  ;; renvoie mlp-xor-test ; l'erreur du pas est dans current-error
+  (learn mlp-xor-test)  ;; renvoie mlp-xor-test ; l'erreur du pas est dans current-error
   (let ((e0 (current-error mlp-xor-test)))
     (dotimes (i 2000)
       (dolist (pattern (list (list (list 0 0) (list 0))
@@ -123,9 +123,9 @@
                               (list (list 1 1) (list 0))))
         (setf (input mlp-xor-test) (first pattern)
               (goal mlp-xor-test) (second pattern))
-        (backpropagate mlp-xor-test)))
+        (learn mlp-xor-test)))
     (setf (input mlp-xor-test) (list 0 0) (goal mlp-xor-test) (list 0))
-    (backpropagate mlp-xor-test)
+    (learn mlp-xor-test)
     (let ((e1 (current-error mlp-xor-test)))
       (ok (< e1 e0) "error on (0 0) after training is lower than before training"))))
 

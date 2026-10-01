@@ -79,45 +79,22 @@ trajectoire brute avant toute conversion en coordonnees de grille."
               (car (id (car (find-winner som)))))
             chant)))
 
-(defun transition-matrix (winners &optional (size *pinson-som-size*))
-  "Matrice SIZE x SIZE des comptes de transition : (aref m a b) = nombre de
-fois ou le gagnant est passe de la case A a la case B d'une frame a la
-suivante, dans WINNERS (une sequence d'indices de neurones, cf.
-WINNER-SEQUENCE)."
-  (let ((m (make-array (list size size) :initial-element 0)))
-    (loop for (a b) on winners while b
-          do (incf (aref m a b)))
-    m))
-
-(defun compare-transitions (m1 m2)
-  "Similarite cosinus entre deux matrices de transition de meme taille,
-vues comme deux vecteurs aplatis -- insensible au nombre total de
-transitions (donc a la longueur des chants compares), contrairement a une
-comparaison directe des comptes bruts. 1.0 = memes proportions de
-transitions, 0.0 = aucune transition en commun."
-  (let ((dims (array-dimensions m1))
-        (dot 0) (n1 0) (n2 0))
-    (dotimes (i (first dims))
-      (dotimes (j (second dims))
-        (let ((a (aref m1 i j)) (b (aref m2 i j)))
-          (incf dot (* a b))
-          (incf n1 (* a a))
-          (incf n2 (* b b)))))
-    (if (or (zerop n1) (zerop n2))
-        0.0
-        (float (/ dot (sqrt (* n1 n2)))))))
+;; TRANSITION-MATRIX et COS-SIMILARITY vivent maintenant dans src/maths.lisp
+;; (bibliotheque coeur, generiques -- pas specifiques aux SOM) : deja
+;; disponibles ici sans rien redefinir.
 
 (defun compare-pinson-chants-transitions (&optional (net 'pinson-som))
-  "Similarite cosinus (matrices de transition, cf. COMPARE-TRANSITIONS) entre
-chaque paire des 3 chants de *PINSON-CHANTS*, sur l'etat courant de NET (pas
-de reentrainement declenche ici) : ((0 1) sim01) ((0 2) sim02) ((1 2) sim12)."
+  "Similarite cosinus (matrices de transition, cf. TRANSITION-MATRIX et
+COS-SIMILARITY) entre chaque paire des 3 chants de *PINSON-CHANTS*, sur
+l'etat courant de NET (pas de reentrainement declenche ici) :
+((0 1) sim01) ((0 2) sim02) ((1 2) sim12)."
   (let* ((seqs (mapcar (lambda (chant) (winner-sequence chant net))
 		       *pinson-chants*))
-         (mats (mapcar #'transition-matrix seqs)))
+         (mats (mapcar (lambda (seq) (transition-matrix seq *pinson-som-size*)) seqs)))
     (loop for i from 0 below (length mats)
           append (loop for j from (1+ i) below (length mats)
                        collect (list (list i j)
-                                     (compare-transitions (nth i mats) (nth j mats)))))))
+                                     (cos-similarity (nth i mats) (nth j mats)))))))
 
 ;; petit test de sanite : le premier vecteur de chaque chant, avant et apres
 ;; apprentissage -- pas cense converger vers une carte topologiquement fine
