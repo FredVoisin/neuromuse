@@ -15,6 +15,8 @@
 		 (:file "maths")
 		 (:file	"mlp")
 		 (:file "perceptron")
+		 (:file "hopfield")
+		 (:file "auto-assoc")
 		 (:file "som")
 		 (:file "rosom")
 		 (:file "read-write")

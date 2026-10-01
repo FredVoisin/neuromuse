@@ -31,15 +31,18 @@ Load the system via ASDF from an SBCL REPL started in this directory (or with th
 `neuromuse.asd` defines the `neuromuse` system, depends on `:sb-bsd-sockets`, and loads `src/` files in
 this order: `neuromuse` (package definition), `neuromuse-main` (core classes/generics), `misc` (generic
 Lisp/wire-format utilities), `maths` (transfer functions, matrix/vector algebra, SOM topology math —
-depends on `make-listarray` from `misc`, hence loading after it), `mlp`, `perceptron`, `som`, `rosom`,
-`read-write`, `udp`. Load order matters — later files depend on classes/functions (e.g. `ANN`,
-`make-new-symbol`, matrix helpers) defined earlier. `maths.lisp` and `misc.lisp` used to be one file,
-`maths&misc.lisp`; split along the line the old name already implied (numerical/matrix code vs. generic
-utilities), with the duplicate `make-new-symbol` definition (also in `neuromuse-main.lisp`) dropped
-rather than carried into either half. `src/perceptron.lisp` is part of the `:components` list, loaded
-right after `mlp`; the upstream "unfinished ?, see mlp" comment is about the class being superseded, not
-about the build. `src/read-write.lisp` loads after `mlp`/`som`/`rosom` (its `save` and `activation-state`
-methods specialize on those classes, so they must already exist) and before `udp.lisp` (see the
+depends on `make-listarray` from `misc`, hence loading after it), `mlp`, `perceptron`, `hopfield`,
+`auto-assoc`, `som`, `rosom`, `read-write`, `udp`. Load order matters — later files depend on
+classes/functions (e.g. `ANN`, `make-new-symbol`, matrix helpers) defined earlier. `maths.lisp` and
+`misc.lisp` used to be one file, `maths&misc.lisp`; split along the line the old name already implied
+(numerical/matrix code vs. generic utilities), with the duplicate `make-new-symbol` definition (also in
+`neuromuse-main.lisp`) dropped rather than carried into either half. `src/perceptron.lisp` is part of
+the `:components` list, loaded right after `mlp`; the upstream "unfinished ?, see mlp" comment is about
+the class being superseded, not about the build. `src/hopfield.lisp`/`src/auto-assoc.lisp` only need
+`ann`/`learn`/`binary`/`widrow-hoff`/`logistic` (all defined by `maths`), so their exact position
+between `perceptron` and `som` is cosmetic, not load-bearing. `src/read-write.lisp` loads after
+`mlp`/`som`/`rosom` (its `save` and `activation-state` methods specialize on those classes, so they must
+already exist) and before `udp.lisp` (see the
 `do-symbols` export-sweep note further down — it has to precede `udp.lisp` in `:components` for the same
 reason any
 new top-level file does).
@@ -85,6 +88,36 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   own multi-epoch loop (unrenamed — it's the driver, not the one-step primitive, same role as
   `train-pinson-som`) now does the `setf` itself before each call, and reads that former return value
   off `(current-error self)` instead.
+- `hopfield` (`src/hopfield.lisp`, subclass of `ANN`) and `auto-assoc` (`src/auto-assoc.lisp`, subclass
+  of `ANN`) — both ported from `legacy/neuromuse-2001-concert/"ANN 1.4.lisp"` (MCL, 2001), class names
+  unchanged from there. `net` for either is a plain CL `in-size x in-size` 2D array (not a list like
+  mlp/perceptron, nor `neuron` instances like som/rosom) of symmetric synaptic weights,
+  `(aref net i j)` always equal to `(aref net j i)`. `hopfield` is a classic associative memory: `learn`
+  reinforces each synapse by Hebbian coincidence between cells `i`/`j` of `(input self)`; `run-hopfield`
+  recalls by thresholding (`binary`, `maths.lisp`) the weighted sum for each cell, so presenting a
+  noisy/partial pattern tends to settle on the closest trained one — within capacity (~0.138 x in-size
+  patterns for random ones, the standard Hopfield limit, less for correlated ones). `auto-assoc` learns
+  by Widrow-Hoff instead (same rule as `perceptron`, reusing `widrow-hoff`/`logistic` from
+  `maths.lisp`) to reproduce/associate `(input self)` to itself — the file is named `auto-assoc.lisp`
+  for what it is now usually called (a single-layer linear auto-encoder, no bottleneck), but the class
+  keeps its original, more exact 2001 name. Two things carried over unexamined from the 2001 code,
+  flagged in both files' docstrings rather than silently changed: `hopfield`'s `learn` divides the
+  *entire* existing weight by `in-size` on every call (not just each new contribution), which compounds
+  across repeated training and measurably hurts recall well before the standard capacity limit should
+  bite (5 random patterns on 100 cells: only 1 recalled exactly in testing, where the limit predicts
+  ~13); and `auto-assoc`'s `learn`/`run-auto-assoc` both index with `(elt input i)` inside their loop
+  over `j`, not `(elt input j)`, so each cell's activation is `input[i]` times a sum that doesn't
+  actually depend on the rest of the input — mathematically not the usual weighted-sum formula, though
+  it still produced a working-looking recall in a quick test. Neither has a `save`, `gui-snapshot`, or
+  `activation-state` method yet (so no file saving, no `neuromuse-gui` window, no `trace-activation`
+  support) — not ported, since nothing asked for it and both would need real design decisions (a 2D
+  array doesn't serialize or trace the way `som`'s neuron list or `mlp`'s weight-matrix list do). The
+  2001 file's own `vector-difference`/`vector-addition`/`vector-*` helpers were duplicated between its
+  Hopfield and auto-associative sections and never actually called by either's `learn`/`run` — not
+  ported; `substract-2-vectors`/`add-two-vectors`/`multiply-2-vectors` (`maths.lisp`) already cover the
+  same role if ever needed. Its MCL-specific `view-aa-activation` window and hardcoded-53x11-grid `see`
+  printer weren't ported either, for the same reason `src/gui.lisp` doesn't yet have a view for these
+  two classes — an actual port would mean designing one, not transcribing QuickDraw calls.
 - `mlp` (`src/mlp.lisp`, subclass of `ANN`) — multi-layer perceptron. `net` is a
   list of weight matrices (one per layer transition), each matrix a list-of-lists. `hidden-fun`/
   `out-fun` are activation functions (default `logistic`). Has `learn` (one step; renamed from
