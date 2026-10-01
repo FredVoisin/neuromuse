@@ -113,9 +113,16 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   `input[i]` times a sum that didn't depend on the rest of the input. Confirmed by testing: trained on
   a few bipolar patterns, `run-auto-assoc` now recalls each one almost exactly (`tanh` output close to
   ±1 matching the pattern), and completes a partial cue (one bit zeroed out) back to the full trained
-  pattern — proper auto-associative pattern completion, which the pre-fix version could not do. Neither
-  class has a `save`, `gui-snapshot`, or
-  `activation-state` method yet (so no file saving, no `neuromuse-gui` window, no `trace-activation`
+  pattern — proper auto-associative pattern completion, which the pre-fix version could not do.
+  `run-auto-assoc`/`run-hopfield` are both renamed from 2001 (`run-aa`/a `run-hopfield` `defun`, not a
+  method) to match `run-mlp`/`run-perceptron`'s convention; `run-aa` itself no longer exists anywhere
+  in the codebase. `auto-assoc` now has a `gui-snapshot` method and its own `neuromuse-gui` window (see
+  "Visualisation (Ltk)" below) — real performance history, not a toy: see
+  [doc/auto-assoc-exemples.md](../doc/auto-assoc-exemples.md) for the 2001 use of a 180-cell
+  `auto-assoc` (`ecarl180`) to analyze a dancer's movement live on stage, fed over MIDI from
+  [LabanOnLisp](https://github.com/FredVoisin/LabanOnLisp), the reconstruction-distance signal that
+  produced being exactly what the new viewer's curve plots today. `hopfield` has no `gui-snapshot` yet.
+  Neither class has a `save` or `activation-state` method (no file saving, no `trace-activation`
   support) — not ported, since nothing asked for it and both would need real design decisions (a 2D
   array doesn't serialize or trace the way `som`'s neuron list or `mlp`'s weight-matrix list do). The
   2001 file's own `vector-difference`/`vector-addition`/`vector-*` helpers were duplicated between its
@@ -394,6 +401,34 @@ time. Two things worth knowing if you touch this:
   `rosom` inherits `som` but `(net rosom)` is `(content-neurons context-neurons)`, not a flat neuron
   list, so it has its own `gui-snapshot` method that just signals a clear error (caught by
   `som-guarded-refresh` same as any other) rather than silently misreading that structure.
+
+`(net auto-assoc)` is a plain CL 2D array (`src/auto-assoc.lisp`), not a flat neuron list either, so the
+auto-assoc viewer (section 9 of `gui.lisp`) is its own parallel implementation again (own
+`auto-assoc-viewer`/`auto-assoc-snapshot` structs, `auto-assoc-refresh`/`launch-auto-assoc-gui`/
+`auto-assoc-gui`). `(neuromuse-gui:gui some-auto-assoc)` dispatches to it automatically; `demo-auto-assoc`
+is the fake-data equivalent of `demo`/`demo-som`. Simpler than the SOM viewer: no input row, no separate
+output row — the whole grid *is* `(output source)`, the full reconstruction cell by cell, so a separate
+output row would be redundant with it, and there's no "winner" concept to show an input row against
+either (auto-assoc isn't competitive). The grid isn't necessarily square like a SOM's (`in-size` isn't
+guaranteed to be a perfect square), so cell positions come from a generic `grid-shape` (rows/cols for
+any N, not `2d`, which assumes a square). Below the grid, a curve (again reusing `build-error-plot`/
+`draw-error-plot` verbatim) traces the reconstruction distance, `(euclidian (input source)
+(output source))`, over time — accumulated by `auto-assoc-refresh` into `(auto-assoc-viewer-
+distance-history v)`, same non-network-writing pattern as the SOM viewer's `winner-history`. Two things
+worth knowing if you touch this:
+- `learn` never writes `(output self)` — only `run-auto-assoc` does. Unlike the SOM viewer (where
+  `find-winner`, called by `learn` during ordinary training, already refreshes `(distance neuron)`/
+  `(output neuron)` as a side effect), a `learn`-only loop leaves the auto-assoc viewer showing nothing
+  useful (`(output source)` stays at its initform, `nil`, so `gui-snapshot`'s `distance` is `nil` too,
+  shown as "n/d"). The loop driving the network has to call `run-auto-assoc` itself from time to time —
+  not a gap to fix, it matches how this was actually used in 2001 (see below): `run-aa` was *always*
+  called explicitly to get the activation to look at, never implicitly during training.
+- This isn't a toy architecture getting a GUI for the first time: a 180-cell `auto-assoc` (`ecarl180`)
+  watched a dancer's movement live on stage in 2001 (*L'Écarlate*, Kasper T. Toeplitz/Myriam Gourfink,
+  Ircam), fed over MIDI from [LabanOnLisp](https://github.com/FredVoisin/LabanOnLisp) — see
+  [doc/auto-assoc-exemples.md](../doc/auto-assoc-exemples.md) for the full story. The reconstruction
+  distance this viewer's curve plots is exactly the signal that performance watched continuously
+  (`legacy/neuromuse-2001-concert/getmidi.lisp`'s `get-moment`, `*distances*`).
 
 ### Examples
 

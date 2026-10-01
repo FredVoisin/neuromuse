@@ -51,7 +51,11 @@
            #:som-gui
            #:launch-som-gui
            #:demo-som
-           #:make-som-snapshot))
+           #:make-som-snapshot
+           #:auto-assoc-gui
+           #:launch-auto-assoc-gui
+           #:demo-auto-assoc
+           #:make-auto-assoc-snapshot))
 
 (in-package :neuromuse-gui)
 
@@ -707,14 +711,18 @@ REPL."
 (defun gui (source &rest args)
   "Ouvre la fenetre adaptee a SOURCE : LAUNCH-GUI (poids + erreur) pour un
 mlp/rmlp, LAUNCH-SOM-GUI (carte d'activite + trace du gagnant, section 7 plus
-bas) pour un som -- dans son propre thread (mk-process) : le REPL reste
-libre pour lancer l'apprentissage et regarder la fenetre le suivre. Retourne
-le thread ; (neuromuse-gui::*viewer*) / (neuromuse-gui::*som-viewer*) donne
+bas) pour un som, LAUNCH-AUTO-ASSOC-GUI (carte de reconstruction + distance,
+section 9 plus bas) pour un auto-assoc -- dans son propre thread
+(mk-process) : le REPL reste libre pour lancer l'apprentissage et regarder
+la fenetre le suivre. Retourne le thread ; (neuromuse-gui::*viewer*) /
+(neuromuse-gui::*som-viewer*) / (neuromuse-gui::*auto-assoc-viewer*) donne
 la derniere fenetre ouverte de chaque sorte."
   (let ((net (network source)))
     (mk-process "neuromuse-gui"
                 (lambda ()
-                  (apply (if (typep net 'som) #'launch-som-gui #'launch-gui)
+                  (apply (cond ((typep net 'som) #'launch-som-gui)
+                               ((typep net 'auto-assoc) #'launch-auto-assoc-gui)
+                               (t #'launch-gui))
                          source args)))))
 
 ;;; ------------------------------------------------------------------
@@ -1082,5 +1090,266 @@ juste de quoi verifier l'affichage seul, comme DEMO-SOURCE pour le mlp."))
   "Ouvre la fenetre SOM sur une activite et un gagnant aleatoires : verifie
 Tk, Ltk et l'affichage sans toucher a un reseau."
   (som-gui (make-instance 'demo-som-source :side side :n-inputs n-inputs)))
+
+;;; ------------------------------------------------------------------
+;;; 9. AUTO-ASSOC : carte de reconstruction, distance de reconstruction
+;;; ------------------------------------------------------------------
+;;;
+;;; (net auto-assoc) est un tableau CL IN-SIZE x IN-SIZE (cf. src/auto-
+;;; assoc.lisp), sans rapport avec les structures des sections precedentes :
+;;; cette section leur est donc parallele, pas une extension, mais reutilise
+;;; telles quelles leurs briques generiques (ACTIVITY->GRAY, BUILD-ERROR-PLOT,
+;;; DRAW-ERROR-PLOT, CLAMP, NETWORK, SOURCE-TITLE, VECTOR-STRING).
+;;;
+;;; Contrairement au SOM (ou LEARN calcule et memorise l'activite de chaque
+;;; case comme effet de bord de FIND-WINNER), LEARN pour un auto-assoc ne
+;;; touche pas (output self) : seul RUN-AUTO-ASSOC l'ecrit. La fenetre reste
+;;; un lecteur pur (meme principe que partout ailleurs dans ce fichier) : il
+;;; faut donc que la boucle qui entraine/utilise le reseau appelle aussi
+;;; RUN-AUTO-ASSOC de temps en temps pour que (output self) -- ce que montre
+;;; la carte -- et la distance de reconstruction ci-dessous restent a jour.
+;;; C'est exactement l'usage de 2001 (GET-MOMENT dans
+;;; legacy/neuromuse-2001-concert/getmidi.lisp, cf. doc/auto-assoc-exemples.md)
+;;; : apres apprentissage hors-ligne, chaque "moment" de danse captee par
+;;; MIDI depuis LabanOnLisp etait passe une fois dans RUN-AA (aujourd'hui
+;;; RUN-AUTO-ASSOC), et c'est cette distance -- pas un gagnant, l'auto-assoc
+;;; n'en a pas -- qui etait le signal regarde en continu.
+;;;
+;;; Pas de rangee d'entree ni de rangee de sortie separee ici (a la
+;;; difference du SOM) : la grille entiere EST (output self), la
+;;; reconstruction complete, case par case -- une rangee de sortie a cote
+;;; serait redondante avec elle. La courbe du bas trace la distance de
+;;; reconstruction (EUCLIDIAN entre (input self) et (output self)) au fil
+;;; des rafraichissements, accumulee par AUTO-ASSOC-REFRESH (pas
+;;; GUI-SNAPSHOT, qui reste une photographie instantanee sans effet de
+;;; bord) dans un champ du AUTO-ASSOC-VIEWER lui-meme -- jamais ecrit dans
+;;; le reseau, meme principe que WINNER-HISTORY pour le SOM.
+
+(defstruct auto-assoc-snapshot
+  "Photographie de l'etat d'un auto-assoc a dessiner, prise en une passe."
+  (rows 0) (cols 0)      ; forme de la grille (ROWS x COLS >= IN-SIZE)
+  (activity '())         ; activite normalisee (0..1) de chaque cellule, indices 0..N-1
+  (distance nil)         ; distance de reconstruction courante, ou NIL si (output self) vide
+  (status "")
+  (signals ""))
+
+(defun grid-shape (n)
+  "COLS puis ROWS pour disposer N cellules en grille a peu pres carree,
+quelle que soit N (pas forcement un carre parfait, a la difference du SOM
+dont la grille EST toujours carree par construction) : COLS = la racine
+carree arrondie au superieur, ROWS autant de lignes que necessaire."
+  (let ((cols (max 1 (ceiling (sqrt (max 1 n))))))
+    (values cols (max 1 (ceiling n cols)))))
+
+(defmethod gui-snapshot ((source auto-assoc))
+  (let* ((n (in-size source))
+         (output (output source))
+         (input (coerce (input source) 'list)))
+    (multiple-value-bind (cols rows) (grid-shape n)
+      (make-auto-assoc-snapshot
+       :rows rows :cols cols
+       ;; (output self) est bipolaire (RUN-AUTO-ASSOC, TANH) -- -1..1 ramene
+       ;; a 0..1 pour ACTIVITY->GRAY, comme ailleurs dans ce fichier.
+       :activity (mapcar (lambda (v) (/ (1+ v) 2.0)) output)
+       :distance (when output (euclidian input output))
+       :status (format nil "~A : ~D cellule~:P (grille ~Dx~D) | learn ~,3F"
+                        (name source) n rows cols (learn-fact source))
+       :signals (format nil "epoch ~D | distance ~A | in ~A"
+                         (epoch source)
+                         (if output (format nil "~,4F" (euclidian input output)) "n/d")
+                         (vector-string input))))))
+
+(defparameter *auto-assoc-canvas-width* 420)
+(defparameter *auto-assoc-canvas-height-max* 420 "Hauteur maximum du canevas
+de la carte ; au-dela, les cellules se resserrent plutot que la fenetre ne
+grandisse -- meme principe que *SOM-CANVAS-HEIGHT-MAX*.")
+(defparameter *auto-assoc-cell-max* 30 "Cote maximum d'une cellule, en pixels.")
+(defparameter *auto-assoc-cell-min* 4 "Cote minimum d'une cellule, en pixels.")
+
+(defun auto-assoc-cell-size (rows cols width height-max)
+  "Cote d'une cellule pour que la grille ROWS x COLS tienne dans
+WIDTH x HEIGHT-MAX."
+  (max *auto-assoc-cell-min*
+       (min *auto-assoc-cell-max*
+            (floor (max 1 (- width (* 2 *margin*))) (max 1 cols))
+            (floor (max 1 (- height-max (* 2 *margin*))) (max 1 rows)))))
+
+(defun build-auto-assoc-view (canvas rows cols)
+  "Cree une fois les ROWS x COLS cellules de la carte (une par cellule
+d'auto-assoc, en ordre ligne par ligne), et retourne le vecteur des
+rectangles, indexable par indice de cellule. Le canevas prend la hauteur
+juste necessaire a ce contenu."
+  (ltk:clear canvas)
+  (let* ((cell (auto-assoc-cell-size rows cols *auto-assoc-canvas-width*
+                                     *auto-assoc-canvas-height-max*))
+         (n (* rows cols))
+         (cells (make-array n))
+         (left (floor (- *auto-assoc-canvas-width* (* cell cols)) 2)))
+    (ltk:configure canvas :height (min *auto-assoc-canvas-height-max*
+                                       (+ (* 2 *margin*) (* cell rows))))
+    (dotimes (k n)
+      (let* ((col (mod k cols))
+             (row (floor k cols))
+             (x (+ left (* col cell)))
+             (y (+ *margin* (* row cell)))
+             (r (ltk:make-rectangle canvas x y (+ x cell) (+ y cell))))
+        (ltk:configure r :outline "#bbbbbb")
+        (setf (aref cells k) r)))
+    cells))
+
+(defun paint-auto-assoc-view (cells activity)
+  "Reconfigure la couleur des cellules deja creees d'apres ACTIVITY (une
+valeur 0..1 par cellule), sans toucher a la geometrie. Les cellules au-dela
+de (length ACTIVITY) (grille non carree, derniere ligne incomplete)
+restent blanches."
+  (dotimes (k (length cells))
+    (ltk:configure (aref cells k) :fill (activity->gray (nth k activity)))))
+
+(defstruct auto-assoc-viewer
+  source
+  grid-canvas items built       ; ITEMS = vecteur de cellules ; BUILT = (rows . cols) deja dessine(e)
+  trace-canvas trace-plot (distance-history '())  ; plus RECENT en tete, comme history-error
+  status-label signals-label auto-button
+  (auto t)
+  (interval *interval*)
+  (running t))
+
+(defvar *auto-assoc-viewer* nil "Derniere fenetre AUTO-ASSOC ouverte, pour inspection au REPL.")
+
+(defun auto-assoc-refresh (v)
+  "Relit l'auto-assoc et met tout a jour : carte de reconstruction, trace de
+la distance. Accumule la distance courante dans DISTANCE-HISTORY -- la
+seule ecriture de cette fenetre, et elle reste entierement locale au
+AUTO-ASSOC-VIEWER, jamais dans le reseau."
+  (let* ((snap (gui-snapshot (auto-assoc-viewer-source v)))
+         (rows (auto-assoc-snapshot-rows snap))
+         (cols (auto-assoc-snapshot-cols snap))
+         (key (cons rows cols)))
+    (unless (equal key (auto-assoc-viewer-built v))
+      (setf (auto-assoc-viewer-items v) (build-auto-assoc-view (auto-assoc-viewer-grid-canvas v) rows cols)
+            (auto-assoc-viewer-built v) key))
+    (paint-auto-assoc-view (auto-assoc-viewer-items v) (auto-assoc-snapshot-activity snap))
+    (when (auto-assoc-snapshot-distance snap)
+      (push (auto-assoc-snapshot-distance snap) (auto-assoc-viewer-distance-history v)))
+    (draw-error-plot (auto-assoc-viewer-trace-plot v)
+                      (reverse (auto-assoc-viewer-distance-history v))
+                      nil)
+    (setf (ltk:text (auto-assoc-viewer-status-label v)) (auto-assoc-snapshot-status snap)
+          (ltk:text (auto-assoc-viewer-signals-label v)) (auto-assoc-snapshot-signals snap))
+    v))
+
+(defun auto-assoc-guarded-refresh (v)
+  "AUTO-ASSOC-REFRESH en protegeant la fenetre, comme GUARDED-REFRESH pour le mlp."
+  (handler-case (auto-assoc-refresh v)
+    (error (c)
+      (ignore-errors
+       (setf (ltk:text (auto-assoc-viewer-signals-label v)) (format nil "! ~A" c))))))
+
+(defun auto-assoc-tick (v)
+  (when (auto-assoc-viewer-auto v) (auto-assoc-guarded-refresh v))
+  (when (auto-assoc-viewer-running v)
+    (ltk:after (auto-assoc-viewer-interval v) (lambda () (auto-assoc-tick v)))))
+
+(defun update-auto-assoc-auto-button (v)
+  (setf (ltk:text (auto-assoc-viewer-auto-button v))
+        (if (auto-assoc-viewer-auto v) "auto : marche" "auto : arret")))
+
+(defun toggle-auto-assoc-auto (v)
+  (setf (auto-assoc-viewer-auto v) (not (auto-assoc-viewer-auto v)))
+  (update-auto-assoc-auto-button v)
+  (when (auto-assoc-viewer-auto v) (auto-assoc-guarded-refresh v)))
+
+(defun reset-auto-assoc-trace (v)
+  "Vide DISTANCE-HISTORY et rafraichit : la trace repart a vide
+immediatement, sans attendre le prochain tic -- comme RESET-ERRORS pour le mlp."
+  (setf (auto-assoc-viewer-distance-history v) nil)
+  (auto-assoc-guarded-refresh v))
+
+(defun launch-auto-assoc-gui (source &key (auto t) (interval *interval*))
+  "Ouvre la fenetre sur SOURCE (instance auto-assoc, ou le symbole qui la
+nomme) et entre dans la boucle d'evenements Tk : BLOQUANT, a n'appeler que
+depuis le thread ou tournera la fenetre. Voir AUTO-ASSOC-GUI pour la
+version non bloquante, celle a utiliser au REPL."
+  (let ((source (network source))
+        (v nil))
+    (ltk:with-ltk ()
+      (ltk:wm-title ltk:*tk* (format nil "neuromuse - ~A" (source-title source)))
+      (let* ((status (make-instance 'ltk:label :master ltk:*tk* :text ""
+                                    :wraplength *auto-assoc-canvas-width*))
+             (signals (make-instance 'ltk:label :master ltk:*tk* :text ""
+                                     :wraplength *auto-assoc-canvas-width*))
+             (gcanvas (make-instance 'ltk:canvas :master ltk:*tk*
+                                     :width *auto-assoc-canvas-width*
+                                     :height *auto-assoc-canvas-height-max*
+                                     :background "white"))
+             (tcanvas (make-instance 'ltk:canvas :master ltk:*tk*
+                                     :width *error-width* :height *error-height*
+                                     :background "white"))
+             (controls (make-instance 'ltk:frame :master ltk:*tk*))
+             (refresh-button (make-instance 'ltk:button :master controls
+                                            :text "rafraichir"))
+             (auto-button (make-instance 'ltk:button :master controls :text ""))
+             (reset-button (make-instance 'ltk:button :master controls
+                                          :text "effacer trace")))
+        (setf v (make-auto-assoc-viewer :source source
+                                        :grid-canvas gcanvas
+                                        :trace-canvas tcanvas :trace-plot (build-error-plot tcanvas)
+                                        :status-label status :signals-label signals
+                                        :auto-button auto-button
+                                        :auto auto :interval interval)
+              *auto-assoc-viewer* v)
+        (setf (ltk:command refresh-button) (lambda () (auto-assoc-guarded-refresh v))
+              (ltk:command auto-button) (lambda () (toggle-auto-assoc-auto v))
+              (ltk:command reset-button) (lambda () (reset-auto-assoc-trace v)))
+        (update-auto-assoc-auto-button v)
+        (ltk:pack status :side :top :anchor :w :padx 8 :pady 3)
+        (ltk:pack signals :side :top :anchor :w :padx 8)
+        (ltk:pack gcanvas :side :top :padx 8 :pady 4)
+        (ltk:pack tcanvas :side :top :padx 8 :pady 4)
+        (ltk:pack controls :side :top :pady 4)
+        (ltk:pack refresh-button :side :left :padx 4)
+        (ltk:pack auto-button :side :left :padx 4)
+        (ltk:pack reset-button :side :left :padx 4)
+        (ltk:bind ltk:*tk* "<Destroy>"
+                  (lambda (event) (declare (ignore event))
+                    (setf (auto-assoc-viewer-running v) nil)))
+        (auto-assoc-guarded-refresh v)
+        (auto-assoc-tick v)))
+    (when v (setf (auto-assoc-viewer-running v) nil))
+    (values)))
+
+(defun auto-assoc-gui (source &rest args)
+  "Comme LAUNCH-AUTO-ASSOC-GUI, mais dans son propre thread (mk-process) :
+le REPL reste libre pour lancer l'apprentissage et regarder la fenetre le
+suivre. Retourne le thread ; (neuromuse-gui::*auto-assoc-viewer*) donne la
+fenetre ouverte."
+  (mk-process "neuromuse-gui-auto-assoc" (lambda () (apply #'launch-auto-assoc-gui source args))))
+
+;;; ------------------------------------------------------------------
+;;; 10. Demonstration AUTO-ASSOC sans reseau
+;;; ------------------------------------------------------------------
+
+(defclass demo-auto-assoc-source ()
+  ((in-size :initform 36 :initarg :in-size :accessor demo-auto-assoc-in-size)
+   (frames :initform 0 :accessor demo-auto-assoc-frames))
+  (:documentation "Source factice pour AUTO-ASSOC-GUI : ni auto-assoc ni
+apprentissage, juste de quoi verifier l'affichage seul, comme DEMO-SOURCE
+pour le mlp."))
+
+(defmethod gui-snapshot ((source demo-auto-assoc-source))
+  (let* ((n (demo-auto-assoc-in-size source)))
+    (incf (demo-auto-assoc-frames source))
+    (multiple-value-bind (cols rows) (grid-shape n)
+      (make-auto-assoc-snapshot
+       :rows rows :cols cols
+       :activity (loop repeat n collect (random 1.0))
+       :distance (+ 0.2 (random 1.5))
+       :status (format nil "demo-auto-assoc (aucun reseau) : ~D cellule~:P (grille ~Dx~D)" n rows cols)
+       :signals (format nil "image ~D | distance aleatoire" (demo-auto-assoc-frames source))))))
+
+(defun demo-auto-assoc (&key (in-size 36))
+  "Ouvre la fenetre AUTO-ASSOC sur une reconstruction et une distance
+aleatoires : verifie Tk, Ltk et l'affichage sans toucher a un reseau."
+  (auto-assoc-gui (make-instance 'demo-auto-assoc-source :in-size in-size)))
 
 ;; EOF

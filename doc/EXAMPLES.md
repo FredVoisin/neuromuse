@@ -8,6 +8,9 @@ architecture-specific walkthroughs:
   `neuromuse-gui`.
 - **[SOM-exemples.md](SOM-exemples.md)** — building/training a SOM, finding winners, a full worked
   example (chaffinch birdsong clustering), watching it train live.
+- **[auto-assoc-exemples.md](auto-assoc-exemples.md)** — building/training an auto-associative memory,
+  pattern completion, a worked example with real performance history (choreographic analysis for
+  *L'Écarlate*, 2001), watching it run live.
 
 ---
 
