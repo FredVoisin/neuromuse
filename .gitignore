@@ -7,3 +7,11 @@
 *~
 .#*
 \#*#
+
+# Generated trace files (src/read-write.lisp: trace-activation, trace-output;
+# examples/pinson_som.lisp: trace-pinson-chants) -- written wherever the
+# REPL's CWD happens to be, which in practice is almost always here.
+/activation-trace.lisp
+/output-trace.lisp
+/pinson-trace-chant*.lisp
+/chant*.lisp
