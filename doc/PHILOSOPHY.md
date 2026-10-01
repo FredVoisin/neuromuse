@@ -20,6 +20,11 @@ It was within the framework of choreographic research, in 2000, that I came to w
 
 ## Core Principles
 
+**Note to the reader:**
+
+*The following has been generated in English by Claude.ia - sonnet 5, in Sept. 2026, as a draft to be amended by the autor.* 
+*The autor take it here as is, to keep a trace of what a LLM may infer by itself from the legacy code and the presentation above*
+
 ### 1. **Art is the Process, Not Just the Product**
 
 Traditional AI frameworks treat networks as tools: you feed in data, extract predictions, move on. Neuromuse inverts this. The act of learning—neurons firing, weights adjusting, error curves falling—*is* the artwork. This matters because:
