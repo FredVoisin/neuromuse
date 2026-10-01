@@ -133,7 +133,7 @@ For a full walkthrough and more examples, see [EXAMPLES.md](doc/EXAMPLES.md).
 
 - **[INSTALLATION.md](doc/INSTALLATION.md)** — Environment setup, Emacs/SLIME workflow, troubleshooting
 - **[EXAMPLES.md](doc/EXAMPLES.md)** — Detailed walkthroughs: XOR, accelerometer data, custom problems
-- **[PHILOSOPHY.md](doc/PHILOSOPHY.md)** — Why neuromuse exists (Nice 2005 presentation, français & English)
+- **[PHILOSOPHY.md](doc/PHILOSOPHY.md)** ([français](doc/PHILOSOPHY.fr.md)) — Why neuromuse exists (Nice 2005 presentation)
 - **[HISTORY.md](doc/HISTORY.md)** — 25 years of development, key collaborations, artistic applications
 - **[GALLERY.md](doc/GALLERY.md)** — Visual history: early experiments, performances, research projects
 - **[PUBLICATIONS.md](doc/PUBLICATIONS.md)** — Academic papers and references
