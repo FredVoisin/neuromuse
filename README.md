@@ -31,19 +31,19 @@ Traditional AI frameworks treat neural networks as black boxes to be optimized. 
 ## FAQ
 
 - **Can I use this for real-time music applications?**  
-Yes. The list-based matrix code is ~40× faster than GPU-accelerated alternatives at neuromuse's actual network sizes (a handful of neurons). See the benchmark in [examples/benchmark-mgl-mat.lisp](examples/benchmark-mgl-mat.lisp). If it runs on any CPU with large models, the code can also by easily adapted for GPU (see below, Contributing).
+Yes. The list-based matrix code is ~40× faster than GPU-accelerated alternatives at neuromuse's actual network sizes. See the benchmark in [examples/benchmark-mgl-mat.lisp](examples/benchmark-mgl-mat.lisp). If it runs on any CPU with large models, the code can also by easily adapted for GPU (see below, Contributing).
 
 - **Can I use this for teaching AI?**  
-Yes, you can. Freely. Suggestions and contributions are welcome.
+Yes, you can. Freely. Suggestions and contributions are welcome!
 
 - **Is the documentation only in code comments?**  
-Historically, yes. We're actively expanding it. Start with a 5-minute read of [PHILOSOPHY.md](doc/PHILOSOPHY.md) to understand the mindset, then dive into [EXAMPLES.md](doc/EXAMPLES.md).
+Historically, yes, and also by nature (see below: Why Lisp?). We're actively expanding it. Start with a 5-minute read of [PHILOSOPHY.md](doc/PHILOSOPHY.md) to understand the mindset, then dive into [EXAMPLES.md](doc/EXAMPLES.md).
 
 - **Who is we?**  
 Since Sept. 27, the 'we' above is Fred - the author - with the help of claude.ia (Anthropic). Collaborators are welcome! To avoid confusion, the AI generated parts of the documentation or of the code are flagged or mentioned as being AI-generated. The [legacy code](https://github.com/FredVoisin/neuromuse/tree/master/legacy) which is the reference has been learned by claude.ai under the supervision of the author who ensures that all contributions are relevant and amended when needed. Fred knows from experience that AI can assist in exploring and working with complex systems like neuromuse — whether they grow large or stay small.
 
 - **Why Lisp?**  
-Because it's the second mother language of the author, learned at Ircam underground when the last was on the roof, but not only.
+Because it's the second mother language of the author, learned at Ircam underground when the last was on the roof, but not only. In Lisp, code and data share the same structure: a function call such as `(+ 1 2)` is simply a list, which a program (a list) can build, inspect or rewrite before evaluating it. This property, called homoiconicity, comes from Church's [Lambda Calculus](https://plato.stanford.edu/entries/lambda-calculus/) and [McCarthy's Lisp](https://www-formal.stanford.edu/jmc/recursive.html). It makes it natural to treat activation functions, learning rules, and even the shape of a network as objects one can compose and reshape while the system is learning. We hope to develop this property further, which allows code to observe and generate itself. Incidentally, this also makes the code its own documentation.
 
 - **Is `rmlp` Elman or Jordan?**   
 Elman. Its recurrent feedback comes from a hidden layer's activation, not the output layer's. See [doc/rmlp-elman-vs-jordan.md](doc/rmlp-elman-vs-jordan.md) for a structural and behavioral test. This question because the loops levels could be confusing while digging ;)
