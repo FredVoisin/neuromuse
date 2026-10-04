@@ -72,6 +72,13 @@
    (distance
      :initform 1 :initarg :distance :accessor distance)))
 
+(defgeneric weights (self)
+  (:documentation "Poids synaptiques de SELF, sans bruit, dans l'ordre des entrees."))
+
+(defmethod weights ((self neuron))
+  ;; (net neurone) = ((source poids derniere-activation) ...)
+  (mapcar #'cadr (net self)))
+
 (defmethod initialize-instance :after ((self neuron) &key name)
   (let ((neuron (if name
 		    (make-new-symbol name)

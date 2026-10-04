@@ -166,8 +166,10 @@
     (let ((w (find-winner s)))
       (is (car (id (first w))) 2 "le neurone dont les poids valent l'entree gagne")
       (is (second w) 0.0 "a distance nulle"))
-    (is (output (nth 2 (net s))) (list 0.1 0.5 0.9)
-        "(output neurone) = ce qui a ete compare a l'entree, ici les poids")
+    (is (output (nth 2 (net s))) (activation s :n 2)
+        "(output neurone) = l'activation entree*poids, comme avant")
+    (is (weights (nth 2 (net s))) (list 0.1 0.5 0.9)
+        "WEIGHTS lit les poids du neurone")
     ;; reglage historique : distance a l'activation x*w
     (setf (distance s) 'neuromuse-distance)
     (let* ((w (find-winner s))

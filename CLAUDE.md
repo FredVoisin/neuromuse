@@ -154,9 +154,11 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   instead; that historical distance is now an ordinary function, `neuromuse-distance` (`maths.lisp`),
   selectable with `(setf (distance som) 'neuromuse-distance)`. It has odd properties (ranking blind to
   input amplitude and sign; ideal neuron w = (1 ... 1) for every input, which `learn`'s pull of w
-  toward x contradicts) — keep it for replaying old pieces, not as a default. `(output neuron)` now
-  holds what was compared to the input, i.e. the weights, in both cases (it used to hold the
-  activation). The *grid* distance between a neighbour and the winner, in `learn`, is a separate
+  toward x contradicts) — keep it for replaying old pieces, not as a default. `(output neuron)` still holds
+  the neuron's *activation* input*weight (computed in the same pass by `neuron-distance`, same
+  formula and same per-component noise draw as `activation`), whatever the `distance` — it is what
+  the GUI and `trace-activation` read, as for mlp/perceptron. The weights themselves, without noise,
+  are read with the `weights` generic (`neuromuse-main.lisp`, method on `neuron`). The *grid* distance between a neighbour and the winner, in `learn`, is a separate
   slot, `grid-distance` (default `'euclidian`, as always before; `'chebyshev` matches `voisins`'s
   square window exactly, `'manhattan` gives a diamond), applied to grid coordinates — never the
   `distance` slot, which is about input space: `neuromuse-distance` on grid coordinates would depend

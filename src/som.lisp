@@ -173,27 +173,30 @@
 ;;********* distance entree / neurone *******
 ;;*******************************************
 
-(defgeneric neuron-weights (ann n)
-  (:documentation "Poids du neurone N de ANN, tels que compares a l'entree par
-(DISTANCE ANN) : bruites par (TEMP ANN) comme l'etait l'activation. Range aussi
-le resultat dans (OUTPUT neurone), que lisent le visualiseur (gui.lisp) et
-TRACE-ACTIVATION (read-write.lisp)."))
-
-(defmethod neuron-weights ((ann som) n)
-  (let ((temp (or (temp ann) 0.0))
-	(nnt (nth n (net ann))))
-    (setf (output nnt)
-	  (loop for synapse in (net nnt)
-		for k from 0 below (length (input ann))
-		collect (+ (cadr synapse)
-			   (- (/ temp 2)
-			      (if (zerop temp) 0 (random temp))))))))
-
 (defun neuron-distance (ann n)
   "Distance, au sens de (DISTANCE ANN), entre (INPUT ANN) et les poids du
-neurone N (cf. NEURON-WEIGHTS). Seul endroit ou FIND-WINNER et LEARN mesurent
-l'ecart entre l'entree et un neurone."
-  (funcall (distance ann) (input ann) (neuron-weights ann n)))
+neurone N -- seul endroit ou FIND-WINNER et LEARN mesurent l'ecart entre
+l'entree et un neurone. En un seul passage sur les synapses, range aussi dans
+(OUTPUT neurone) son activation entree*poids, exactement comme ACTIVATION :
+c'est ce que lit le visualiseur (gui.lisp) et TRACE-ACTIVATION
+(read-write.lisp), quelle que soit la distance choisie. Le bruit de (TEMP ANN)
+est tire une fois par composante, comme avant, et ajoute a la fois a
+l'activation et aux poids compares a l'entree. Les poids eux-memes, sans
+bruit, se lisent avec WEIGHTS."
+  (let* ((input (input ann))
+	 (temp (or (temp ann) 0.0))
+	 (nnt (nth n (net ann)))
+	 (compared '())
+	 (activ '()))
+    (loop for synapse in (net nnt)
+	  for k from 0 below (length input)
+	  do (let ((w (cadr synapse))
+		   (noise (- (/ temp 2)
+			     (if (zerop temp) 0 (random temp)))))
+	       (push (+ (* (elt input k) w) noise) activ)
+	       (push (+ w noise) compared)))
+    (setf (output nnt) (nreverse activ))
+    (funcall (distance ann) input (nreverse compared))))
 
 (defmethod find-winner ((ann som) &key (inf #'< ) (equality #'= ))
   (let ((win '((nil 696969)) ))
