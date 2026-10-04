@@ -69,7 +69,7 @@
   (values))
 
 (defmethod save ((self som) &optional path)
-  "Serialise l'etat APPRIS de SELF (pas toutes ses slots) dans PATH (par
+  "Serialise l'etat  SELF (pas tous ses slots) dans PATH (par
 defaut ~S.lisp), sous une forme rechargeable avec LOAD. Contrairement a SAVE
 pour un mlp, ne dumpe pas bêtement toutes les slots via
 STRUCTURE-SLOT-NAMES : (net self) est une liste d'instances NEURON, pas de
@@ -108,19 +108,15 @@ tout le reste opere sur IT."
 (defmethod save ((self rosom) &optional path)
   (declare (ignore path))
   (error "SAVE ne gere pas encore ROSOM : (net rosom) est (neurones-contenu
-neurones-contexte), pas une liste plate de neurones comme pour SOM -- a
-ecrire si besoin (methode dediee, comme pour GUI-SNAPSHOT dans src/gui.lisp
-et ACTIVATION-STATE plus haut, plutot que d'etendre celle-ci)."))
+neurones-contexte), pas une liste plate de neurones comme pour SOM. A faire."))
 
 ;;; ------------------------------------------------------------------
 ;;; TRACE-ACTIVATION : journal d'activation au fil d'une boucle
 ;;; ------------------------------------------------------------------
 ;;;
-;;; Pensee pour etre appelee a chaque pas d'une boucle d'apprentissage ou
-;;; d'execution sans rien y changer par ailleurs -- comme GUI-SNAPSHOT dans
-;;; src/gui.lisp, une lecture pure qui n'affecte jamais le reseau, elle aussi
-;;; generique via une seule methode par classe (ACTIVATION-STATE) plutot que
-;;; des tests de type disperses.
+;;; Peut être appelée à chaque pas d'une boucle d'apprentissage ou
+;;; d'execution sans rien changer par ailleurs -- comme GUI-SNAPSHOT dans
+;;; src/gui.lisp.
 
 (defgeneric activation-state (ann)
   (:documentation "Etat d'activation de ANN a tracer par TRACE-ACTIVATION :
@@ -138,10 +134,7 @@ position sur la grille (cf. 2D, src/maths.lisp)."))
   (mapcar #'output (net ann)))
 
 (defmethod activation-state ((ann rosom))
-  (error "ACTIVATION-STATE ne gere pas encore ROSOM : (net rosom) est
-(neurones-contenu neurones-contexte), pas une liste plate de neurones comme
-pour SOM -- a ecrire si besoin (methode dediee, comme pour GUI-SNAPSHOT dans
-src/gui.lisp, plutot que d'etendre celle-ci)."))
+  (error "ACTIVATION-STATE ne gere pas encore ROSOM."))
 
 (defun trace-activation (ann &optional (path "activation-trace.lisp"))
   "Ajoute a la suite de PATH (mode APPEND ; un fichier de formes Lisp, une
@@ -181,25 +174,13 @@ liste de formes Lisp, dans l'ordre d'ecriture (la plus ancienne en tete)."
 
 
 (defun trace-output (ann &optional (path "output-trace.lisp"))
-  "Ajoute a la suite de PATH (mode APPEND ; un fichier de formes Lisp, une
-par ligne, cree si besoin) l'output courant de ANN (une instance,
-ou le symbole qui la nomme) -- cf. ACTIVATION-STATE pour ce qui est
-effectivement ecrit selon sa classe. Pensee pour s'inserer dans n'importe
-quelle boucle d'apprentissage ou d'execution sans rien y changer par
-ailleurs, par exemple :
+  "Ajoute a la suite de PATH l'output courant de ANN (une instance,
+ou le symbole qui la nomme) - S'insère dans n'importe
+quelle boucle sans rien changer, par exemple :
 
   (dolist (frame chant)
     (setf (input som) (coerce frame 'vector))
-    (trace-output som \"trace.lisp\"))
-
-Chaque appel ajoute UN etat, sur UNE ligne (*PRINT-PRETTY* NIL le temps de
-l'ecrire : sinon le pretty-printer de ~S replie les etats les plus larges --
-144 cases pour un som -- sur plusieurs lignes, ce qui rendrait le fichier
-plus penible a parcourir/grep ligne par ligne sans rien changer a ce qu'on
-relit avec READ). La sequence est l'ordre des appels dans le fichier, relue
-par READ-ACTIVATION-TRACE. Renvoie ANN, comme BACKPROPAGATE, LEARN (som),
-ROSOM-LEARN et TRAIN-PERCEPTRON -- pour pouvoir l'imbriquer directement, par
-exemple (trace-activation (learn som))."
+    (trace-output som \"trace.lisp\"))"
   (let ((ann (if (symbolp ann) (symbol-value ann) ann)))
     (with-open-file (stream path :direction :output
                                   :if-exists :append :if-does-not-exist :create)
