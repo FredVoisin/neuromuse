@@ -19,6 +19,10 @@
 (subtest "maths: distance & error"
   (is (euclidian (list 0 0) (list 3 4)) 5.0)
   (is (euclidian-fast (list 0 0) (list 3 4)) 25)
+  (is (neuromuse-distance (list 3 4) (list 0 0)) 5.0 :test #'=
+      "poids nuls : activation nulle, distance = norme de l'entree")
+  (is (neuromuse-distance (list 3 4) (list 1 1)) 0.0 :test #'=
+      "poids a 1 : distance nulle quelle que soit l'entree")
   (is (check-error (vector 1.0 2.0) (vector 1.0 2.0) 0.01) 0
       "identical vectors have zero error")
   (is (check-error (vector 0.0 0.0) (vector 1.0 1.0) 0.01) 2.0
@@ -147,6 +151,47 @@
     (let ((winner (find-winner s)))
       (is (length winner) 2 "find-winner returns (neuron distance)")
       (is (type-of (first winner)) 'neuron :test #'eq))))
+
+(subtest "som: distance euclidienne par defaut, distance neuromuse en option"
+  (let ((s (make-instance 'som :name 'som-metric-test :size 4 :input 3)))
+    (is (distance s) 'euclidian "distance euclidienne d(x, w) par defaut")
+    (is (error-scaling s) :normalized "pilotage par l'erreur normalise par defaut")
+    ;; le neurone 2 recoit exactement l'entree comme poids
+    (loop for synapse in (net (nth 2 (net s)))
+          for v in '(0.1 0.5 0.9)
+          do (setf (cadr synapse) v))
+    (setf (input s) (coerce (list 0.1 0.5 0.9) 'vector))
+    (let ((w (find-winner s)))
+      (is (car (id (first w))) 2 "le neurone dont les poids valent l'entree gagne")
+      (is (second w) 0.0 "a distance nulle"))
+    (is (output (nth 2 (net s))) (list 0.1 0.5 0.9)
+        "(output neurone) = ce qui a ete compare a l'entree, ici les poids")
+    ;; reglage historique : distance a l'activation x*w
+    (setf (distance s) 'neuromuse-distance)
+    (let* ((w (find-winner s))
+           (k (car (id (first w)))))
+      (is (second w) (euclidian (input s) (activation s :n k)) :test #'=
+          "NEUROMUSE-DISTANCE mesure d(x, x*w), comme avant"))))
+
+(subtest "som: learn, voisinage normalise, erreur nulle"
+  (let ((s (make-instance 'som :name 'som-learn-test :size 9 :input 3)))
+    (setf (learn-fact s) 0.5
+          (radius s) 1
+          (input s) (coerce (list 0.2 0.4 0.6) 'vector))
+    (let ((before (second (find-winner s))))
+      (learn s)
+      (ok (< (second (find-winner s)) before) "le gagnant se rapproche de l'entree")
+      (is (max-error s) before "MAX-ERROR retient l'erreur du gagnant"))
+    (is (neighbourhood-width s (max-error s)) 1 :test #'=
+        "a erreur maximale, la largeur vaut RADIUS")
+    (is (neighbourhood-width s (/ (max-error s) 2)) 0.5 :test #'=
+        "a mi-erreur, la moitie de RADIUS")
+    ;; entree egale aux poids d'un neurone : erreur nulle, LEARN ne doit pas echouer
+    (setf (input s) (coerce (mapcar #'cadr (net (nth 4 (net s)))) 'vector))
+    (ok (learn s) "LEARN passe avec une erreur nulle")
+    (setf (distance s) 'neuromuse-distance
+          (error-scaling s) :raw)
+    (ok (learn s) "le reglage historique (NEUROMUSE-DISTANCE, :RAW) tourne toujours")))
 
 (subtest "rosom: construction and activation"
   (let ((r (make-instance 'rosom :name 'rosom-shape-test)))

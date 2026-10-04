@@ -11,7 +11,23 @@
     :initform #'voisins :initarg :neighbourhood :accessor neighbourhood)
    (winner
     :initform 0 :initarg :winner :accessor winner :type integer)
-   (distance ;; distance input > memoire, pour ne pas etre recalculee
+   (distance
+    ;; Fonction (son symbole) qui mesure l'ecart entre l'entree X et les
+    ;; poids W d'un neurone, dans FIND-WINNER comme dans LEARN (cf.
+    ;; NEURON-DISTANCE) :
+    ;;   'EUCLIDIAN          -- d(x, w), par defaut : le SOM de Kohonen
+    ;;                          habituel, ou le poids est un prototype dans
+    ;;                          l'espace des entrees, et ou l'apprentissage (w
+    ;;                          vers x) fait baisser la quantite meme qui a
+    ;;                          designe le gagnant.
+    ;;   'NEUROMUSE-DISTANCE -- d(x, x*w), la distance historique des versions
+    ;;                          1999-2001 (cf. maths.lisp) : l'entree y est
+    ;;                          comparee a l'activation du neurone, le poids y
+    ;;                          est un gain plutot qu'un prototype. A combiner
+    ;;                          avec ERROR-SCALING a :RAW pour rejouer les
+    ;;                          anciennes versions.
+    ;; Toute fonction (x w) -> nombre convient. (Le DISTANCE de chaque NEURON
+    ;; est un autre slot, du meme nom : la derniere distance calculee.)
     :initform 'euclidian :initarg :distance :accessor distance :type symbol)
    (topology ;; '(taille-du-net nombredimension autresdescripteurs) une fois
     ;; INIT passe (toujours le cas : INITIALIZE-INSTANCE :AFTER l'appelle) --
@@ -21,7 +37,28 @@
     ;; second element (la dimension) est repris par INIT.
     :initform '(euclidian 2) :initarg :topology :accessor topology :type list)
    (temp
-    :initform 0.0 :initarg :temp :accessor temp :type number))
+    :initform 0.0 :initarg :temp :accessor temp :type number)
+   (error-scaling
+    ;; Largeur de la gaussienne de voisinage dans LEARN (cf.
+    ;; NEIGHBOURHOOD-WIDTH) :
+    ;;   :normalized -- RADIUS * min(1, erreur / MAX-ERROR) : l'erreur pilote
+    ;;                  toujours la largeur, mais ramenee entre 0 et 1 par la
+    ;;                  plus grande erreur de gagnant deja vue (a la maniere du
+    ;;                  PLSOM de Berglund et Sitte, 2006), donc en cases de la
+    ;;                  grille et independante de l'echelle des donnees. A
+    ;;                  erreur maximale, on retrouve exactement la formule
+    ;;                  classique mise en commentaire au-dessus de GAUSSIAN-HAT
+    ;;                  (maths.lisp) ; quand la carte s'ajuste, le voisinage
+    ;;                  se resserre de lui-meme.
+    ;;   :raw        -- l'erreur brute du neurone, comme avant : la largeur
+    ;;                  est alors en unites de l'entree, pas en cases.
+    :initform :normalized :initarg :error-scaling :accessor error-scaling :type keyword)
+   (max-error
+    ;; Plus grande erreur de gagnant vue depuis INIT (cf. ERROR-SCALING
+    ;; :NORMALIZED). Ne fait que croitre : une valeur aberrante la fige haut et
+    ;; resserre ensuite tout le voisinage -- la remettre a 0.0 a la main au
+    ;; besoin (INIT le fait).
+    :initform 0.0 :initarg :max-error :accessor max-error :type number))
   (:documentation "som"))
 
 ;; Naming an explicitly-named instance (binding SELF to NAME itself, cf.
@@ -70,6 +107,7 @@
 	(push (list (list j i)
 		    (- .25 (random .5)) 0) (net nr)))))
   (setf (winner self) (random size)
+	(max-error self) 0.0     ; nouveaux poids : l'echelle des erreurs repart de zero
 	(input self) (coerce (make-list input :initial-element 0) 'vector)
 	(output self) (make-list input :initial-element 0))
   (values self))
@@ -114,12 +152,37 @@
     (update-activation n))
   (values))
 
+;;*******************************************
+;;********* distance entree / neurone *******
+;;*******************************************
+
+(defgeneric neuron-weights (ann n)
+  (:documentation "Poids du neurone N de ANN, tels que compares a l'entree par
+(DISTANCE ANN) : bruites par (TEMP ANN) comme l'etait l'activation. Range aussi
+le resultat dans (OUTPUT neurone), que lisent le visualiseur (gui.lisp) et
+TRACE-ACTIVATION (read-write.lisp)."))
+
+(defmethod neuron-weights ((ann som) n)
+  (let ((temp (or (temp ann) 0.0))
+	(nnt (nth n (net ann))))
+    (setf (output nnt)
+	  (loop for synapse in (net nnt)
+		for k from 0 below (length (input ann))
+		collect (+ (cadr synapse)
+			   (- (/ temp 2)
+			      (if (zerop temp) 0 (random temp))))))))
+
+(defun neuron-distance (ann n)
+  "Distance, au sens de (DISTANCE ANN), entre (INPUT ANN) et les poids du
+neurone N (cf. NEURON-WEIGHTS). Seul endroit ou FIND-WINNER et LEARN mesurent
+l'ecart entre l'entree et un neurone."
+  (funcall (distance ann) (input ann) (neuron-weights ann n)))
+
 (defmethod find-winner ((ann som) &key (inf #'< ) (equality #'= ))
-  (let ((vector (input ann))
-  	(win '((nil 696969)) ))
+  (let ((win '((nil 696969)) ))
     (loop for k from 0 to (1- (length (net ann)))
           do
-          (let ((dist (funcall (distance ann) vector (activation ann :n k))))
+          (let ((dist (neuron-distance ann k)))
 	    (setf (distance (nth k (net ann))) dist)
             (if (not (funcall inf dist (cadar win)))
             	(when (funcall equality dist (cadar win))
@@ -144,6 +207,27 @@
 ;;********* apprentissage *******************
 ;;*******************************************
 
+(defun neighbourhood-width (ann error)
+  "Largeur de la gaussienne de voisinage pour un neurone d'erreur ERROR, selon
+(ERROR-SCALING ANN) -- cf. la documentation de ce slot. En :NORMALIZED, tant
+que MAX-ERROR vaut 0 (rien encore d'appris), la largeur est RADIUS entier."
+  (ecase (error-scaling ann)
+    (:raw error)
+    (:normalized
+     (let ((rho (max-error ann)))
+       (* (radius ann)
+	  (if (plusp rho) (min 1 (/ error rho)) 1))))))
+
+(defun neighbourhood-correction (learn width grid-distance)
+  "Taux de correction (GAUSSIAN-HAT) d'un neurone a GRID-DISTANCE cases du
+gagnant, pour une gaussienne de largeur WIDTH. Une largeur nulle (ou
+negligeable) ne corrige que le gagnant lui-meme, au taux LEARN : avant, une
+erreur nulle laissait la correction a NIL (ou divisait 0 par 0 pour le
+gagnant) et faisait echouer LEARN."
+  (if (< width 1e-6)
+      (if (zerop grid-distance) learn 0)
+      (gaussian-hat learn width grid-distance)))
+
 (defmethod learn ((ann som))
   (let ((input (input ann))
 	(n (length (net ann)))
@@ -161,16 +245,20 @@
 	  voisins (funcall (neighbourhood ann) coord-w radius (floor (expt n (/ 1 (cadr topos))))))
     (when (verbose ann)
       (format t "~%win : ~S ~S" winner coord-w))
+    ;; l'erreur du gagnant fixe l'echelle de NEIGHBOURHOOD-WIDTH (:NORMALIZED)
+    (setf (max-error ann) (max (max-error ann) (cadr winner)))
     (loop for voisin in voisins ;; winner inclu
 	  do
 	  (let* ((k (funcall h (car voisin) (cadr voisin) n))
 		 (vn (nth k (net ann)))
-		 (error (funcall (distance ann) input (activation ann :n k)))
-		 correction)
+		 (error (neuron-distance ann k))
+		 (correction (neighbourhood-correction ;chapeau mexicain
+			      learn
+			      (neighbourhood-width ann error)
+			      ;; distance SUR LA GRILLE, toujours euclidienne : le
+			      ;; slot DISTANCE ne concerne que l'espace des entrees
+			      (euclidian voisin coord-w))))
             (setf (distance vn) error)
-            (when (not (zerop error))
-              (setf correction (gaussian-hat learn error (funcall (distance ann) voisin coord-w))))
- ;chapeau mexicain
 	    (dotimes (i (length input))
 	      (let ((synapse (nth i (net vn))))
 		(setf (cadr synapse)

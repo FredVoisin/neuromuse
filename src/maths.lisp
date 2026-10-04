@@ -690,6 +690,21 @@ returns
   (apply #'+ (loop for k from 0 to (1- (length a))
 		   collect (expt (- (elt a k) (elt b k)) 2))))
 
+(defun neuromuse-distance (x w)
+  "Distance euclidienne entre l'entree X et l'activation X*W (produit
+composante par composante) : d(x, x*w) = sqrt(somme xi^2 (1 - wi)^2). C'est
+la distance des SOM de neuromuse de 1999 a 2001, ou FIND-WINNER comparait
+l'entree a l'activation du neurone plutot qu'a ses poids ; a donner au slot
+DISTANCE d'un SOM pour retrouver ce comportement. Proprietes a connaitre : le
+classement des neurones ne depend ni de l'amplitude globale de X ni du signe
+de ses composantes, une composante nulle de X ne compte pas, et le neurone
+ideal pour toute entree est W = (1 1 ... 1) -- alors que LEARN tire W vers X.
+X et W : listes ou vecteurs, de meme longueur."
+  (sqrt (let ((s 0))
+	  (dotimes (k (length x) s)
+	    (let ((xk (elt x k)))
+	      (incf s (expt (- xk (* xk (elt w k))) 2)))))))
+
 (defun transition-matrix (sequence size)
   "Matrice SIZE x SIZE des comptes de transition : (aref m a b) = nombre de
 fois ou SEQUENCE passe de l'etat A a l'etat B d'un indice au suivant --

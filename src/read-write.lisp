@@ -78,7 +78,7 @@ l'une ni l'autre ne se relit avec ~S. A la place, un unique MAKE-INSTANCE
 reconstruit la grille a la bonne taille (declenchant INIT, donc de nouveaux
 NEURON correctement cables -- NN, ID -- comme a la construction d'origine),
 puis les reglages vraiment utiles (TOPOLOGY, RADIUS, LEARN-FACT, TEMP,
-NET-TEMP, DISTANCE, EPOCH) et, pour chaque neurone, son NET -- les poids
+NET-TEMP, DISTANCE, EPOCH, ERROR-SCALING, MAX-ERROR) et, pour chaque neurone, son NET -- les poids
 synaptiques appris, la seule partie de l'etat d'un neurone qui compte pour
 l'usage du SOM (AGE, OUTPUT, DISTANCE d'un neurone restent a leurs valeurs
 par defaut ; NEIGHBOURHOOD aussi, laisse a #'VOISINS -- le seul jamais
@@ -96,9 +96,10 @@ tout le reste opere sur IT."
     (format stream "(in-package :neuromuse)~%")
     (format stream "(let ((it (make-instance 'som :name '~S :size ~D :input ~D)))~%"
 	    (name self) (length (net self)) (length (input self)))
-    (format stream "  (setf (topology it) '~S (radius it) ~S (learn-fact it) ~S~%        (temp it) ~S (net-temp it) ~S (distance it) '~S (epoch it) ~D)~%"
+    (format stream "  (setf (topology it) '~S (radius it) ~S (learn-fact it) ~S~%        (temp it) ~S (net-temp it) ~S (distance it) '~S (epoch it) ~D~%        (error-scaling it) ~S (max-error it) ~S)~%"
 	    (topology self) (radius self) (learn-fact self)
-	    (temp self) (net-temp self) (distance self) (epoch self))
+	    (temp self) (net-temp self) (distance self) (epoch self)
+	    (error-scaling self) (max-error self))
     (dolist (n (net self))
       (format stream "  (setf (net (nth ~D (net it))) '~S)~%" (car (id n)) (net n)))
     (format stream "  it)~%"))

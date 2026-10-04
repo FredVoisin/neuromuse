@@ -57,7 +57,9 @@ Run the test suite with:
 `tests/neuromuse.lisp` is a `prove`-based suite (package `neuromuse-test`, `:use`s `:neuromuse` and
 `:prove`) covering the math/transfer-function layer, matrix/vector algebra, SOM topology helpers, MLP
 construction/shape, one deterministic MLP-training-reduces-error check (fixed `*random-state*` seed, so
-it's not flaky), rmlp construction, and som/rosom construction+activation+winner-finding. It's wired up
+it's not flaky), rmlp construction, som/rosom construction+activation+winner-finding, and som's
+distance options (`'euclidian` default vs `'neuromuse-distance`) and `learn` (normalized
+neighbourhood width, zero-error case). It's wired up
 via a second system, `neuromuse-test`, defined at the bottom of `neuromuse.asd`
 (`:depends-on (:neuromuse :prove)`, loads `tests/neuromuse.lisp`) and referenced from `neuromuse`'s
 `:in-order-to ((test-op (test-op "neuromuse-test")))`. Requires Quicklisp for `:prove`.
@@ -145,6 +147,26 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   activation feeds back into the input on the next step via `recurrent-layer-activation`.
 - `som` (`src/som.lisp`, subclass of `ANN`) — self-organizing (Kohonen) map. `net` is a flat list of
   `neuron` instances; `topology` describes the map's spatial layout for neighborhood computation.
+  The `distance` slot names the input-space distance function, called as `(distance x w)` on the
+  input and the neuron's (noise-jittered, cf. `temp`) weights through `neuron-distance` — the one
+  place `find-winner` and `learn` measure input/neuron mismatch. Default `'euclidian`, i.e. the usual
+  Kohonen d(x, w). Until 2026 `find-winner` compared the input to the neuron's *activation* x*w
+  instead; that historical distance is now an ordinary function, `neuromuse-distance` (`maths.lisp`),
+  selectable with `(setf (distance som) 'neuromuse-distance)`. It has odd properties (ranking blind to
+  input amplitude and sign; ideal neuron w = (1 ... 1) for every input, which `learn`'s pull of w
+  toward x contradicts) — keep it for replaying old pieces, not as a default. `(output neuron)` now
+  holds what was compared to the input, i.e. the weights, in both cases (it used to hold the
+  activation). The *grid* distance between a neighbour and the winner, in `learn`, is always
+  `euclidian` on grid coordinates, independent of the `distance` slot.
+  `error-scaling` sets the neighbourhood Gaussian's width in `learn` (`neighbourhood-width`):
+  `:normalized` (default) is `radius` × min(1, error / `max-error`), `max-error` being the largest
+  winner error seen since `init` (PLSOM-like; at full error it is exactly the classic
+  `exp(-d²/(2·radius)²)` commented above `gaussian-hat`); `:raw` is the historical width = the
+  neuron's raw error, in input units rather than grid cells. `'neuromuse-distance` + `:raw` reproduces
+  the pre-2026 `learn` bit for bit (checked on a 12x12 map: identical weights after 15 epochs, same
+  seed). A zero error no longer makes `learn` fail (`neighbourhood-correction`). Maps written by
+  `save` before this change carry `(distance it) 'euclidian` but meant the activation distance: reload
+  them with `(setf (distance it) 'neuromuse-distance (error-scaling it) :raw)` to keep their behaviour.
 - `rosom` (`src/rosom.lisp`, subclass of `som`) — "recurrent oscillatory SOM": pairs a content SOM with
   a context SOM (`net` is `(content-neurons context-neurons)`) plus phase/frequency-like state
   (`input-context`) so winners synchronize over time. Its training step is a `learn` method, like
@@ -219,7 +241,8 @@ reaches it; it exports its own entry points from its `defpackage`.)
   `logistic`, `sigmoide`, `linear`, `boltzmann` (all take `:thresh :temp :learn :slope`).
 - Matrix/vector algebra on plain lists (not CL arrays), e.g. `multiply-matrix-and-vector`,
   `multiply-two-matrices`, `add-2-matrices`, `transpose`, `hadamar-product`, `substract-2-vectors`.
-- Distance/error: `euclidian`, `euclidian-fast`, `check-error` (returns a single summed error value, not
+- Distance/error: `euclidian`, `euclidian-fast`, `neuromuse-distance` (historical SOM distance d(x, x*w), see `som`
+  above), `check-error` (returns a single summed error value, not
   a list), `compare-vectors`.
 - `noise` (replaces the old `noiser`) — random perturbation of a number/list/vector/`neuron`/`ann`;
   `mlp`'s `learn`/`run-mlp` call it on the net via `net-temp` to add weight jitter.
