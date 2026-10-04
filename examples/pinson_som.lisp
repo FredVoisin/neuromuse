@@ -1,6 +1,5 @@
-;;;; pinson_som.lisp - Carte auto-organisatrice (SOM) 12x12 pour les vecteurs
-;;;; de chant de pinson (Fringilla coelebs) extraits dans pinson_vecteurs.lisp :
-;;;; 144 neurones en grille carree, 18 entrees (une par bande FFT, voir
+;;;; pinson_som.lisp - Carte auto-organisatrice (SOM) 12x12 pour apprentissage
+;;;; du chant de pinson (pinson_vecteurs.lisp) : 18 entrees (une par bande FFT, voir
 ;;;; *pinson-freqs*).
 ;;;;
 ;;;; Usage, package :neuromuse courant :
@@ -22,8 +21,8 @@
 (unless (and (boundp 'pinson-som) (ann-p pinson-som))
   (make-instance 'som :name 'pinson-som
                        :size *pinson-som-size* :input *pinson-som-input*)
-  (setf (learn-fact pinson-som) .3
-        (radius pinson-som) 2
+  (setf (learn-fact pinson-som) .4
+        (radius pinson-som) 3
         (temp pinson-som) 0.0
 	(net-temp pinson-som) 0.05))
 
@@ -108,35 +107,65 @@ l'etat courant de NET (pas de reentrainement declenche ici) :
 ;;     (format t "~&gagnant (apres) : ~S~%" (pinson-som-winner (first chant))))
 
 #|
+;; (defvar *stop* NIL)
+;; GUI SOM
+(neuromuse-gui:gui 'pinson-som)
+;;
 
-
-(compare-pinson-chants-transitions)
-
+;; APPRENTISSAGE 1
 ;(time 
 (train-pinson-som :epochs 200)
 ;; 146 seconds i7-6700HQ CPU @ 2.60GHz
 ;)					
+;; transitions des chants
+(compare-pinson-chants-transitions)
+: => (((0 1) 0.9159275) ((0 2) 0.9052235) ((1 2) 0.9684066))
 
+;; APPRENTISSAGE 2
 (setf (learn-fact pinson-som) .3)
 (train-pinson-som :epochs 300)
-(setf (learn-fact pinson-som) .2)
-(train-pinson-som :epochs 300)
+(dolist (frame (car *pinson-chants*))
+	     (setf (input pinson-som) (coerce frame 'vector))
+	     (trace-output pinson-som "output-pinson-som-chant1@500.lisp"))
 
-;; chants originaux
-(print 
+;; transitions
 (compare-pinson-chants-transitions)
-; Il manque une ligne de base pour savoir ce qui est "proche" ou "différent" en absolu
- ; => (((0 1) 0.9249053) ((0 2) 0.9022291) ((1 2) 0.96922594)) ;
-)
+=> (((0 1) 0.92456686) ((0 2) 0.92515785) ((1 2) 0.96650606))
+
+;;APPRENTISSAGE 3
+(setf (learn-fact pinson-som) .2)
+(setf (net-temp pinson-som) .0)
+(train-pinson-som :epochs 300)
+(dolist (frame (car *pinson-chants*))
+	     (setf (input pinson-som) (coerce frame 'vector))
+	     (trace-output pinson-som "output-pinson-som-chant1@800.lisp"))
+
+;;transitions
+(compare-pinson-chants-transitions)
+; => (((0 1) 0.9091702) ((0 2) 0.91568685) ((1 2) 0.9615911))
+
 
 |#
 
-;(defvar *stop* NIL)
-(neuromuse-gui:gui 'pinson-som)
+;;; Trace des output gagnants
+(defun trace-pinson-chants (&key (net 'pinson-som) (prefix "pinson-out"))
+  "Parcourt chacun des 3 chants de *PINSON-CHANTS*, SANS apprentissage et journalise
+l'activation de neurone gagnant a chaque frame via TRACE-ACTIVATION (src/read-write.lisp) : un fichier par chant, PREFIX1.lisp, PREFIX2.lisp, PREFIX3.lisp -- chacun
+ecrase au debut de l'appel (pas de :append d'un appel sur l'autre), puis
+rempli frame par frame. Relire un fichier avec READ-ACTIVATION-TRACE."
+  (let ((som (if (symbolp net) (symbol-value net) net)))
+    (loop for chant in *pinson-chants*
+          for i from 1
+          do (let ((path (format nil "~A~D.lisp" prefix i)))
+               (ignore-errors (delete-file path))
+               (dolist (frame chant)
+                 (setf (input som) (coerce frame 'vector))
+                 (find-winner som)
+		 (trace-output som path))))
+    (values som)))
 
-;;; Trace de l'activation, SANS apprentissage : un fichier par chant
-
-(defun trace-pinson-chants (&key (net 'pinson-som) (prefix "pinson-trace-chant"))
+;;; Trace des activations SOM, SANS apprentissage : un fichier par chant
+(defun trace-pinson-activations (&key (net 'pinson-som) (prefix "pinson-trace-chant"))
   "Parcourt chacun des 3 chants de *PINSON-CHANTS*, SANS apprentissage
 (FIND-WINNER seulement, pas LEARN -- NET reste tel quel), et journalise
 l'activation de NET a chaque frame via TRACE-ACTIVATION (src/read-write.lisp) :
@@ -154,7 +183,8 @@ rempli frame par frame. Relire un fichier avec READ-ACTIVATION-TRACE."
                  (trace-activation som path))))
     (values som)))
 
-; (trace-pinson-chants)
+;; trace activation SOM
+; (trace-pinson-activations)
 
 
 ;; EOF
