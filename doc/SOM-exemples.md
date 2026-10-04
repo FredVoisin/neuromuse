@@ -35,6 +35,11 @@ as `make-mlp`/`make-rmlp`: afterward you can refer to it as `my-som` directly, n
 
 Like `mlp`, `learn-fact` defaults to `0.0` — a freshly-built SOM won't learn anything until you set it.
 
+### About SOM topologies
+
+For more flexibilty, in neuromuse, a SOM can handle various topologies and geometries. See [A propos des distances de SOM](doc/som-distances.md)
+
+
 ## 2. Training
 
 One learning step is `(learn som)`: present an input via `(setf (input som) ...)` (a vector, not a
@@ -154,6 +159,7 @@ one carefully considers the SOM's geometry and topology.
 
 ## Further Reading
 
+- Voir aussi [A propos des distances de SOM](doc/som-distances.md).
 - See `src/som.lisp` for the full SOM implementation and docstrings.
 - See `src/rosom.lisp` for the recurrent oscillatory SOM (`rosom`) — pairs a content SOM with a context
   SOM; not covered here yet.
