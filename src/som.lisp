@@ -33,33 +33,34 @@
     ;; est un autre slot, du meme nom : la derniere distance calculee.)
     :initform 'euclidian :initarg :distance :accessor distance :type symbol)
    (grid-distance
-    ;; Fonction (son symbole) qui mesure, dans LEARN, l'ecart SUR LA GRILLE
+    ;; Metrique (son symbole) qui mesure, dans LEARN, l'ecart SUR LA GRILLE
     ;; entre un voisin et le gagnant, a partir de leurs coordonnees (cf. 2D) :
-    ;; c'est elle qui fixe la forme du voisinage, la ou DISTANCE mesure la
-    ;; ressemblance dans l'espace des entrees -- deux geometries differentes,
-    ;; a ne pas confondre (NEUROMUSE-DISTANCE appliquee a des coordonnees de
-    ;; grille dependrait de la position absolue du gagnant sur la carte).
-    ;;   'EUCLIDIAN -- par defaut, comme toujours jusqu'ici : voisinage rond
-    ;;                 dans la fenetre carree de VOISINS, dont les coins
-    ;;                 (a radius*sqrt 2) sont donc moins corriges que les bords.
-    ;;   'CHEBYSHEV -- max des ecarts par axe : distance exacte de la fenetre
-    ;;                 carree de VOISINS, coins et bords traites a egalite.
+    ;; elle fixe la forme du voisinage, la ou DISTANCE mesure la ressemblance
+    ;; dans l'espace des entrees -- deux geometries differentes, a ne pas
+    ;; confondre (NEUROMUSE-DISTANCE appliquee a des coordonnees de grille
+    ;; dependrait de la position absolue du gagnant sur la carte).
+    ;;   'EUCLIDIAN -- par defaut, comme toujours jusqu'ici : voisinage rond.
+    ;;   'CHEBYSHEV -- max des ecarts par axe : voisinage carre, exactement la
+    ;;                 fenetre de VOISINS (coins et bords a egalite).
     ;;   'MANHATTAN -- somme des ecarts par axe : voisinage en losange.
-    ;;   'TOROIDAL  -- grille sans bords, les bords opposes se rejoignent ; a
-    ;;                 associer a NEIGHBOURHOOD #'VOISINS-TOROIDAL (sinon la
-    ;;                 fenetre reste bornee aux bords et rien ne change).
-    ;;   'HEXAGONAL -- lignes impaires decalees d'une demi-case : six voisins
-    ;;                 directs a distance 1 ; VOISINS convient tel quel.
-    ;; Formules dans maths.lisp. Toute fonction symetrique (a b) -> nombre,
-    ;; nulle seulement pour a = b, convient ; LEARN lie *GRID-SIDE* au cote de
-    ;; la grille pour celles qui en ont besoin.
+    ;; La topologie de la grille (carree ou hexagonale, bornee ou torique) se
+    ;; decrit dans TOPOLOGY, pas ici : LEARN la passe a la metrique par les
+    ;; mots-cles :SIDE, :LATTICE et :BOUNDARY (cf. GRID-METRIC, maths.lisp).
+    ;; Toute fonction (a b &key side lattice boundary) convient.
     :initform 'euclidian :initarg :grid-distance :accessor grid-distance :type symbol)
    (topology ;; '(taille-du-net nombredimension autresdescripteurs) une fois
     ;; INIT passe (toujours le cas : INITIALIZE-INSTANCE :AFTER l'appelle) --
     ;; le premier element devient le nombre total de neurones, le second la
     ;; dimension de la grille pour 2D/D2 (VOISINS, LEARN). L'initform
     ;; ci-dessous ('euclidian 2) ne survit donc jamais telle quelle : seul son
-    ;; second element (la dimension) est repris par INIT.
+    ;; second element (la dimension) est repris par INIT. Ensuite, en
+    ;; proprietes facultatives, conservees par INIT et SAVE, la topologie de
+    ;; la grille que LEARN passe a GRID-DISTANCE et a NEIGHBOURHOOD :
+    ;;   :lattice  :square (defaut) ou :hex (lignes impaires decalees d'une
+    ;;             demi-case, six voisins directs) ;
+    ;;   :boundary :bounded (defaut) ou :torus (bords opposes recolles ; cote
+    ;;             pair exige pour une grille hexagonale).
+    ;; Exemple : '(144 2 :lattice :hex :boundary :torus).
     :initform '(euclidian 2) :initarg :topology :accessor topology :type list)
    (temp
     :initform 0.0 :initarg :temp :accessor temp :type number)
@@ -264,7 +265,10 @@ gagnant) et faisait echouer LEARN."
 	(learn (learn-fact ann))
 	(topos (topology ann))
 	(side (floor (expt n (/ 1 (cadr topos)))))   ; cote de la grille
-	(*grid-side* side)    ; pour TOROIDAL (maths.lisp), appelee a deux arguments
+	;; topologie de la grille, decrite apres taille et dimension dans
+	;; TOPOLOGY : '(144 2 :lattice :hex :boundary :torus)
+	(lattice (getf (cddr topos) :lattice :square))
+	(boundary (getf (cddr topos) :boundary :bounded))
 	coord-w
 	voisins
 	f h)
@@ -272,7 +276,7 @@ gagnant) et faisait echouer LEARN."
     (setf f #'2d ;(read-from-string (format nil "~Sd" (cadr topos)))
 	  h #'d2 ;(read-from-string (format nil "d~S" (cadr topos)))
 	  coord-w (funcall f (car (id winner)) n)
-	  voisins (funcall (neighbourhood ann) coord-w radius side))
+	  voisins (funcall (neighbourhood ann) coord-w radius side :boundary boundary))
     (when (verbose ann)
       (format t "~%win : ~S ~S" winner coord-w))
     ;; l'erreur du gagnant fixe l'echelle de NEIGHBOURHOOD-WIDTH (:NORMALIZED)
@@ -287,7 +291,8 @@ gagnant) et faisait echouer LEARN."
 			      (neighbourhood-width ann error)
 			      ;; distance SUR LA GRILLE (slot GRID-DISTANCE), pas
 			      ;; dans l'espace des entrees (slot DISTANCE)
-			      (funcall (grid-distance ann) voisin coord-w))))
+			      (funcall (grid-distance ann) voisin coord-w
+				       :side side :lattice lattice :boundary boundary))))
             (setf (distance vn) error)
 	    (dotimes (i (length input))
 	      (let ((synapse (nth i (net vn))))

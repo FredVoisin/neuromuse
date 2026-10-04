@@ -32,15 +32,32 @@
       "cosinus : meme direction, distance nulle quelle que soit la norme")
   (is (cosine (list 1 0) (list -1 0)) 2 :test #'= "cosinus : vecteurs opposes a 2")
   (is (cosine (list 0 0) (list 1 2)) 1 "cosinus : vecteur nul, distance 1")
-  (is (toroidal (list 0 0) (list 11 0) 12) 1.0 :test #'=
-      "tore : (0 0) et (11 0) sont voisins sur une grille de 12")
-  (is (let ((*grid-side* 12)) (toroidal (list 0 5) (list 0 2))) 3.0 :test #'=
-      "tore : cote lu dans *GRID-SIDE*, chemin direct quand il est le plus court")
-  (ok (< (abs (- (hexagonal (list 1 1) (list 0 2)) (sqrt 3))) 1e-6)
-      "hexagonal : deuxieme couronne a sqrt(3)")
-  (is (count-if (lambda (p) (< (abs (- (hexagonal (list 1 1) p) 1)) 1e-6))
-                (loop for c from 0 to 2 append (loop for l from 0 to 2 collect (list c l))))
-      6 "hexagonal : six voisins directs a distance 1")
+  (is (euclidian (list 0 0) (list 11 0)) 11.0 :test #'=
+      "sans mot-cle : distance ordinaire")
+  (is (euclidian (list 0 0) (list 11 0) :side 12 :boundary :torus) 1.0 :test #'=
+      "tore : (0 0) et (11 0) voisins par le bord sur une grille de 12")
+  (is (euclidian (list 0 5) (list 0 2) :side 12 :boundary :torus) 3.0 :test #'=
+      "tore : chemin direct quand il est le plus court")
+  (is (chebyshev (list 0 0) (list 11 11) :side 12 :boundary :torus) 1
+      "tore : Tchebychev, le coin oppose est un voisin direct")
+  (is (manhattan (list 0 0) (list 11 11) :side 12 :boundary :torus) 2
+      "tore : Manhattan, le coin oppose est a deux pas")
+  (ok (< (abs (- (euclidian (list 1 1) (list 0 2) :lattice :hex) (sqrt 3))) 1e-6)
+      "hexagonal : deuxieme couronne a sqrt(3) en distance euclidienne")
+  (is (chebyshev (list 1 1) (list 0 2) :lattice :hex) 2
+      "hexagonal : deuxieme couronne a deux pas")
+  (flet ((ring (fn)
+           (count-if (lambda (p) (< (abs (- (funcall fn (list 1 1) p :lattice :hex) 1)) 1e-6))
+                     (loop for c from 0 to 2 append (loop for l from 0 to 2 collect (list c l))))))
+    (is (ring 'euclidian) 6 "hexagonal : six voisins directs a distance euclidienne 1")
+    (is (ring 'chebyshev) 6 "hexagonal : six voisins directs a un pas")
+    (is (ring 'manhattan) 6 "hexagonal : Manhattan compte aussi les pas"))
+  (ok (< (abs (- (euclidian (list 0 0) (list 3 0) :side 4 :lattice :hex :boundary :torus) 1)) 1e-6)
+      "tore hexagonal de cote pair : voisins par le bord")
+  (is-error (euclidian (list 0 0) (list 2 0) :side 3 :lattice :hex :boundary :torus) 'error
+            "tore hexagonal de cote impair refuse")
+  (is-error (euclidian (list 0 0) (list 2 0) :boundary :torus) 'error
+            "tore sans :side refuse")
   (is (check-error (vector 1.0 2.0) (vector 1.0 2.0) 0.01) 0
       "identical vectors have zero error")
   (is (check-error (vector 0.0 0.0) (vector 1.0 1.0) 0.01) 2.0
@@ -231,22 +248,30 @@
           (input s) (coerce (list 0.2 0.4 0.6) 'vector))
     (ok (learn s) "LEARN tourne avec une grille de Tchebychev")))
 
-(subtest "som: voisinage torique et autres distances dans LEARN"
-  (is (length (voisins-toroidal (list 0 0) 1 4)) 9 "fenetre 3x3 complete au coin")
-  (ok (member (list 3 3) (voisins-toroidal (list 0 0) 1 4) :test #'equal)
-      "le coin oppose est voisin sur le tore")
-  (is (length (voisins-toroidal (list 0 0) 1 2)) 4 "sans doublon quand la fenetre deborde")
+(subtest "som: topologie de la grille dans LEARN"
+  (is (length (remove-duplicates (voisins (list 0 0) 1 4) :test #'equal)) 4
+      "grille bornee : fenetre coupee au coin (4 cases distinctes)")
+  (is (length (voisins (list 0 0) 1 4 :boundary :torus)) 9 "tore : fenetre 3x3 complete au coin")
+  (ok (member (list 3 3) (voisins (list 0 0) 1 4 :boundary :torus) :test #'equal)
+      "tore : le coin oppose est dans la fenetre")
+  (is (length (voisins (list 0 0) 1 2 :boundary :torus)) 4 "tore : sans doublon quand la fenetre deborde")
   (let ((s (make-instance 'som :name 'som-torus-test :size 16 :input 3)))
     (setf (learn-fact s) 0.5
           (radius s) 1
           (input s) (coerce (list 0.2 0.4 0.6) 'vector))
-    (setf (neighbourhood s) #'voisins-toroidal
-          (grid-distance s) 'toroidal)
-    (ok (learn s) "LEARN tourne sur un tore (cote lie par LEARN)")
-    (setf (neighbourhood s) #'voisins
-          (grid-distance s) 'hexagonal)
-    (ok (learn s) "LEARN tourne sur une grille hexagonale")
-    (setf (distance s) 'cosine)
+    (setf (topology s) '(16 2 :boundary :torus))
+    (ok (learn s) "LEARN tourne sur un tore")
+    (init s :size 16 :input 3)
+    (is (topology s) '(16 2 :boundary :torus) "INIT conserve la topologie de la grille")
+    (setf (input s) (coerce (list 0.2 0.4 0.6) 'vector)
+          (topology s) '(16 2 :lattice :hex :boundary :torus)
+          (grid-distance s) 'chebyshev)
+    (ok (learn s) "LEARN tourne sur un tore hexagonal, en pas hexagonaux")
+    (setf (topology s) '(16 2 :lattice :triangle))
+    (is-error (learn s) 'error "pavage inconnu refuse")
+    (setf (topology s) '(16 2)
+          (grid-distance s) 'euclidian
+          (distance s) 'cosine)
     (ok (learn s) "LEARN tourne avec la distance cosinus")))
 
 (subtest "rosom: construction and activation"

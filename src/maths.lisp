@@ -665,17 +665,35 @@ returns
   (if (<= x 0) 0
       (round (* 15 (+ 5 (log (* 1000 x) 5))))))
 
-(defgeneric euclidian (x y)
-  (:documentation "Distance euclidienne (raccourcie) entre x et y."))
+(defgeneric euclidian (x y &key side lattice boundary)
+  (:documentation "Distance euclidienne entre x et y :
 
-(defmethod euclidian ((a list) (b list))
+    d(x, y) = sqrt( somme_i (x_i - y_i)^2 )
+
+Sans mot-cle, distance ordinaire entre deux listes ou vecteurs (espace des
+entrees, comme toujours). Avec les mots-cles de topologie (cf. GRID-METRIC),
+X et Y sont des coordonnees de neurones sur la grille d'un SOM : LATTICE
+(:square par defaut, ou :hex) et BOUNDARY (:bounded par defaut, ou :torus,
+qui demande SIDE, le cote de la grille)."))
+
+(defmethod euclidian :around (x y &key side (lattice :square) (boundary :bounded))
+  ;; grille carree bornee (ou pas de mot-cle) : la distance ordinaire,
+  ;; calculee par les methodes ci-dessous exactement comme avant
+  (if (and (eq lattice :square) (eq boundary :bounded))
+      (call-next-method)
+      (grid-metric :euclidian x y :side side :lattice lattice :boundary boundary)))
+
+(defmethod euclidian ((a list) (b list) &key side lattice boundary)
+  (declare (ignore side lattice boundary))
   (sqrt (apply #'+ (mapcar #'(lambda (x y) (expt (- x y) 2)) a b))))
 
-(defmethod euclidian ((a vector) (b vector))
+(defmethod euclidian ((a vector) (b vector) &key side lattice boundary)
+  (declare (ignore side lattice boundary))
   (sqrt (apply #'+ (loop for k from 0 to (1- (length a))
 			 collect (expt (- (elt a k) (elt b k)) 2)))))
 
-(defmethod euclidian ((a vector) (b list))
+(defmethod euclidian ((a vector) (b list) &key side lattice boundary)
+  (declare (ignore side lattice boundary))
   (sqrt (apply #'+ (loop for k from 0 to (1- (length a))
 			 collect (expt (- (elt a k) (elt b k)) 2)))))
 
@@ -695,8 +713,9 @@ returns
 ;; Toutes s'appellent comme EUCLIDIAN, (distance a b), sur deux listes ou
 ;; vecteurs de meme longueur (melanges possibles), et se donnent par leur nom
 ;; au slot DISTANCE d'un SOM (espace des entrees : COSINE, NEUROMUSE-DISTANCE)
-;; ou a son slot GRID-DISTANCE (coordonnees sur la grille : CHEBYSHEV,
-;; MANHATTAN, TOROIDAL, HEXAGONAL), par exemple (setf (distance som) 'cosine).
+;; ou a son slot GRID-DISTANCE (coordonnees sur la grille : EUCLIDIAN,
+;; CHEBYSHEV, MANHATTAN, qui acceptent les mots-cles de topologie decrits
+;; plus bas), par exemple (setf (distance som) 'cosine).
 ;; Notation : a = (a_1 ... a_d), b = (b_1 ... b_d).
 
 (defun cosine (a b)
@@ -720,76 +739,117 @@ sont nuls."
           (t (- 1 (/ ab (sqrt (* aa bb))))))))
 
 ;; distances pour la GRILLE d'un SOM (slot GRID-DISTANCE), sur des
-;; coordonnees de neurones, (colonne ligne) comme les renvoie 2D
+;; coordonnees de neurones, (colonne ligne) comme les renvoie 2D. La metrique
+;; (EUCLIDIAN, CHEBYSHEV, MANHATTAN) et la topologie de la grille sont
+;; independantes : la topologie arrive par les mots-cles SIDE, LATTICE et
+;; BOUNDARY, que LEARN (som.lisp) tire du slot TOPOLOGY de la carte, et
+;; GRID-METRIC applique la bonne methode pour une meme metrique.
 
-(defun chebyshev (a b)
+(defun hex-position (p)
+  "Position dans le plan du neurone de coordonnees P = (colonne ligne) sur
+une grille hexagonale dont les lignes impaires sont decalees d'une demi-case
+vers la droite :  x = c + (l mod 2)/2,  y = l * sqrt(3)/2.
+Les six voisins directs sont ainsi tous a la distance 1."
+  (let ((c (elt p 0)) (l (elt p 1)))
+    (list (+ c (/ (mod l 2) 2)) (* l (/ (sqrt 3) 2)))))
+
+(defun hex-steps (a b)
+  "Nombre de pas hexagonaux entre A et B, coordonnees (colonne ligne) sur la
+meme grille hexagonale que HEX-POSITION. En coordonnees axiales
+q = c - floor(l/2), r = l, puis cubiques (q, r, -q-r) :
+
+    pas(a, b) = max( |dq|, |dr|, |dq + dr| )
+
+c'est-a-dire la distance de Tchebychev en coordonnees cubiques."
+  (flet ((axial (p)
+           (let ((c (elt p 0)) (l (elt p 1)))
+             (values (- c (floor l 2)) l))))
+    (multiple-value-bind (qa ra) (axial a)
+      (multiple-value-bind (qb rb) (axial b)
+        (let ((dq (- qa qb)) (dr (- ra rb)))
+          (max (abs dq) (abs dr) (abs (+ dq dr))))))))
+
+(defun %plain-metric (metric a b)
+  "METRIC (:euclidian, :chebyshev, :manhattan) entre A et B, sans topologie."
+  (let ((acc 0))
+    (map nil (lambda (x y)
+               (let ((d (abs (- x y))))
+                 (ecase metric
+                   (:euclidian (incf acc (* d d)))
+                   (:chebyshev (setf acc (max acc d)))
+                   (:manhattan (incf acc d)))))
+         a b)
+    (if (eq metric :euclidian) (sqrt acc) acc)))
+
+(defun %lattice-metric (metric a b lattice)
+  (ecase lattice
+    (:square (%plain-metric metric a b))
+    (:hex (if (eq metric :euclidian)
+              ;; distance dans le plan entre les positions hexagonales
+              (%plain-metric :euclidian (hex-position a) (hex-position b))
+              ;; Tchebychev et Manhattan : le nombre de pas hexagonaux, la
+              ;; metrique naturelle d'un pavage (voisinage en hexagone)
+              (hex-steps a b)))))
+
+(defun grid-metric (metric a b &key side (lattice :square) (boundary :bounded))
+  "Distance METRIC (:euclidian, :chebyshev ou :manhattan) entre les neurones
+de coordonnees A et B, selon la topologie de la grille :
+
+  LATTICE  :square -- grille carree, coordonnees (colonne ligne) telles quelles.
+           :hex    -- grille hexagonale, lignes impaires decalees d'une
+                      demi-case (cf. HEX-POSITION). :euclidian y mesure la
+                      distance dans le plan ; :chebyshev et :manhattan, le
+                      nombre de pas hexagonaux (cf. HEX-STEPS).
+  BOUNDARY :bounded -- grille bornee.
+           :torus   -- bords opposes recolles, grille de cote SIDE :
+
+               d_tore(a, b) = min sur k_i dans {-1, 0, 1} de d(a, b + k * SIDE)
+
+                      la plus courte distance a l'une des copies de B
+                      decalees d'un cote dans chaque direction. Sur une grille
+                      hexagonale, SIDE doit etre pair pour que l'alternance
+                      des lignes decalees se poursuive a travers le bord."
+  (ecase boundary
+    (:bounded (%lattice-metric metric a b lattice))
+    (:torus
+     (unless side
+       (error "GRID-METRIC : tore sans cote de grille -- passer :SIDE."))
+     (when (and (eq lattice :hex) (oddp side))
+       (error "GRID-METRIC : tore hexagonal de cote impair (~D) -- l'alternance
+des lignes decalees ne se raccorde qu'avec un cote pair." side))
+     (let ((best nil)
+           (b (coerce b 'list)))
+       ;; toutes les copies de B decalees de -SIDE, 0 ou +SIDE sur chaque axe
+       (labels ((images (coords)
+                  (if (null coords)
+                      (list nil)
+                      (loop for k in (list (- side) 0 side)
+                            append (mapcar (lambda (rest) (cons (+ (car coords) k) rest))
+                                           (images (cdr coords)))))))
+         (dolist (image (images b) best)
+           (let ((d (%lattice-metric metric a image lattice)))
+             (when (or (null best) (< d best)) (setf best d)))))))))
+
+(defun chebyshev (a b &key side (lattice :square) (boundary :bounded))
   "Distance de Tchebychev : le plus grand ecart, axe par axe,
 
     d(a, b) = max_i |a_i - b_i|
 
-Sur la grille d'un SOM, c'est exactement la distance que suppose la fenetre
-carree de VOISINS : voisinage carre, coins et bords a egalite."
-  (let ((m 0))
-    (map nil (lambda (x y) (setf m (max m (abs (- x y))))) a b)
-    m))
+Sur la grille carree d'un SOM, c'est exactement la distance que suppose la
+fenetre carree de VOISINS : voisinage carre, coins et bords a egalite. Sur une
+grille hexagonale, le nombre de pas hexagonaux. Mots-cles de topologie : cf.
+GRID-METRIC."
+  (grid-metric :chebyshev a b :side side :lattice lattice :boundary boundary))
 
-(defun manhattan (a b)
+(defun manhattan (a b &key side (lattice :square) (boundary :bounded))
   "Distance de Manhattan : la somme des ecarts, axe par axe,
 
     d(a, b) = somme_i |a_i - b_i|
 
-Sur la grille d'un SOM : voisinage en losange."
-  (let ((s 0))
-    (map nil (lambda (x y) (incf s (abs (- x y)))) a b)
-    s))
-
-(defvar *grid-side* nil
-  "Cote de la grille carree du SOM en cours d'apprentissage : LEARN (som.lisp)
-le lie le temps de son passage sur les voisins, pour que TOROIDAL puisse
-s'appeler avec deux arguments seulement, comme EUCLIDIAN.")
-
-(defun toroidal (a b &optional (side *grid-side*))
-  "Distance euclidienne sur un tore, c'est-a-dire une grille de cote SIDE dont
-les bords opposes se rejoignent :
-
-    d(a, b) = sqrt( somme_i min(|a_i - b_i|, SIDE - |a_i - b_i|)^2 )
-
-Sur chaque axe, on prend le plus court des deux chemins, direct ou par le bord
-oppose. SIDE vaut par defaut *GRID-SIDE*, que LEARN lie au cote de la grille.
-Pour un SOM sans bords, l'associer au voisinage VOISINS-TOROIDAL :
-VOISINS borne la fenetre aux bords de la grille, si bien qu'avec lui la
-distance torique ne servirait jamais."
-  (unless side
-    (error "TOROIDAL : cote de la grille inconnu -- le passer en troisieme
-argument, ou lier *GRID-SIDE* (LEARN le fait pour un SOM)."))
-  (let ((s 0))
-    (map nil (lambda (x y)
-               (let ((dx (mod (abs (- x y)) side)))
-                 (incf s (expt (min dx (- side dx)) 2))))
-         a b)
-    (sqrt s)))
-
-(defun hexagonal (a b)
-  "Distance euclidienne sur une grille hexagonale, en coordonnees (colonne
-ligne) dites decalees : les lignes impaires sont deplacees d'une demi-case vers
-la droite, et les lignes sont espacees de sqrt(3)/2. Le neurone (c, l) est
-donc place en
-
-    x = c + (l mod 2) / 2      y = l * sqrt(3) / 2
-
-et d(a, b) = sqrt( (x_a - x_b)^2 + (y_a - y_b)^2 ).
-
-Chaque neurone a ainsi six voisins directs, tous a la distance 1 ; la
-couronne suivante est a sqrt(3) et 2. La numerotation des neurones (2D, D2)
-ne change pas : seule leur position, donc leur distance, change. La fenetre
-carree de VOISINS contient bien tous les neurones a moins de RADIUS pas
-hexagonaux. Coordonnees a deux axes seulement."
-  (flet ((pos (p)
-           (let ((c (elt p 0)) (l (elt p 1)))
-             (values (+ c (/ (mod l 2) 2)) (* l (/ (sqrt 3) 2))))))
-    (multiple-value-bind (xa ya) (pos a)
-      (multiple-value-bind (xb yb) (pos b)
-        (sqrt (+ (expt (- xa xb) 2) (expt (- ya yb) 2)))))))
+Sur la grille carree d'un SOM : voisinage en losange. Sur une grille
+hexagonale, le nombre de pas hexagonaux, comme CHEBYSHEV. Mots-cles de
+topologie : cf. GRID-METRIC."
+  (grid-metric :manhattan a b :side side :lattice lattice :boundary boundary))
 
 (defun neuromuse-distance (x w)
   "Distance euclidienne entre l'entree X et l'activation X*W (produit
@@ -867,8 +927,14 @@ specifique aux reseaux de neurones."
 
 ;; todo: developper, generaliser, reduire
 
-(defun voisins (pos radius n &optional r )
+(defun %voisins-bornes (pos radius n &optional r )
   ;pos = '(x y z ...) et n = 1- sqrt n
+  ;; NB (defaut d'origine, conserve tel quel) : REMOVE-DUPLICATES compare par
+  ;; EQL, qui ne tient pas deux listes egales pour identiques. Les doublons
+  ;; crees par le bornage aux bords restent donc : au coin (0 0), rayon 1,
+  ;; on obtient 9 entrees pour 4 cases, et LEARN corrige ces neurones
+  ;; plusieurs fois par pas (le gagnant d'un coin, 4 fois). Le centre de la
+  ;; carte n'est pas concerne.
   (if (not pos)
       (remove-duplicates r)
       (let ((x (pop pos))
@@ -881,7 +947,7 @@ specifique aux reseaux de neurones."
 		    do
 		    (push (list (min (+ x i) o)) r)
 		    (push (list (max (- x i) 0)) r))
-	      (voisins pos radius n r))
+	      (%voisins-bornes pos radius n r))
 	    (progn
 	      (loop for a in r
 		    do
@@ -890,23 +956,27 @@ specifique aux reseaux de neurones."
 			  do
 			  (push (append a (list (min (+ x i) o))) tmp)
 			  (push (append a (list (max (- x i) 0))) tmp)))
-	      (voisins pos radius n tmp))))))
+	      (%voisins-bornes pos radius n tmp))))))
 
-(defun voisins-toroidal (pos radius n)
-  "Comme VOISINS, mais sur un tore : les coordonnees qui depassent un bord
-de la grille (de cote N) reviennent par le bord oppose, au lieu d'etre
-bornees. Renvoie la liste des coordonnees, (colonne ligne ...), de la fenetre
-de rayon RADIUS centree sur POS, sans doublon (si 2 RADIUS + 1 > N). A donner
-au slot NEIGHBOURHOOD d'un SOM, avec 'TOROIDAL pour GRID-DISTANCE."
-  (let ((axes (mapcar (lambda (x)
-                        (remove-duplicates
-                         (loop for i from (- radius) to radius
-                               collect (mod (+ x i) n))))
-                      pos)))
-    (reduce (lambda (axis acc)
-              (loop for v in axis
-                    append (mapcar (lambda (rest) (cons v rest)) acc)))
-            axes :from-end t :initial-value (list nil))))
+(defun voisins (pos radius n &key (boundary :bounded))
+  "Coordonnees des neurones de la fenetre carree de rayon RADIUS centree sur
+POS = (colonne ligne ...), sur une grille de cote N, sans doublon. BOUNDARY
+:bounded (defaut, comme toujours) borne la fenetre aux bords de la grille ;
+:torus la fait revenir par le bord oppose (coordonnees prises modulo N).
+Convient aussi a une grille hexagonale : la fenetre carree y contient tous
+les neurones a moins de RADIUS pas hexagonaux."
+  (ecase boundary
+    (:bounded (%voisins-bornes pos radius n))
+    (:torus
+     (let ((axes (mapcar (lambda (x)
+                           (remove-duplicates
+                            (loop for i from (- radius) to radius
+                                  collect (mod (+ x i) n))))
+                         pos)))
+       (reduce (lambda (axis acc)
+                 (loop for v in axis
+                       append (mapcar (lambda (rest) (cons v rest)) acc)))
+               axes :from-end t :initial-value (list nil))))))
 
 ;le chapeau divergerait, selon Uwe Lammel und Jurgen Cleve Kunstliche Intelligenz, 2001.
 ;(* learn (exp (/ (- (expt error 2)) (expt (* 2 radius) 2))))
