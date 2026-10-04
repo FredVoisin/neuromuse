@@ -121,7 +121,7 @@ La numérotation des neurones (`2d`/`d2`) reste la même pour toutes les topolog
 
 **Défaut d'origine, corrigé :** sur une grille bornée, `voisins` laissait des doublons dans sa fenêtre aux bords de la carte, car `remove-duplicates` comparait les coordonnées avec `eql`, qui ne reconnaît pas deux listes égales comme identiques. Au coin (0, 0) avec un rayon de 1, il renvoyait 9 coordonnées pour 4 cases, et `learn` corrigeait ces neurones plusieurs fois par pas : le gagnant d'un coin, 4 fois. La comparaison se fait maintenant avec `equal`. Cela change aussi le ROSOM, qui utilise `voisins`, et le réglage historique ne reproduit plus l'ancien code aux bords de la carte. Le tore n'était pas concerné.
 
-# Mesures avec le vrai code
+# Mesures avec la nouvelle version
 
 Carte 12×12, 16 entrées, formes qui varient continûment, 15 époques, une seule graine. Toutes les erreurs sont mesurées à la distance euclidienne.
 
@@ -137,7 +137,7 @@ Carte 12×12, 16 entrées, formes qui varient continûment, 15 époques, une seu
 | défaut + tore (`:boundary :torus`) | 113 / 144 | 3,7 % | 0,29 |
 | défaut + distance `'cosine` | 96 / 144 | 12,9 % | 0,42 |
 
-L'erreur topographique est la part des entrées dont le premier et le deuxième gagnant ne sont pas voisins sur la grille, voisins voulant dire à une distance d'au plus 1,5 dans la géométrie de la carte : 8 voisins sur la grille carrée et sur le tore, 6 sur la grille hexagonale, plus exigeante. L'erreur de quantification est l'écart moyen entre une entrée et les poids de son gagnant.
+L'erreur topographique est la part des entrées dont le premier et le deuxième gagnant ne sont pas voisins sur la grille, voisins étant à une distance d'au plus 1,5 dans la géométrie de la carte : 8 voisins sur la grille carrée et sur le tore, 6 sur la grille hexagonale. L'erreur de quantification est l'écart moyen entre une entrée et les poids de son gagnant.
 
 Ces mesures sont faites après la correction de `voisins`. La normalisation améliore nettement la topologie (de 5,6 % à 2,4 %), pour une erreur de quantification à peine plus haute. Toutes les grilles s'organisent bien. Mais il s'agit d'un seul essai, avec une seule graine : la correction de `voisins`, qui ne touche que les bords, a suffi à faire passer l'erreur topographique de Manhattan de 4,1 % à 7,5 %, et celle du cosinus de 6,8 % à 12,9 %. Des écarts de quelques points entre réglages relèvent donc du hasard de l'apprentissage ; il faudrait plusieurs graines pour classer les réglages.
 
@@ -151,7 +151,7 @@ Avec `:normalized`, la largeur de la gaussienne vaut :
 
   largeur = radius × min(1, erreur / max-error)
 
-où `max-error` est la plus grande erreur de gagnant vue depuis `init`. L'erreur pilote toujours la largeur, comme en 1999, mais elle est ramenée entre 0 et 1, donc exprimée en cases de la grille et indépendante de l'échelle des données. C'est l'idée du PLSOM de Berglund et Sitte (2006).
+où `max-error` est la plus grande erreur de gagnant vue depuis `init`. L'erreur pilote toujours la largeur, mais elle est ramenée entre 0 et 1, donc exprimée en pas dans la grille et indépendamment de l'échelle des données. C'est l'idée du PLSOM de Berglund et Sitte (2006).
 
 À erreur maximale, on retrouve exactement la formule classique laissée en commentaire au-dessus de `gaussian-hat`, exp(−d² / (2·radius)²). Quand la carte s'ajuste, les erreurs diminuent et le voisinage se resserre de lui-même.
 
