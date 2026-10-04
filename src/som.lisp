@@ -29,6 +29,23 @@
     ;; Toute fonction (x w) -> nombre convient. (Le DISTANCE de chaque NEURON
     ;; est un autre slot, du meme nom : la derniere distance calculee.)
     :initform 'euclidian :initarg :distance :accessor distance :type symbol)
+   (grid-distance
+    ;; Fonction (son symbole) qui mesure, dans LEARN, l'ecart SUR LA GRILLE
+    ;; entre un voisin et le gagnant, a partir de leurs coordonnees (cf. 2D) :
+    ;; c'est elle qui fixe la forme du voisinage, la ou DISTANCE mesure la
+    ;; ressemblance dans l'espace des entrees -- deux geometries differentes,
+    ;; a ne pas confondre (NEUROMUSE-DISTANCE appliquee a des coordonnees de
+    ;; grille dependrait de la position absolue du gagnant sur la carte).
+    ;;   'EUCLIDIAN -- par defaut, comme toujours jusqu'ici : voisinage rond
+    ;;                 dans la fenetre carree de VOISINS, dont les coins
+    ;;                 (a radius*sqrt 2) sont donc moins corriges que les bords.
+    ;;   'CHEBYSHEV -- max des ecarts par axe : distance exacte de la fenetre
+    ;;                 carree de VOISINS, coins et bords traites a egalite.
+    ;;   'MANHATTAN -- somme des ecarts par axe : voisinage en losange.
+    ;; Toute fonction symetrique (a b) -> nombre, nulle seulement pour a = b,
+    ;; convient. (Une grille torique ou hexagonale demanderait aussi de revoir
+    ;; VOISINS et 2D/D2, pas seulement cette distance.)
+    :initform 'euclidian :initarg :grid-distance :accessor grid-distance :type symbol)
    (topology ;; '(taille-du-net nombredimension autresdescripteurs) une fois
     ;; INIT passe (toujours le cas : INITIALIZE-INSTANCE :AFTER l'appelle) --
     ;; le premier element devient le nombre total de neurones, le second la
@@ -255,9 +272,9 @@ gagnant) et faisait echouer LEARN."
 		 (correction (neighbourhood-correction ;chapeau mexicain
 			      learn
 			      (neighbourhood-width ann error)
-			      ;; distance SUR LA GRILLE, toujours euclidienne : le
-			      ;; slot DISTANCE ne concerne que l'espace des entrees
-			      (euclidian voisin coord-w))))
+			      ;; distance SUR LA GRILLE (slot GRID-DISTANCE), pas
+			      ;; dans l'espace des entrees (slot DISTANCE)
+			      (funcall (grid-distance ann) voisin coord-w))))
             (setf (distance vn) error)
 	    (dotimes (i (length input))
 	      (let ((synapse (nth i (net vn))))

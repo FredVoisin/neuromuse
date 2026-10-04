@@ -59,7 +59,7 @@ Run the test suite with:
 construction/shape, one deterministic MLP-training-reduces-error check (fixed `*random-state*` seed, so
 it's not flaky), rmlp construction, som/rosom construction+activation+winner-finding, and som's
 distance options (`'euclidian` default vs `'neuromuse-distance`) and `learn` (normalized
-neighbourhood width, zero-error case). It's wired up
+neighbourhood width, zero-error case, grid distance). It's wired up
 via a second system, `neuromuse-test`, defined at the bottom of `neuromuse.asd`
 (`:depends-on (:neuromuse :prove)`, loads `tests/neuromuse.lisp`) and referenced from `neuromuse`'s
 `:in-order-to ((test-op (test-op "neuromuse-test")))`. Requires Quicklisp for `:prove`.
@@ -156,8 +156,12 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   input amplitude and sign; ideal neuron w = (1 ... 1) for every input, which `learn`'s pull of w
   toward x contradicts) — keep it for replaying old pieces, not as a default. `(output neuron)` now
   holds what was compared to the input, i.e. the weights, in both cases (it used to hold the
-  activation). The *grid* distance between a neighbour and the winner, in `learn`, is always
-  `euclidian` on grid coordinates, independent of the `distance` slot.
+  activation). The *grid* distance between a neighbour and the winner, in `learn`, is a separate
+  slot, `grid-distance` (default `'euclidian`, as always before; `'chebyshev` matches `voisins`'s
+  square window exactly, `'manhattan` gives a diamond), applied to grid coordinates — never the
+  `distance` slot, which is about input space: `neuromuse-distance` on grid coordinates would depend
+  on the winner's absolute position on the map. Toroidal or hexagonal grids would also need
+  `voisins` and `2d`/`d2` reworked, not just this function.
   `error-scaling` sets the neighbourhood Gaussian's width in `learn` (`neighbourhood-width`):
   `:normalized` (default) is `radius` × min(1, error / `max-error`), `max-error` being the largest
   winner error seen since `init` (PLSOM-like; at full error it is exactly the classic
@@ -242,7 +246,7 @@ reaches it; it exports its own entry points from its `defpackage`.)
 - Matrix/vector algebra on plain lists (not CL arrays), e.g. `multiply-matrix-and-vector`,
   `multiply-two-matrices`, `add-2-matrices`, `transpose`, `hadamar-product`, `substract-2-vectors`.
 - Distance/error: `euclidian`, `euclidian-fast`, `neuromuse-distance` (historical SOM distance d(x, x*w), see `som`
-  above), `check-error` (returns a single summed error value, not
+  above), `chebyshev`/`manhattan` (for a SOM's `grid-distance`), `check-error` (returns a single summed error value, not
   a list), `compare-vectors`.
 - `noise` (replaces the old `noiser`) — random perturbation of a number/list/vector/`neuron`/`ann`;
   `mlp`'s `learn`/`run-mlp` call it on the net via `net-temp` to add weight jitter.

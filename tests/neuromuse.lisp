@@ -23,6 +23,8 @@
       "poids nuls : activation nulle, distance = norme de l'entree")
   (is (neuromuse-distance (list 3 4) (list 1 1)) 0.0 :test #'=
       "poids a 1 : distance nulle quelle que soit l'entree")
+  (is (chebyshev (list 0 0) (list 3 4)) 4 "Tchebychev : plus grand ecart par axe")
+  (is (manhattan (list 0 0) (list 3 4)) 7 "Manhattan : somme des ecarts par axe")
   (is (check-error (vector 1.0 2.0) (vector 1.0 2.0) 0.01) 0
       "identical vectors have zero error")
   (is (check-error (vector 0.0 0.0) (vector 1.0 1.0) 0.01) 2.0
@@ -192,6 +194,24 @@
     (setf (distance s) 'neuromuse-distance
           (error-scaling s) :raw)
     (ok (learn s) "le reglage historique (NEUROMUSE-DISTANCE, :RAW) tourne toujours")))
+
+(subtest "som: distance sur la grille"
+  (let ((s (make-instance 'som :name 'som-grid-test :size 9 :input 3)))
+    (is (grid-distance s) 'euclidian "grille euclidienne par defaut")
+    ;; carte 3x3, gagnant au centre (1 1), rayon 1, largeur pleine : avec
+    ;; Tchebychev, coin (0 0) et bord (1 0) sont a la meme distance, donc
+    ;; recoivent la meme correction ; en euclidien, le coin en recoit moins
+    (flet ((correction (fn voisin)
+             (neighbourhood-correction 1.0 1 (funcall fn voisin (list 1 1)))))
+      (is (correction 'chebyshev (list 0 0)) (correction 'chebyshev (list 1 0))
+          "Tchebychev : coin et bord a egalite" :test #'=)
+      (ok (< (correction 'euclidian (list 0 0)) (correction 'euclidian (list 1 0)))
+          "euclidien : le coin est moins corrige que le bord"))
+    (setf (grid-distance s) 'chebyshev
+          (learn-fact s) 0.5
+          (radius s) 1
+          (input s) (coerce (list 0.2 0.4 0.6) 'vector))
+    (ok (learn s) "LEARN tourne avec une grille de Tchebychev")))
 
 (subtest "rosom: construction and activation"
   (let ((r (make-instance 'rosom :name 'rosom-shape-test)))

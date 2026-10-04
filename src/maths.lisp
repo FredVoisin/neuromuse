@@ -690,6 +690,23 @@ returns
   (apply #'+ (loop for k from 0 to (1- (length a))
 		   collect (expt (- (elt a k) (elt b k)) 2))))
 
+;; distances pour la GRILLE d'un SOM (slot GRID-DISTANCE), sur des
+;; coordonnees de meme longueur, listes ou vecteurs
+
+(defun chebyshev (a b)
+  "Distance de Tchebychev : le plus grand ecart, axe par axe, entre A et B.
+Sur la grille d'un SOM, c'est exactement la distance que suppose la fenetre
+carree de VOISINS."
+  (let ((m 0))
+    (dotimes (k (length a) m)
+      (setf m (max m (abs (- (elt a k) (elt b k))))))))
+
+(defun manhattan (a b)
+  "Distance de Manhattan : la somme des ecarts, axe par axe, entre A et B."
+  (let ((s 0))
+    (dotimes (k (length a) s)
+      (incf s (abs (- (elt a k) (elt b k)))))))
+
 (defun neuromuse-distance (x w)
   "Distance euclidienne entre l'entree X et l'activation X*W (produit
 composante par composante) : d(x, x*w) = sqrt(somme xi^2 (1 - wi)^2). C'est
