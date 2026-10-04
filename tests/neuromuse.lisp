@@ -249,8 +249,10 @@
     (ok (learn s) "LEARN tourne avec une grille de Tchebychev")))
 
 (subtest "som: topologie de la grille dans LEARN"
-  (is (length (remove-duplicates (voisins (list 0 0) 1 4) :test #'equal)) 4
-      "grille bornee : fenetre coupee au coin (4 cases distinctes)")
+  (is (length (voisins (list 0 0) 1 4)) 4
+      "grille bornee : fenetre coupee au coin, sans doublon")
+  (is (length (voisins (list 0 5) 2 12)) 15
+      "grille bornee : fenetre coupee au bord, sans doublon")
   (is (length (voisins (list 0 0) 1 4 :boundary :torus)) 9 "tore : fenetre 3x3 complete au coin")
   (ok (member (list 3 3) (voisins (list 0 0) 1 4 :boundary :torus) :test #'equal)
       "tore : le coin oppose est dans la fenetre")

@@ -929,14 +929,13 @@ specifique aux reseaux de neurones."
 
 (defun %voisins-bornes (pos radius n &optional r )
   ;pos = '(x y z ...) et n = 1- sqrt n
-  ;; NB (defaut d'origine, conserve tel quel) : REMOVE-DUPLICATES compare par
-  ;; EQL, qui ne tient pas deux listes egales pour identiques. Les doublons
-  ;; crees par le bornage aux bords restent donc : au coin (0 0), rayon 1,
-  ;; on obtient 9 entrees pour 4 cases, et LEARN corrige ces neurones
-  ;; plusieurs fois par pas (le gagnant d'un coin, 4 fois). Le centre de la
-  ;; carte n'est pas concerne.
+  ;; REMOVE-DUPLICATES compare ici des listes de coordonnees, donc avec
+  ;; EQUAL : avec le test par defaut (EQL), jusqu'en octobre 2026, les doublons
+  ;; crees par le bornage aux bords restaient (au coin (0 0), rayon 1, 9
+  ;; entrees pour 4 cases), et LEARN corrigeait ces neurones plusieurs fois
+  ;; par pas -- le gagnant d'un coin, 4 fois.
   (if (not pos)
-      (remove-duplicates r)
+      (remove-duplicates r :test #'equal)
       (let ((x (pop pos))
 	    (o (1- n))
 	    tmp)

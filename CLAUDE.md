@@ -176,16 +176,18 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   distance between hex positions and `chebyshev`/`manhattan` count hexagonal steps. Without keywords,
   `euclidian` is the plain distance it always was (an `:around` method on the generic). Neuron
   numbering (`2d`/`d2`) is the same square indexing for every topology; only positions, hence
-  distances, change. Known original quirk, kept as is: `voisins`'s bounded window keeps duplicate
-  coordinates at the edges (`remove-duplicates` compares lists with `eql`), so edge and corner
-  neurons are corrected several times per `learn` step. `save` writes `neighbourhood` when it is a
+  distances, change. `voisins`'s bounded window used to keep duplicate coordinates at the
+  edges (`remove-duplicates` compared lists with the default `eql`), so edge and corner neurons were
+  corrected several times per `learn` step (a corner winner 4 times); fixed with `:test #'equal`
+  in October 2026, which also changes `rosom`, the other caller of `voisins`. `save` writes `neighbourhood` when it is a
   named function. Input-space alternative: `'cosine` (1 - cos(x, w), direction only).
   `error-scaling` sets the neighbourhood Gaussian's width in `learn` (`neighbourhood-width`):
   `:normalized` (default) is `radius` × min(1, error / `max-error`), `max-error` being the largest
   winner error seen since `init` (PLSOM-like; at full error it is exactly the classic
   `exp(-d²/(2·radius)²)` commented above `gaussian-hat`); `:raw` is the historical width = the
   neuron's raw error, in input units rather than grid cells. `'neuromuse-distance` + `:raw` reproduces
-  the pre-2026 `learn` bit for bit (checked on a 12x12 map: identical weights after 15 epochs, same
+  the pre-2026 `learn` except at the map's edges, where the old duplicate corrections are gone
+  (before that fix it matched bit for bit: identical weights after 15 epochs on a 12x12 map, same
   seed). A zero error no longer makes `learn` fail (`neighbourhood-correction`). Maps written by
   `save` before this change carry `(distance it) 'euclidian` but meant the activation distance: reload
   them with `(setf (distance it) 'neuromuse-distance (error-scaling it) :raw)` to keep their behaviour.
