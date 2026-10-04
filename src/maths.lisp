@@ -690,22 +690,106 @@ returns
   (apply #'+ (loop for k from 0 to (1- (length a))
 		   collect (expt (- (elt a k) (elt b k)) 2))))
 
+;;*************      AUTRES DISTANCES     **********************************
+;;
+;; Toutes s'appellent comme EUCLIDIAN, (distance a b), sur deux listes ou
+;; vecteurs de meme longueur (melanges possibles), et se donnent par leur nom
+;; au slot DISTANCE d'un SOM (espace des entrees : COSINE, NEUROMUSE-DISTANCE)
+;; ou a son slot GRID-DISTANCE (coordonnees sur la grille : CHEBYSHEV,
+;; MANHATTAN, TOROIDAL, HEXAGONAL), par exemple (setf (distance som) 'cosine).
+;; Notation : a = (a_1 ... a_d), b = (b_1 ... b_d).
+
+(defun cosine (a b)
+  "Distance cosinus : 1 - cos(a, b), soit
+
+    d(a, b) = 1 - (somme_i a_i b_i) / ( sqrt(somme_i a_i^2) sqrt(somme_i b_i^2) )
+
+Vaut 0 pour deux vecteurs de meme direction, 1 pour deux vecteurs orthogonaux,
+2 pour deux vecteurs opposes. Ne depend que de la direction, pas de la norme :
+dans l'espace des entrees d'un SOM, elle code la FORME d'un spectre plutot que
+son intensite -- l'equivalent coherent de ce que NEUROMUSE-DISTANCE fait de
+facon detournee. Si l'un des deux vecteurs est nul, la direction n'est pas
+definie : la distance vaut alors 1 (aucune ressemblance), et 0 si les deux
+sont nuls."
+  (let ((ab 0) (aa 0) (bb 0))
+    (map nil (lambda (x y)
+               (incf ab (* x y)) (incf aa (* x x)) (incf bb (* y y)))
+         a b)
+    (cond ((and (zerop aa) (zerop bb)) 0)
+          ((or (zerop aa) (zerop bb)) 1)
+          (t (- 1 (/ ab (sqrt (* aa bb))))))))
+
 ;; distances pour la GRILLE d'un SOM (slot GRID-DISTANCE), sur des
-;; coordonnees de meme longueur, listes ou vecteurs
+;; coordonnees de neurones, (colonne ligne) comme les renvoie 2D
 
 (defun chebyshev (a b)
-  "Distance de Tchebychev : le plus grand ecart, axe par axe, entre A et B.
+  "Distance de Tchebychev : le plus grand ecart, axe par axe,
+
+    d(a, b) = max_i |a_i - b_i|
+
 Sur la grille d'un SOM, c'est exactement la distance que suppose la fenetre
-carree de VOISINS."
+carree de VOISINS : voisinage carre, coins et bords a egalite."
   (let ((m 0))
-    (dotimes (k (length a) m)
-      (setf m (max m (abs (- (elt a k) (elt b k))))))))
+    (map nil (lambda (x y) (setf m (max m (abs (- x y))))) a b)
+    m))
 
 (defun manhattan (a b)
-  "Distance de Manhattan : la somme des ecarts, axe par axe, entre A et B."
+  "Distance de Manhattan : la somme des ecarts, axe par axe,
+
+    d(a, b) = somme_i |a_i - b_i|
+
+Sur la grille d'un SOM : voisinage en losange."
   (let ((s 0))
-    (dotimes (k (length a) s)
-      (incf s (abs (- (elt a k) (elt b k)))))))
+    (map nil (lambda (x y) (incf s (abs (- x y)))) a b)
+    s))
+
+(defvar *grid-side* nil
+  "Cote de la grille carree du SOM en cours d'apprentissage : LEARN (som.lisp)
+le lie le temps de son passage sur les voisins, pour que TOROIDAL puisse
+s'appeler avec deux arguments seulement, comme EUCLIDIAN.")
+
+(defun toroidal (a b &optional (side *grid-side*))
+  "Distance euclidienne sur un tore, c'est-a-dire une grille de cote SIDE dont
+les bords opposes se rejoignent :
+
+    d(a, b) = sqrt( somme_i min(|a_i - b_i|, SIDE - |a_i - b_i|)^2 )
+
+Sur chaque axe, on prend le plus court des deux chemins, direct ou par le bord
+oppose. SIDE vaut par defaut *GRID-SIDE*, que LEARN lie au cote de la grille.
+Pour un SOM sans bords, l'associer au voisinage VOISINS-TOROIDAL :
+VOISINS borne la fenetre aux bords de la grille, si bien qu'avec lui la
+distance torique ne servirait jamais."
+  (unless side
+    (error "TOROIDAL : cote de la grille inconnu -- le passer en troisieme
+argument, ou lier *GRID-SIDE* (LEARN le fait pour un SOM)."))
+  (let ((s 0))
+    (map nil (lambda (x y)
+               (let ((dx (mod (abs (- x y)) side)))
+                 (incf s (expt (min dx (- side dx)) 2))))
+         a b)
+    (sqrt s)))
+
+(defun hexagonal (a b)
+  "Distance euclidienne sur une grille hexagonale, en coordonnees (colonne
+ligne) dites decalees : les lignes impaires sont deplacees d'une demi-case vers
+la droite, et les lignes sont espacees de sqrt(3)/2. Le neurone (c, l) est
+donc place en
+
+    x = c + (l mod 2) / 2      y = l * sqrt(3) / 2
+
+et d(a, b) = sqrt( (x_a - x_b)^2 + (y_a - y_b)^2 ).
+
+Chaque neurone a ainsi six voisins directs, tous a la distance 1 ; la
+couronne suivante est a sqrt(3) et 2. La numerotation des neurones (2D, D2)
+ne change pas : seule leur position, donc leur distance, change. La fenetre
+carree de VOISINS contient bien tous les neurones a moins de RADIUS pas
+hexagonaux. Coordonnees a deux axes seulement."
+  (flet ((pos (p)
+           (let ((c (elt p 0)) (l (elt p 1)))
+             (values (+ c (/ (mod l 2) 2)) (* l (/ (sqrt 3) 2))))))
+    (multiple-value-bind (xa ya) (pos a)
+      (multiple-value-bind (xb yb) (pos b)
+        (sqrt (+ (expt (- xa xb) 2) (expt (- ya yb) 2)))))))
 
 (defun neuromuse-distance (x w)
   "Distance euclidienne entre l'entree X et l'activation X*W (produit
@@ -807,6 +891,22 @@ specifique aux reseaux de neurones."
 			  (push (append a (list (min (+ x i) o))) tmp)
 			  (push (append a (list (max (- x i) 0))) tmp)))
 	      (voisins pos radius n tmp))))))
+
+(defun voisins-toroidal (pos radius n)
+  "Comme VOISINS, mais sur un tore : les coordonnees qui depassent un bord
+de la grille (de cote N) reviennent par le bord oppose, au lieu d'etre
+bornees. Renvoie la liste des coordonnees, (colonne ligne ...), de la fenetre
+de rayon RADIUS centree sur POS, sans doublon (si 2 RADIUS + 1 > N). A donner
+au slot NEIGHBOURHOOD d'un SOM, avec 'TOROIDAL pour GRID-DISTANCE."
+  (let ((axes (mapcar (lambda (x)
+                        (remove-duplicates
+                         (loop for i from (- radius) to radius
+                               collect (mod (+ x i) n))))
+                      pos)))
+    (reduce (lambda (axis acc)
+              (loop for v in axis
+                    append (mapcar (lambda (rest) (cons v rest)) acc)))
+            axes :from-end t :initial-value (list nil))))
 
 ;le chapeau divergerait, selon Uwe Lammel und Jurgen Cleve Kunstliche Intelligenz, 2001.
 ;(* learn (exp (/ (- (expt error 2)) (expt (* 2 radius) 2))))

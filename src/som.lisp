@@ -26,6 +26,9 @@
     ;;                          est un gain plutot qu'un prototype. A combiner
     ;;                          avec ERROR-SCALING a :RAW pour rejouer les
     ;;                          anciennes versions.
+    ;;   'COSINE             -- 1 - cos(x, w) : ne depend que de la direction,
+    ;;                          code la forme de l'entree plutot que son
+    ;;                          intensite (cf. maths.lisp).
     ;; Toute fonction (x w) -> nombre convient. (Le DISTANCE de chaque NEURON
     ;; est un autre slot, du meme nom : la derniere distance calculee.)
     :initform 'euclidian :initarg :distance :accessor distance :type symbol)
@@ -42,9 +45,14 @@
     ;;   'CHEBYSHEV -- max des ecarts par axe : distance exacte de la fenetre
     ;;                 carree de VOISINS, coins et bords traites a egalite.
     ;;   'MANHATTAN -- somme des ecarts par axe : voisinage en losange.
-    ;; Toute fonction symetrique (a b) -> nombre, nulle seulement pour a = b,
-    ;; convient. (Une grille torique ou hexagonale demanderait aussi de revoir
-    ;; VOISINS et 2D/D2, pas seulement cette distance.)
+    ;;   'TOROIDAL  -- grille sans bords, les bords opposes se rejoignent ; a
+    ;;                 associer a NEIGHBOURHOOD #'VOISINS-TOROIDAL (sinon la
+    ;;                 fenetre reste bornee aux bords et rien ne change).
+    ;;   'HEXAGONAL -- lignes impaires decalees d'une demi-case : six voisins
+    ;;                 directs a distance 1 ; VOISINS convient tel quel.
+    ;; Formules dans maths.lisp. Toute fonction symetrique (a b) -> nombre,
+    ;; nulle seulement pour a = b, convient ; LEARN lie *GRID-SIDE* au cote de
+    ;; la grille pour celles qui en ont besoin.
     :initform 'euclidian :initarg :grid-distance :accessor grid-distance :type symbol)
    (topology ;; '(taille-du-net nombredimension autresdescripteurs) une fois
     ;; INIT passe (toujours le cas : INITIALIZE-INSTANCE :AFTER l'appelle) --
@@ -249,12 +257,14 @@ gagnant) et faisait echouer LEARN."
       (gaussian-hat learn width grid-distance)))
 
 (defmethod learn ((ann som))
-  (let ((input (input ann))
+  (let* ((input (input ann))
 	(n (length (net ann)))
 	(winner (find-winner ann))
 	(radius (radius ann))
 	(learn (learn-fact ann))
 	(topos (topology ann))
+	(side (floor (expt n (/ 1 (cadr topos)))))   ; cote de la grille
+	(*grid-side* side)    ; pour TOROIDAL (maths.lisp), appelee a deux arguments
 	coord-w
 	voisins
 	f h)
@@ -262,7 +272,7 @@ gagnant) et faisait echouer LEARN."
     (setf f #'2d ;(read-from-string (format nil "~Sd" (cadr topos)))
 	  h #'d2 ;(read-from-string (format nil "d~S" (cadr topos)))
 	  coord-w (funcall f (car (id winner)) n)
-	  voisins (funcall (neighbourhood ann) coord-w radius (floor (expt n (/ 1 (cadr topos))))))
+	  voisins (funcall (neighbourhood ann) coord-w radius side))
     (when (verbose ann)
       (format t "~%win : ~S ~S" winner coord-w))
     ;; l'erreur du gagnant fixe l'echelle de NEIGHBOURHOOD-WIDTH (:NORMALIZED)

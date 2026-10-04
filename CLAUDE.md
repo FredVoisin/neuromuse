@@ -59,7 +59,7 @@ Run the test suite with:
 construction/shape, one deterministic MLP-training-reduces-error check (fixed `*random-state*` seed, so
 it's not flaky), rmlp construction, som/rosom construction+activation+winner-finding, and som's
 distance options (`'euclidian` default vs `'neuromuse-distance`) and `learn` (normalized
-neighbourhood width, zero-error case, grid distance). It's wired up
+neighbourhood width, zero-error case, grid distances including torus and hexagonal grid, cosine). It's wired up
 via a second system, `neuromuse-test`, defined at the bottom of `neuromuse.asd`
 (`:depends-on (:neuromuse :prove)`, loads `tests/neuromuse.lisp`) and referenced from `neuromuse`'s
 `:in-order-to ((test-op (test-op "neuromuse-test")))`. Requires Quicklisp for `:prove`.
@@ -160,10 +160,14 @@ state: `net` (the actual weights/topology), `input`/`output`, `epoch`, `learn-fa
   the GUI and `trace-activation` read, as for mlp/perceptron. The weights themselves, without noise,
   are read with the `weights` generic (`neuromuse-main.lisp`, method on `neuron`). The *grid* distance between a neighbour and the winner, in `learn`, is a separate
   slot, `grid-distance` (default `'euclidian`, as always before; `'chebyshev` matches `voisins`'s
-  square window exactly, `'manhattan` gives a diamond), applied to grid coordinates — never the
+  square window exactly, `'manhattan` gives a diamond, `'hexagonal` puts odd rows half a cell to the
+  right so each neuron has six neighbours at distance 1, `'toroidal` wraps opposite edges and needs
+  `(setf (neighbourhood som) #'voisins-toroidal)` too, since `voisins` clamps at the edges; `learn`
+  binds `*grid-side*` so `toroidal` can be called with two arguments like the others), applied to grid coordinates — never the
   `distance` slot, which is about input space: `neuromuse-distance` on grid coordinates would depend
-  on the winner's absolute position on the map. Toroidal or hexagonal grids would also need
-  `voisins` and `2d`/`d2` reworked, not just this function.
+  on the winner's absolute position on the map. Neuron numbering (`2d`/`d2`) is the same square indexing for every
+  grid shape; only positions, hence distances, change. `save` writes `neighbourhood` when it is a named
+  function. Input-space alternative: `'cosine` (1 - cos(x, w), direction only).
   `error-scaling` sets the neighbourhood Gaussian's width in `learn` (`neighbourhood-width`):
   `:normalized` (default) is `radius` × min(1, error / `max-error`), `max-error` being the largest
   winner error seen since `init` (PLSOM-like; at full error it is exactly the classic
@@ -248,7 +252,8 @@ reaches it; it exports its own entry points from its `defpackage`.)
 - Matrix/vector algebra on plain lists (not CL arrays), e.g. `multiply-matrix-and-vector`,
   `multiply-two-matrices`, `add-2-matrices`, `transpose`, `hadamar-product`, `substract-2-vectors`.
 - Distance/error: `euclidian`, `euclidian-fast`, `neuromuse-distance` (historical SOM distance d(x, x*w), see `som`
-  above), `chebyshev`/`manhattan` (for a SOM's `grid-distance`), `check-error` (returns a single summed error value, not
+  above), `cosine` (input space), `chebyshev`/`manhattan`/`toroidal`/`hexagonal` (for a SOM's `grid-distance`;
+  formulas in their docstrings), `voisins-toroidal` (wrapping neighbourhood), `check-error` (returns a single summed error value, not
   a list), `compare-vectors`.
 - `noise` (replaces the old `noiser`) — random perturbation of a number/list/vector/`neuron`/`ann`;
   `mlp`'s `learn`/`run-mlp` call it on the net via `net-temp` to add weight jitter.

@@ -81,8 +81,8 @@ puis les reglages vraiment utiles (TOPOLOGY, RADIUS, LEARN-FACT, TEMP,
 NET-TEMP, DISTANCE, GRID-DISTANCE, EPOCH, ERROR-SCALING, MAX-ERROR) et, pour chaque neurone, son NET -- les poids
 synaptiques appris, la seule partie de l'etat d'un neurone qui compte pour
 l'usage du SOM (AGE, OUTPUT, DISTANCE d'un neurone restent a leurs valeurs
-par defaut ; NEIGHBOURHOOD aussi, laisse a #'VOISINS -- le seul jamais
-utilise dans ce depot). Tout est ecrit a l'interieur d'un seul LET, pas
+par defaut ; NEIGHBOURHOOD est ecrit s'il s'agit d'une fonction nommee,
+comme #'VOISINS ou #'VOISINS-TOROIDAL, et laisse a #'VOISINS sinon). Tout est ecrit a l'interieur d'un seul LET, pas
 plusieurs formes qui referenceraient (NAME SELF) par symbole : si ce nom est
 deja lie au moment du rechargement, INITIALIZE-INSTANCE en choisit un autre
 (cf. MAKE-NEW-SYMBOL), et des formes separees rateraient alors l'instance
@@ -100,6 +100,11 @@ tout le reste opere sur IT."
 	    (topology self) (radius self) (learn-fact self)
 	    (temp self) (net-temp self) (distance self) (grid-distance self) (epoch self)
 	    (error-scaling self) (max-error self))
+    ;; voisinage : seulement s'il a un nom relisible (#'VOISINS-TOROIDAL...)
+    (let ((f (neighbourhood self)))
+      (let ((fname (if (symbolp f) f (nth-value 2 (function-lambda-expression f)))))
+        (when (and (symbolp fname) fname (fboundp fname))
+          (format stream "  (setf (neighbourhood it) #'~S)~%" fname))))
     (dolist (n (net self))
       (format stream "  (setf (net (nth ~D (net it))) '~S)~%" (car (id n)) (net n)))
     (format stream "  it)~%"))
