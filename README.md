@@ -64,8 +64,12 @@ Elman. Its recurrent feedback comes from a hidden layer's activation, not the ou
    ```
    (or see [INSTALLATION.md](doc/INSTALLATION.md) for alternative setup)
 
-3. Start Emacs + SLIME and load the system:
+3. Start Emacs + SLIME and load the system. The symlink alone isn't enough the first time —
+   Quicklisp caches which systems live under `local-projects/` and won't see the new symlink until
+   that cache is rebuilt, so `(ql:quickload :neuromuse)` on its own fails with `System "neuromuse" not
+   found` right after step 2. Run `(ql:register-local-projects)` once to rebuild it, then quickload:
    ```lisp
+   (ql:register-local-projects)   ;; only needed once after the symlink is created/moved
    (ql:quickload :neuromuse)
    (in-package :neuromuse)
    ```

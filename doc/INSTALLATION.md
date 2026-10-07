@@ -91,6 +91,9 @@ cd ~/projects/neuromuse
 ```bash
 ln -s ~/projects/neuromuse ~/quicklisp/local-projects/neuromuse
 ```
+Quicklisp caches which systems live under `local-projects/` (`local-projects/system-index.txt`) rather
+than rescanning that directory on every `quickload`, so the symlink alone doesn't make `:neuromuse`
+loadable yet — the very next step rebuilds that cache.
 
 **Option B: Manual registry (works either way — required if you skipped Quicklisp)**, from the SBCL REPL:
 ```lisp
@@ -102,6 +105,7 @@ ln -s ~/projects/neuromuse ~/quicklisp/local-projects/neuromuse
 
 **With Quicklisp** (found automatically via the step 4 symlink):
 ```lisp
+(ql:register-local-projects)   ;; rebuilds the local-projects cache -- needed once after step 4
 (ql:quickload :neuromuse)
 (in-package :neuromuse)
 ```
@@ -184,6 +188,35 @@ above — a shell init file doesn't do this), or you're running a mode that skip
 ```lisp
 (load "~/quicklisp/setup.lisp")
 ```
+
+**`System "neuromuse" not found` (`QUICKLISP-CLIENT:SYSTEM-NOT-FOUND`) from `(ql:quickload :neuromuse)`**
+
+Two different causes give this exact error:
+
+- The symlink is in place but Quicklisp's `local-projects` cache hasn't been rebuilt since —
+  `quickload` only consults that cache, it doesn't rescan the directory itself. Fix:
+  ```lisp
+  (ql:register-local-projects)
+  (ql:quickload :neuromuse)
+  ```
+  This is also the most common "it worked on one machine, not the other" install report, since a
+  long-running SBCL/SLIME session (or a machine where the cache happened to get rebuilt for some other
+  local-projects system) can mask it for a while.
+- The symlink itself is dangling — pointing at wherever you cloned neuromuse the *first* time, not
+  where it actually lives now (e.g. you cloned to `~/neuromuse`, later moved the checkout under
+  `~/projects/neuromuse`, and the old symlink target was never updated).
+  `register-local-projects` silently skips a broken symlink, so it keeps returning normally and
+  `local-projects/system-index.txt` stays empty — no error at that step to point you at the real
+  cause. Check it directly:
+  ```bash
+  ls -la ~/quicklisp/local-projects/      # is "neuromuse" a symlink, and does its target exist?
+  ```
+  and recreate it pointing at wherever `neuromuse.asd` actually is:
+  ```bash
+  rm ~/quicklisp/local-projects/neuromuse
+  ln -s ~/projects/neuromuse ~/quicklisp/local-projects/neuromuse   ;; adjust the path to your clone
+  ```
+  then `(ql:register-local-projects)` again.
 
 **`Error: cannot find neuromuse` when loading**
 
