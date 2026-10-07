@@ -38,17 +38,17 @@ below show both paths side by side.
 
 ### 1. Install SBCL
 
-**macOS (via Homebrew):**
-```bash
-brew install sbcl
-```
-
 **Linux (Debian/Ubuntu):**
 ```bash
 sudo apt-get install sbcl
 ```
 
-**Windows & others:** See [http://www.sbcl.org/platform-table.html](http://www.sbcl.org/platform-table.html)
+**macOS (via Homebrew):**
+```bash
+brew install sbcl
+```
+
+**Windows & others, including macOS x86_64:** See [http://www.sbcl.org/platform-table.html](http://www.sbcl.org/platform-table.html)
 
 ### 2. Install Quicklisp (recommended — skip to step 3 if you're going without)
 
