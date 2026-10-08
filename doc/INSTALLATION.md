@@ -43,12 +43,22 @@ below show both paths side by side.
 sudo apt-get install sbcl
 ```
 
-**macOS (via Homebrew):**
-```bash
-brew install sbcl
-```
+**macOS:**
 
-**Windows & others, including macOS x86_64:** See [http://www.sbcl.org/platform-table.html](http://www.sbcl.org/platform-table.html)
+- on ARM64 (Silicon)
+  ```bash
+  brew install sbcl
+  ```
+
+- on x86_64 (Intel)
+  Download SBCL v. 2.2.9 from [SBCL website](http://www.sbcl.org/platform-table.html)
+  After installation, unquarantine:
+  ```
+   xattr -d com.apple.quarantine /usr/local/bin/sbcl
+   xattr -d com.apple.quarantine /usr/local/lib/sbcl/*
+  ```
+  
+**Windows & others:** See [http://www.sbcl.org/platform-table.html](http://www.sbcl.org/platform-table.html)
 
 ### 2. Install Quicklisp (recommended — skip to step 3 if you're going without)
 
