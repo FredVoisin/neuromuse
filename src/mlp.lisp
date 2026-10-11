@@ -38,7 +38,7 @@
 	     :accessor goal
 	     :type list)
    (slope :initform 1.0
-	  :initarg :solpe
+	  :initarg :slope
 	  :reader slope
 	  :accessor slope
 	  :type float)

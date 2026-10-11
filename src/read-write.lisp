@@ -49,7 +49,25 @@
   (declare (ignore path))
   (format t "~&No method for saving ~S !~&" self))
 
+(defun function-designator (f)
+  "Nom de la fonction F (generique ou non), pour pouvoir l'ecrire et la
+relire comme #'nom -- #+sbcl seulement (SB-MOP:GENERIC-FUNCTION-NAME pour un
+generique comme LOGISTIC/LINEAR/..., FUNCTION-LAMBDA-EXPRESSION sinon)."
+  #+sbcl (if (typep f 'generic-function)
+             (sb-mop:generic-function-name f)
+             (nth-value 2 (function-lambda-expression f)))
+  #-sbcl (nth-value 2 (function-lambda-expression f)))
+
 (defmethod save ((self mlp) &optional path)
+  "Serialise tous les slots de SELF (STRUCTURE-SLOT-NAMES) dans un seul
+MAKE-INSTANCE rechargeable avec LOAD. Un slot fonction (HIDDEN-FUN, OUT-FUN --
+toujours au moins ca, meme aux valeurs par defaut, #'LOGISTIC) s'ecrit
+#'nom (FUNCTION-DESIGNATOR), pas tel quel : ~S sur un objet fonction produit
+une representation illisible (#<STANDARD-GENERIC-FUNCTION ...>), que LOAD ne
+sait pas relire -- bug trouve en testant le round-trip SAVE/LOAD d'un mlp
+construit avec ses reglages par defaut (doc/formats.md). Un slot liste ou
+symbole (dont NAME : meme bug, un symbole non quote se relit comme une
+reference de variable, pas comme un litteral) s'ecrit quote."
   (when (not path) (setf path (format nil "~S.lisp" (name self))))
   (let ((slots (structure-slot-names (type-of self))))
     (with-open-file (stream path
@@ -61,9 +79,11 @@
       (loop for s in slots
 	 do
 	   (let ((slot-value (funcall s self)))
-	     (if (listp slot-value)
-		 (format stream " :~S '~S~&" s slot-value)
-		 (format stream " :~S ~S~&" s slot-value))))
+	     (cond ((functionp slot-value)
+		    (format stream " :~S #'~S~&" s (function-designator slot-value)))
+		   ((or (listp slot-value) (symbolp slot-value))
+		    (format stream " :~S '~S~&" s slot-value))
+		   (t (format stream " :~S ~S~&" s slot-value)))))
       (format stream ")~%")))
   (format t "~& MLP ~S saved to file ~S !" (name self) path)
   (values))
@@ -115,6 +135,105 @@ tout le reste opere sur IT."
   (declare (ignore path))
   (error "SAVE ne gere pas encore ROSOM : (net rosom) est (neurones-contenu
 neurones-contexte), pas une liste plate de neurones comme pour SOM. A faire."))
+
+;;; ------------------------------------------------------------------
+;;; WRITE-DOT : (net ann) au format DOT (Graphviz), pour neato/dot/fdp/...
+;;; ------------------------------------------------------------------
+;;;
+;;; Generique a toute sous-classe d'ANN d'un seul coup : ne lit que NODES et
+;;; EDGES (neuromuse-main.lisp et chaque fichier de classe), jamais une
+;;; structure de NET en particulier -- contrairement a SAVE, qui doit
+;;; connaitre la forme exacte de NET pour chaque classe (et ne gere toujours
+;;; pas ROSOM, cf. juste au-dessus), WRITE-DOT n'a besoin que d'une seule
+;;; methode : la vue graphe deja uniforme couvre som/rosom/mlp/rmlp/
+;;; perceptron/hopfield/auto-assoc sans rien de plus.
+
+(defun dot-quote (string)
+  "STRING entre guillemets DOT, guillemets et antislashs internes echappes --
+un identifiant ou un label DOT entre guillemets accepte a peu pres n'importe
+quoi, ce qui evite d'avoir a connaitre la forme exacte d'un noeud (instance
+NEURON, liste (COUCHE INDICE) ou (:INPUT J), entier...) pour la citer."
+  (with-output-to-string (out)
+    (write-char #\" out)
+    (loop for c across string
+          do (when (member c '(#\" #\\)) (write-char #\\ out))
+             (write-char c out))
+    (write-char #\" out)))
+
+(defun dot-source (ann)
+  "La source DOT de (net ann), vue comme un graphe pondere (NODES/EDGES) --
+une chaine, fonction pure (ne touche a aucun fichier) : un digraph, un noeud
+par element de (nodes ann) (etiquete par sa propre representation imprimee
+-- princ -- qu'il s'agisse d'une instance NEURON, d'une liste
+(COUCHE INDICE)/(:INPUT J)/(:CONTEXT J) ou d'un entier de cellule), un arc
+SOURCE -> CIBLE par element de (edges ann), etiquete par son poids (arrondi a
+3 decimales, ROUND1). Les arcs d'un hopfield/auto-assoc (poids symetrique,
+NET[i][j] = NET[j][i]) restent ecrits avec une seule fleche par paire (cf.
+EDGES sur ces classes) : l'information n'est pas perdue, juste affichee dans
+un seul sens."
+  (flet ((dot-id (node) (dot-quote (princ-to-string node))))
+    (with-output-to-string (stream)
+      (format stream "digraph ~A {~%" (dot-quote (string-downcase (string (name ann)))))
+      (dolist (node (nodes ann))
+        (let ((id (dot-id node)))
+          (format stream "  ~A [label=~A];~%" id id)))
+      (dolist (edge (edges ann))
+        (format stream "  ~A -> ~A [label=~A];~%"
+                (dot-id (first edge)) (dot-id (second edge))
+                (dot-quote (princ-to-string (round1 (third edge) 3)))))
+      (format stream "}~%"))))
+
+(defgeneric write-dot (ann &optional path &key format engine)
+  (:documentation "Ecrit (net ann), vu comme un graphe pondere (DOT-SOURCE,
+cf. NODES/EDGES), dans PATH (par defaut ~(nom~).~(format~)).
+FORMAT (:dot par defaut) choisit ce qui atterrit dans PATH :
+  :dot            la source Graphviz telle quelle -- portable, lisible,
+                  modifiable a la main, a rendre soi-meme ensuite avec
+                  n'importe quel moteur (dot, neato, fdp, sfdp, circo,
+                  twopi...) :  dot -Tpng reseau.dot -o reseau.png
+  :png, :svg, ... n'importe quel format de sortie que ENGINE (\"dot\" par
+                  defaut ; ou \"neato\" etc.) sait produire -- la source DOT
+                  est ecrite dans un fichier temporaire (PATH.dot), rendue
+                  par ENGINE (#+sbcl, via SB-EXT:RUN-PROGRAM), puis effacee
+                  si le rendu reussit (sinon elle reste, pour deboguer).
+ENGINE choisit le moteur Graphviz pour un FORMAT different de :dot ; sans
+effet pour :dot, qui n'invoque aucun processus externe."))
+
+(defmethod write-dot ((ann ann) &optional path &key (format :dot) (engine "dot"))
+  (when (not path)
+    (setf path (format nil "~(~A~).~(~A~)" (name ann) format)))
+  (cond
+    ((string-equal (string format) "dot")
+     (with-open-file (stream path
+                             :direction :output
+                             :if-exists :supersede
+                             :if-does-not-exist :create)
+       (write-string (dot-source ann) stream)))
+    (t
+     #+sbcl
+     (let ((dot-path (format nil "~A.dot" path)))
+       (with-open-file (stream dot-path
+                               :direction :output
+                               :if-exists :supersede
+                               :if-does-not-exist :create)
+         (write-string (dot-source ann) stream))
+       (handler-case
+           (let ((proc (sb-ext:run-program engine
+                                           (list (format nil "-T~(~A~)" format) dot-path "-o" path)
+                                           :search t :output *standard-output* :error *standard-output*)))
+             (if (zerop (sb-ext:process-exit-code proc))
+                 (delete-file dot-path)
+                 (warn "~A a echoue (code ~D) sur ~S ; source DOT conservee dans ~S"
+                       engine (sb-ext:process-exit-code proc) path dot-path)))
+         (error (e)
+           (warn "~A injoignable (~A) ; source DOT conservee dans ~S" engine e dot-path))))
+     #-sbcl
+     (error "Rendu ~A non disponible hors SBCL -- utiliser (write-dot ann path) ~
+avec FORMAT :dot (le defaut) et rendre a la main : ~A -T~(~A~) fichier.dot -o fichier.~(~A~)"
+            format engine format format)))
+  (format t "~& ~S : graphe ecrit dans ~S~@[, rendu par ~A~]"
+          (name ann) path (unless (string-equal (string format) "dot") engine))
+  (values))
 
 ;;; ------------------------------------------------------------------
 ;;; TRACE-ACTIVATION : journal d'activation au fil d'une boucle

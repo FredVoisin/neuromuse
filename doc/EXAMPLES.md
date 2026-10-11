@@ -11,6 +11,8 @@ architecture-specific walkthroughs:
 - **[auto-assoc-exemples.md](auto-assoc-exemples.md)** — building/training an auto-associative memory,
   pattern completion, a worked example with real performance history (choreographic analysis for
   *L'Écarlate*, 2001), watching it run live.
+- **[formats.md](formats.md)** — saving a trained network (`save`), logging its activation over time
+  (`trace-activation`/`trace-output`), and visualizing its structure as a graph (`write-dot`, DOT/PNG/SVG).
 
 ---
 
@@ -101,6 +103,7 @@ The examples above use *online* learning (update after each sample). For *batch*
 
 - See [MLP-exemples.md](MLP-exemples.md) for MLP/rMLP walkthroughs.
 - See [SOM-exemples.md](SOM-exemples.md) for SOM walkthroughs.
+- See [formats.md](formats.md) for saving, tracing, and visualizing a trained network.
 - See `src/mlp.lisp` for the full MLP implementation and docstrings.
 - See `src/som.lisp` for SOM details.
 - See `src/rosom.lisp` for recurrent oscillatory SOMs.
