@@ -122,12 +122,20 @@ fact the rarest hue among the edges themselves, cyan and orange/yellow the most 
 uses cyan, not green, as its cool median stop (a pale green still appears, but only where the
 cyan→yellow interpolation passes near the zero crossing, not as a stop of its own).
 
-`:edge-label`/`:node-label` are the same two knobs on every `write-dot` method (generic, som,
-hopfield/auto-assoc) — just not always with the same default, since what a node shows by default
-differs per shape of graph (see each section below). `:color` is also accepted by every method, but
-*not* with the same meaning: this red/yellow/cyan/blue spectrum by weight sign for the generic method
-and hopfield/auto-assoc, grayscale by neighbour distance for a som (see its own section) — each method
-only reads the keywords
+The black background itself isn't automatic, though — `write-dot` defaults to white, like any plain DOT
+graph. Pass `:dark t` for the black background *and* white node outlines/text (both are needed: left at
+their defaults, black outlines and black text would vanish against a black background):
+
+```lisp
+(write-dot xor "xor.png" :format :png :color t :dark t)   ;; the img/ecarlate-sin.png look
+```
+
+`:edge-label`/`:node-label`/`:dark` are the same three knobs on every `write-dot` method (generic, som,
+hopfield/auto-assoc) — just not always with the same default for the first two, since what a node shows
+by default differs per shape of graph (see each section below) — `:dark` is nil (white background)
+everywhere. `:color` is also accepted by every method, but *not* with the same meaning: this
+red/yellow/cyan/blue spectrum by weight sign for the generic method and hopfield/auto-assoc, grayscale
+by neighbour distance for a som (see its own section) — each method only reads the keywords
 it documents, so passing one a method doesn't recognize (e.g. `:color` to a method that predates this
 option) is silently ignored rather than an error: CLOS checks keyword validity against the union of
 *all* methods applicable to that `ann`'s class, not just the one actually invoked.
