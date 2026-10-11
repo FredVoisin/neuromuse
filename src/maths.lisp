@@ -994,6 +994,17 @@ specifique aux reseaux de neurones."
 ;(2d 4 25)
 ;(d2 4 0 25)
 
+(defun grid-shape (n)
+  "COLS puis ROWS pour disposer N cellules en grille a peu pres carree,
+quelle que soit N (pas forcement un carre parfait, a la difference du SOM
+dont la grille EST toujours carree par construction) : COLS = la racine
+carree arrondie au superieur, ROWS autant de lignes que necessaire. Deplace
+depuis src/gui.lisp (ou l'auto-assoc viewer l'utilisait deja) -- pure,
+generique, aucune dependance a Ltk ni a une classe d'ANN -- reutilisee
+maintenant aussi par WRITE-DOT sur hopfield/auto-assoc (read-write.lisp)."
+  (let ((cols (max 1 (ceiling (sqrt (max 1 n))))))
+    (values cols (max 1 (ceiling n cols)))))
+
 (defun 3d (x n)
   (let ((k (expt n 1/3)))
     (list (mod x k)

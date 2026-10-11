@@ -15,6 +15,7 @@ and [SOM-exemples.md](SOM-exemples.md) for the `xor` and `my-som` networks used 
    - [Rendering to PNG or SVG directly](#rendering-to-png-or-svg-directly)
    - [Demo: `xor`](#demo-xor)
    - [SOM: the grid instead of the connections](#som-the-grid-instead-of-the-connections)
+   - [`hopfield` and `auto-assoc`: a grid layout, not a topology](#hopfield-and-auto-assoc-a-grid-layout-not-a-topology)
 - [Further Reading](#further-reading)
 
 ---
@@ -74,37 +75,51 @@ has no method for them).
 ## 3. `write-dot`: the network as a graph
 
 `write-dot` has one method per *shape* of graph, not one per class — what a network's connectivity
-means to look at differs enough between an mlp and a som that one generic rendering can't serve both
-well. Two shapes exist today:
+means to look at differs enough between an mlp, a som, and a hopfield that one generic rendering
+can't serve all of them well. Three shapes exist today:
 
-- **mlp/rmlp/perceptron/hopfield/auto-assoc** — the uniform graph view every `ann` subclass already
-  has, `(nodes ann)`/`(edges ann)` (one `edges` method per class, `nodes` derived from it mechanically,
-  see `src/neuromuse-main.lisp`): one node per element of `(nodes ann)`, one directed edge
+- **mlp/rmlp/perceptron** — the uniform graph view every `ann` subclass already has, `(nodes ann)`/
+  `(edges ann)` (one `edges` method per class, `nodes` derived from it mechanically, see
+  `src/neuromuse-main.lisp`): one node per element of `(nodes ann)`, one directed edge
   `source -> target` per element of `(edges ann)`. This is the *input/output* connectivity — which
   weight feeds which unit — which is exactly what defines these architectures.
 - **som** — the neighbour structure of the grid instead: a som is defined by *which neurons sit next to
   which*, not by its (very densely bipartite, and not very informative to look at) connections to the
-  input. Own section below.
+  input.
+- **hopfield/auto-assoc** — every cell is already connected to every other cell (there's no "neighbour"
+  concept to draw instead, unlike a som), so the useful thing a dedicated method can add is just a
+  *readable, fixed layout* — a grid, the same one `src/gui.lisp`'s viewer historically used for these
+  (`grid-shape`, not necessarily a perfect square) — rather than whatever a force-directed layout does
+  with a fully-connected graph (a "hairball").
 
-`rosom` isn't supported by either yet — `(net rosom)` doesn't match what either method assumes, same
-situation as `save` (`write-dot` errors clearly rather than misreading it). `hopfield`/`auto-assoc` use
-the generic method as-is; a grid-positioned layout for them (their cells don't have an inherent 2D
-position, but historically got displayed on one — see `doc/auto-assoc-exemples.md`) hasn't been built.
+`rosom` isn't supported by any of them yet — `(net rosom)` doesn't match what the mlp/perceptron or the
+som method assumes, same situation as `save` (`write-dot` errors clearly rather than misreading it).
 
 ```lisp
 (write-dot xor)   ;; writes xor.dot in the current directory, DOT source only
 ```
 
-### Coloring edges by weight
+### Coloring edges by weight, and hiding labels
 
-The generic method takes `:color` (nil by default) and `:label` (t by default): color edges red
+The generic method takes `:color` (nil by default) and `:edge-label` (t by default): color edges red
 (positive) / blue (negative), normalized by the net's largest `|weight|` — the same convention as the
-heatmap in `src/gui.lisp` — instead of, or alongside, the numeric label:
+heatmap in `src/gui.lisp` — instead of, or alongside, the numeric label. `:node-label` (t by default)
+controls whether each node shows its own identifier at all:
 
 ```lisp
-(write-dot xor "xor.png" :format :png :color t)                 ;; colored AND labeled
-(write-dot xor "xor.png" :format :png :color t :label nil)      ;; colored only, no text
+(write-dot xor "xor.png" :format :png :color t)                                  ;; colored AND labeled
+(write-dot xor "xor.png" :format :png :color t :edge-label nil)                  ;; colored only, no text
+(write-dot xor "xor.png" :format :png :color t :edge-label nil :node-label nil)  ;; color only, nothing else
 ```
+
+`:edge-label`/`:node-label` are the same two knobs on every `write-dot` method (generic, som,
+hopfield/auto-assoc) — just not always with the same default, since what a node shows by default
+differs per shape of graph (see each section below). `:color` is also accepted by every method, but
+*not* with the same meaning: red/blue by weight sign for the generic method and hopfield/auto-assoc,
+grayscale by neighbour distance for a som (see its own section) — each method only reads the keywords
+it documents, so passing one a method doesn't recognize (e.g. `:color` to a method that predates this
+option) is silently ignored rather than an error: CLOS checks keyword validity against the union of
+*all* methods applicable to that `ann`'s class, not just the one actually invoked.
 
 ### Rendering to PNG or SVG directly
 
@@ -164,29 +179,73 @@ lay them out:
 
 **`:mode :u-matrix`** (the default) colors each edge, grayscale, by the distance between the two
 neurons' weight vectors (`(euclidian (weights n1) (weights n2))`) — dark edges mark cluster boundaries.
-Each node is colored by its *average* distance to its grid neighbours, same scale.
+Each node is colored by its *average* distance to its grid neighbours, same scale. This coloring is
+what `:color` (t by default — this is the one method where it defaults on, since it's the whole point
+of the default mode) turns off, for a plain black-and-white topology diagram:
+
+```lisp
+(write-dot my-som "map.png" :format :png)                  ;; U-matrix, colored (the default)
+(write-dot my-som "map.png" :format :png :color nil)       ;; same topology, no coloring at all
+```
+
+`:edge-label` (nil by default, unlike the generic method) prints the actual distance on each edge as
+text — works in either mode, independent of `:color`:
+
+```lisp
+(write-dot my-som "map.png" :format :png :edge-label t)
+```
 
 **`:mode :component`** needs `:component <k>`, the index of one input dimension (0 to `(1- (in-size
 my-som))`): colors each node, white to blue, by that one weight component — one of `(in-size my-som)`
-"component planes," showing how a single input dimension is distributed across the map. Call once per
-dimension (`(dotimes (k (in-size my-som)) (write-dot my-som (format nil "plane-~D.png" k) :format :png
-:mode :component :component k))` for all of them at once) — edges stay drawn, undecorated, just for
-reference.
+"component planes," showing how a single input dimension is distributed across the map (`:color` has no
+effect in this mode — a component plane *is* its coloring). Call once per dimension
+(`(dotimes (k (in-size my-som)) (write-dot my-som (format nil "plane-~D.png" k) :format :png
+:mode :component :component k))` for all of them at once) — edges stay drawn, undecorated unless
+`:edge-label t`.
 
 **`:labels`** (nil by default) annotates each node with a value you supply — a sequence as long as
 `(net my-som)`, in that order. Nothing in `som.lisp` keeps a history of which neuron won how often (same
 reason the live viewer in `src/gui.lisp` accumulates its own `winner-history` rather than reading one
 off the network), so a best-matching-unit count has to be tallied by the caller first, e.g. with
-`inventaire-h` (`src/maths.lisp`) over a logged sequence of winners, then passed in:
+`inventaire-h` (`src/maths.lisp`) over a logged sequence of winners, then passed in. Without `:labels`,
+`:node-label` (nil by default) falls back to showing each node's own index instead:
 
 ```lisp
 (write-dot my-som "map.png" :format :png :labels (mapcar #'second (inventaire-h winner-log)))
+(write-dot my-som "map.png" :format :png :node-label t)   ;; no :labels: shows 0, 1, 2... instead
 ```
 
 A `:boundary :torus` map's wraparound edges (first and last neuron of a row/column) still get drawn —
 `grid-neighbour-pairs` computes the topology correctly either way — but on this flat layout they end up
 collinear with, and so visually indistinguishable from, the ordinary edges along that same row/column:
 the topology is right, the picture just doesn't make the wraparound obvious.
+
+### `hopfield` and `auto-assoc`: a grid layout, not a topology
+
+Same `:color`/`:edge-label` as the generic method (see above — `:node-label` here defaults to nil, same
+as a som, rather than showing anything by default), plus `:scale` (as for a som) and `:threshold` — the
+one thing worth adding here, since unlike a som's grid neighbours, a hopfield/auto-assoc cell connects
+to *every* other cell: on anything but a small network, drawing all of them gets dense fast (180 cells,
+as in the `ecarl180` network in `doc/auto-assoc-exemples.md`, is 180×179/2 = 16110 pairs). `:threshold`
+(0 by default, i.e. draw everything) skips any edge whose `|weight|` falls below it:
+
+```lisp
+(make-hopfield hop 12)
+(setf (input hop) '(1 0 1 0 1 1 0 0 1 0 1 0))
+(learn hop)
+(write-dot hop "hop.png" :format :png :color t)                  ;; every pair, colored by sign
+(write-dot hop "hop.png" :format :png :color t :threshold 0.1)   ;; only the stronger connections
+```
+
+Node color reflects `(output ann)` *if it's already there* — white to blue, normalized by its own
+min/max — showing whatever pattern the network currently holds: `nil` until `run-hopfield`/
+`run-auto-assoc` actually writes it (`learn` never does, cf. [MLP-exemples.md](MLP-exemples.md) and
+`src/hopfield.lisp`/`src/auto-assoc.lisp`'s own docstrings), a neutral gray in the meantime:
+
+```lisp
+(run-hopfield hop)                                  ;; writes (output hop)
+(write-dot hop "hop.png" :format :png :color t)      ;; now the nodes show the recalled pattern too
+```
 
 ---
 
@@ -195,8 +254,9 @@ the topology is right, the picture just doesn't make the wraparound obvious.
 - [EXAMPLES.md](EXAMPLES.md) — general training workflow.
 - [MLP-exemples.md](MLP-exemples.md), [SOM-exemples.md](SOM-exemples.md) — the `xor`/`my-som` networks
   used above.
-- `src/neuromuse-main.lisp` — `nodes`/`edges`, the generic graph view the mlp/rmlp/perceptron/hopfield/
-  auto-assoc `write-dot` method reads.
+- `src/neuromuse-main.lisp` — `nodes`/`edges`, the generic graph view the mlp/rmlp/perceptron
+  `write-dot` method reads.
 - `src/som.lisp` — `grid-neighbour-pairs`, the grid topology the som `write-dot` method reads.
-- `src/read-write.lisp` — `save`, `write-dot` (both methods), `trace-activation`/`trace-output`, full
-  docstrings.
+- `src/maths.lisp` — `grid-shape`, the cell layout the hopfield/auto-assoc `write-dot` method reads.
+- `src/read-write.lisp` — `save`, `write-dot` (one method per class of graph shape),
+  `trace-activation`/`trace-output`, full docstrings.

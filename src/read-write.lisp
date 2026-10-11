@@ -140,17 +140,18 @@ neurones-contexte), pas une liste plate de neurones comme pour SOM. A faire."))
 ;;; WRITE-DOT : (net ann) au format DOT (Graphviz), pour neato/dot/fdp/...
 ;;; ------------------------------------------------------------------
 ;;;
-;;; Generique a toute sous-classe d'ANN d'un seul coup : ne lit que NODES et
-;;; EDGES (neuromuse-main.lisp et chaque fichier de classe), jamais une
-;;; structure de NET en particulier -- contrairement a SAVE, qui doit
-;;; connaitre la forme exacte de NET pour chaque classe (et ne gere toujours
-;;; pas ROSOM, cf. juste au-dessus), WRITE-DOT n'a besoin que d'une seule
-;;; methode pour mlp/rmlp/perceptron/hopfield/auto-assoc : la vue EDGES/NODES
-;;; (poids vers l'entree ou entre cellules) leur convient telle quelle. Un
-;;; SOM se definit au contraire par le voisinage de grille entre neurones,
-;;; pas par ses connexions a l'entree -- methode separee, plus bas, qui
-;;; dessine cette topologie (positions de grille imposees a neato) plutot
-;;; que le graphe EDGES/NODES generique.
+;;; Une methode par forme de graphe, pas par classe -- contrairement a SAVE,
+;;; qui doit connaitre la forme exacte de NET pour chaque classe (et ne gere
+;;; toujours pas ROSOM, cf. juste au-dessus) :
+;;;   - mlp/rmlp/perceptron : la vue EDGES/NODES generique (NODES/EDGES,
+;;;     neuromuse-main.lisp et chaque fichier de classe) -- poids vers
+;;;     l'entree, leurs connexions telles quelles.
+;;;   - som : le voisinage de grille entre neurones, pas ses connexions a
+;;;     l'entree -- methode separee, plus bas (positions de grille imposees
+;;;     a neato).
+;;;   - hopfield/auto-assoc : une grille de cellules toutes connectees entre
+;;;     elles (pas de voisinage, juste une disposition lisible) -- encore
+;;;     une troisieme methode, plus bas (CELL-GRID-DOT-SOURCE).
 
 (defun dot-quote (string)
   "STRING entre guillemets DOT, guillemets et antislashs internes echappes --
@@ -226,14 +227,14 @@ propre disposition, cf. WRITE-DOT sur SOM."
 defaut) et rendre a la main : ~A ~{~A ~}-T~(~A~) fichier.dot -o fichier.~(~A~)"
              format engine extra-args format format)))
 
-(defun edge-attrs (weight &key color (label t) (max-weight 1))
+(defun edge-attrs (weight &key color (edge-label t) (max-weight 1))
   "Chaine d'attributs DOT [label=... color=...] pour un arc de poids WEIGHT.
-LABEL (t par defaut) affiche le poids arrondi (ROUND1, 3 decimales) ; COLOR
-(nil par defaut) colore l'arc rouge/bleu par signe, normalise par
+EDGE-LABEL (t par defaut) affiche le poids arrondi (ROUND1, 3 decimales) ;
+COLOR (nil par defaut) colore l'arc rouge/bleu par signe, normalise par
 MAX-WEIGHT (DIVERGING-HEX) -- l'un, l'autre, ou les deux (ni l'un ni
 l'autre : un arc nu)."
   (let ((parts '()))
-    (when label
+    (when edge-label
       (push (format nil "label=~A" (dot-quote (princ-to-string (round1 weight 3)))) parts))
     (when color
       (push (format nil "color=~A"
@@ -241,16 +242,20 @@ l'autre : un arc nu)."
             parts))
     (format nil "[~{~A~^, ~}]" (nreverse parts))))
 
-(defun dot-source (ann &key color (label t))
+(defun dot-source (ann &key color (edge-label t) (node-label t))
   "La source DOT de (net ann), vue comme un graphe pondere (NODES/EDGES) --
 une chaine, fonction pure (ne touche a aucun fichier) : un digraph, un noeud
-par element de (nodes ann) (etiquete par sa propre representation imprimee
--- princ -- qu'il s'agisse d'une instance NEURON, d'une liste
-(COUCHE INDICE)/(:INPUT J)/(:CONTEXT J) ou d'un entier de cellule), un arc
-SOURCE -> CIBLE par element de (edges ann) (cf. EDGE-ATTRS pour COLOR/LABEL).
-Les arcs d'un hopfield/auto-assoc (poids symetrique, NET[i][j] = NET[j][i])
-restent ecrits avec une seule fleche par paire (cf. EDGES sur ces classes) :
-l'information n'est pas perdue, juste affichee dans un seul sens."
+par element de (nodes ann) (NODE-LABEL, t par defaut, l'etiquette par sa
+propre representation imprimee -- princ -- qu'il s'agisse d'une instance
+NEURON, d'une liste (COUCHE INDICE)/(:INPUT J)/(:CONTEXT J) ou d'un entier
+de cellule ; nil, aucune etiquette), un arc SOURCE -> CIBLE par element de
+(edges ann) (cf. EDGE-ATTRS pour COLOR/EDGE-LABEL). Methode generique de
+WRITE-DOT pour mlp/rmlp/perceptron -- hopfield/auto-assoc ont leur propre
+methode, CELL-GRID-DOT-SOURCE plus bas, mieux adaptee a leur connectivite
+complete (EDGES marche techniquement aussi bien sur eux, poids symetrique
+NET[i][j] = NET[j][i] ecrit en une seule fleche par paire, information non
+perdue, juste affichee dans un seul sens -- mais sans la disposition en
+grille lisible de CELL-GRID-DOT-SOURCE)."
   (flet ((dot-id (node) (dot-quote (princ-to-string node))))
     (let* ((all-edges (edges ann))
            (max-w (if (and color all-edges)
@@ -260,11 +265,11 @@ l'information n'est pas perdue, juste affichee dans un seul sens."
         (format stream "digraph ~A {~%" (dot-quote (string-downcase (string (name ann)))))
         (dolist (node (nodes ann))
           (let ((id (dot-id node)))
-            (format stream "  ~A [label=~A];~%" id id)))
+            (format stream "  ~A [label=~A];~%" id (if node-label id (dot-quote "")))))
         (dolist (edge all-edges)
           (format stream "  ~A -> ~A ~A;~%"
                   (dot-id (first edge)) (dot-id (second edge))
-                  (edge-attrs (third edge) :color color :label label :max-weight max-w)))
+                  (edge-attrs (third edge) :color color :edge-label edge-label :max-weight max-w)))
         (format stream "}~%")))))
 
 (defgeneric write-dot (ann &optional path &key format engine)
@@ -281,51 +286,62 @@ dans PATH :
                   SB-EXT:RUN-PROGRAM), puis effacee si le rendu reussit
                   (sinon elle reste, pour deboguer).
 Une methode par forme de graphe, pas par classe : (net ann) vu comme
-EDGES/NODES (poids vers l'entree ou entre cellules -- mlp/rmlp/perceptron/
-hopfield/auto-assoc) contre (net ann) vu comme une grille de voisinage
-(SOM/ROSOM) sont deux representations differentes, pas la meme vue rendue
-differemment. Voir WRITE-DOT sur SOM pour la seconde."))
+EDGES/NODES, poids vers l'entree (mlp/rmlp/perceptron) ; comme une grille de
+voisinage entre neurones (SOM -- ROSOM pas encore supporte) ; comme une
+grille de cellules toutes connectees entre elles (HOPFIELD/AUTO-ASSOC) --
+trois representations differentes, pas la meme vue rendue differemment.
+Voir WRITE-DOT sur SOM et sur HOPFIELD pour les deux autres."))
 
-(defmethod write-dot ((ann ann) &optional path &key (format :dot) (engine "dot") color (label t))
-  "COLOR (nil par defaut) et LABEL (t par defaut) : cf. EDGE-ATTRS -- arcs
-colores rouge/bleu par signe (comme la heatmap de src/gui.lisp), etiquetes
-par leur poids, les deux a la fois ou ni l'un ni l'autre."
+(defmethod write-dot ((ann ann) &optional path
+                       &key (format :dot) (engine "dot") color (edge-label t) (node-label t))
+  "COLOR (nil par defaut) et EDGE-LABEL (t par defaut) : cf. EDGE-ATTRS --
+arcs colores rouge/bleu par signe (comme la heatmap de src/gui.lisp),
+etiquetes par leur poids, les deux a la fois ou ni l'un ni l'autre.
+NODE-LABEL (t par defaut) : chaque noeud etiquete par sa propre
+representation imprimee, ou nil pour un noeud nu."
   (when (not path)
     (setf path (format nil "~(~A~).~(~A~)" (name ann) format)))
-  (render-dot (dot-source ann :color color :label label) path format engine)
+  (render-dot (dot-source ann :color color :edge-label edge-label :node-label node-label)
+              path format engine)
   (format t "~& ~S : graphe ecrit dans ~S~@[, rendu par ~A~]"
           (name ann) path (unless (string-equal (string format) "dot") engine))
   (values))
 
-(defmethod write-dot ((ann rosom) &optional path &key format engine color label)
-  (declare (ignore path format engine color label))
+(defmethod write-dot ((ann rosom) &optional path &key format engine color edge-label node-label)
+  (declare (ignore path format engine color edge-label node-label))
   (error "WRITE-DOT ne gere pas encore ROSOM : (net rosom) est
 (content-neurones context-neurones), pas une grille plate de neurones comme
 pour SOM, dont la methode WRITE-DOT suppose la forme. A faire."))
 
-(defun som-grid-dot-source (ann &key (mode :u-matrix) component labels (scale 1.2))
+(defun som-grid-dot-source (ann &key (mode :u-matrix) component labels node-label (color t)
+                                   edge-label (scale 1.2))
   "La source DOT de la topologie de grille de ANN (SOM) -- fonction pure,
 cf. DOT-SOURCE. Un graphe NON dirige (GRAPH/--, pas DIGRAPH/->, le voisinage
 de grille est symetrique), un noeud par neurone a sa position de grille
 imposee (POS=\"x,y!\" -- carree, (2D i n) ; hexagonale, decalee par
-HEX-POSITION), un arc par paire de GRID-NEIGHBOUR-PAIRS (som.lisp).
-MODE :u-matrix (par defaut) : chaque arc colore en niveau de gris (GRAY-HEX)
-  par la distance entre les poids des deux neurones (EUCLIDIAN sur WEIGHTS),
-  normalisee par la plus grande distance observee -- les arcs sombres
-  marquent les frontieres entre clusters. Chaque noeud colore par sa
-  distance moyenne a ses voisins directs.
+HEX-POSITION), un arc par paire de GRID-NEIGHBOUR-PAIRS (som.lisp), toujours
+a la distance entre les poids des deux neurones (EUCLIDIAN sur WEIGHTS).
+MODE :u-matrix (par defaut) : COLOR (t par defaut) colore chaque arc en
+  niveau de gris (GRAY-HEX) par cette distance, normalisee par la plus
+  grande observee -- les arcs sombres marquent les frontieres entre
+  clusters -- et chaque noeud par sa distance moyenne a ses voisins
+  directs ; COLOR nil laisse arcs et noeuds nus (juste la topologie).
 MODE :component : COMPONENT (l'indice d'une dimension d'entree, requis)
   choisit une des (in-size ann) cartes de composantes -- chaque noeud
   colore (blanc a bleu, SEQUENTIAL-HEX) par le poids de cette seule
-  dimension, normalise par son min/max sur la carte. Les arcs restent
-  dessines, non colores (juste la topologie de reference) ; appeler une
+  dimension, normalise par son min/max sur la carte ; COLOR sans effet ici,
+  ce mode n'a pas de sens sans la couleur qui montre la carte. Appeler une
   fois par dimension pour les avoir toutes.
+EDGE-LABEL (nil par defaut) affiche la distance (ROUND1, 3 decimales) en
+texte sur chaque arc, meme hors MODE :u-matrix et meme si COLOR est nil.
 LABELS (nil par defaut) : sequence de longueur (length (net ann)), dans
 l'ordre de (net ann) -- un compte de victoires (BMU) par exemple, calcule
 par l'appelant (INVENTAIRE-H, maths.lisp, sur une suite de gagnants) --
 WRITE-DOT ne le fait pas lui-meme, rien dans som.lisp n'accumule cet
 historique (cf. le viewer de src/gui.lisp, qui l'accumule lui-meme pour la
-meme raison). SCALE agrandit/retrecit l'espacement de la grille.
+meme raison). A defaut de LABELS, NODE-LABEL (nil par defaut) affiche
+l'indice du neurone a la place -- LABELS reste prioritaire si les deux sont
+donnes. SCALE agrandit/retrecit l'espacement de la grille.
 Positions non ajustees pour un :boundary :torus : les arcs qui bouclent par
 le bord (une ligne/colonne entiere, premier et dernier neurone) se
 retrouvent alignes avec les arcs ordinaires de cette meme ligne/colonne --
@@ -345,6 +361,7 @@ seule la disposition a plat ne le montre pas joliment."
                           (euclidian (nth (first pair) ws) (nth (second pair) ws)))
                         pairs))
          (u-max (if dists (reduce #'max dists) 1))
+         (u-color (and color (eq mode :u-matrix)))
          (node-sum (make-array n :initial-element 0.0))
          (node-count (make-array n :initial-element 0)))
     (loop for (i j) in pairs
@@ -364,7 +381,9 @@ seule la disposition a plat ne le montre pas joliment."
         (dotimes (i n)
           (let* ((pos (nth i positions))
                  (fill (ecase mode
-                         (:u-matrix (gray-hex (if (zerop u-max) 0 (/ (aref node-sum i) u-max))))
+                         (:u-matrix (if u-color
+                                        (gray-hex (if (zerop u-max) 0 (/ (aref node-sum i) u-max)))
+                                        "#FFFFFF"))
                          (:component (sequential-hex (if (= comp-max comp-min) 0
                                                           (/ (- (nth component (nth i ws)) comp-min)
                                                              (- comp-max comp-min))))))))
@@ -372,27 +391,119 @@ seule la disposition a plat ne le montre pas joliment."
                     i
                     (dot-quote (format nil "~F,~F!" (* scale (first pos)) (* scale (- (second pos)))))
                     (dot-quote fill)
-                    (dot-quote (if labels (princ-to-string (elt labels i)) "")))))
+                    (dot-quote (cond (labels (princ-to-string (elt labels i)))
+                                      (node-label (princ-to-string i))
+                                      (t ""))))))
         (loop for (i j) in pairs
               for d in dists
-              do (format stream "  n~D -- n~D~:[~; [color=~A]~];~%"
-                         i j (eq mode :u-matrix)
-                         (and (eq mode :u-matrix)
-                              (dot-quote (gray-hex (if (zerop u-max) 0 (/ d u-max)))))))
+              do (let ((parts '()))
+                   (when edge-label
+                     (push (format nil "label=~A" (dot-quote (princ-to-string (round1 d 3)))) parts))
+                   (when u-color
+                     (push (format nil "color=~A" (dot-quote (gray-hex (if (zerop u-max) 0 (/ d u-max)))))
+                           parts))
+                   (format stream "  n~D -- n~D [~{~A~^, ~}];~%" i j (nreverse parts))))
         (format stream "}~%")))))
 
 (defmethod write-dot ((ann som) &optional path
-                       &key (format :dot) (engine "neato") (mode :u-matrix) component labels (scale 1.2))
+                       &key (format :dot) (engine "neato") (mode :u-matrix) component labels
+                         node-label (color t) edge-label (scale 1.2))
   "Topologie de grille de ANN, pas la vue EDGES/NODES generique (cf. le
 generique WRITE-DOT) -- positions imposees (POS=\"x,y!\" -- le point
 d'exclamation final est ce qui les epingle : neato, comme tout moteur de la
 famille, le respecte directement, sans option particuliere a passer).
 ENGINE reste \"neato\" par defaut : un moteur hors de cette famille (dot,
 circo, twopi) ignore generalement POS et recalcule sa propre disposition.
-Cf. SOM-GRID-DOT-SOURCE pour MODE/COMPONENT/LABELS/SCALE."
+Cf. SOM-GRID-DOT-SOURCE pour MODE/COMPONENT/LABELS/NODE-LABEL/COLOR/
+EDGE-LABEL/SCALE."
   (when (not path)
     (setf path (format nil "~(~A~).~(~A~)" (name ann) format)))
-  (render-dot (som-grid-dot-source ann :mode mode :component component :labels labels :scale scale)
+  (render-dot (som-grid-dot-source ann :mode mode :component component :labels labels
+                                   :color color :edge-label edge-label
+                                   :node-label node-label :scale scale)
+              path format engine)
+  (format t "~& ~S : graphe de grille ecrit dans ~S~@[, rendu par ~A~]"
+          (name ann) path (unless (string-equal (string format) "dot") engine))
+  (values))
+
+(defun cell-grid-dot-source (ann &key color (edge-label t) node-label (scale 1.2) (threshold 0))
+  "La source DOT de (net ann) vue comme une grille de cellules -- fonction
+pure, cf. DOT-SOURCE/SOM-GRID-DOT-SOURCE -- pour hopfield/auto-assoc : NET y
+est un tableau IN-SIZE x IN-SIZE symetrique (pas une liste de neurones comme
+pour un som, ni une liste de matrices comme pour un mlp), chaque cellule
+connectee a toutes les autres -- pas de notion de voisinage ici
+(GRID-NEIGHBOUR-PAIRS, som.lisp, ne s'applique pas). Positions de grille
+imposees (GRID-SHAPE, maths.lisp -- COLS x ROWS, pas necessairement un carre
+parfait) : pas une topologie, juste une disposition lisible plutot que la
+« boule de poils » qu'un moteur libre de placer les noeuds obtiendrait sur
+un graphe aussi dense. Un arc par paire (I J), I < J (NET[I][J] = NET[J][I],
+cf. EDGES sur ces classes), dont |poids| >= THRESHOLD (0 par defaut : tout
+est trace -- sur un grand reseau, ecarl180, 180 cellules, cf.
+doc/auto-assoc-exemples.md, C(180,2) = 16110 paires : relever THRESHOLD
+declutter le rendu). COLOR/EDGE-LABEL : cf. EDGE-ATTRS, memes arcs rouge/
+bleu par signe que la vue EDGES/NODES generique. Chaque noeud colore (blanc
+a bleu, SEQUENTIAL-HEX) par sa valeur courante dans (output ann), normalisee
+par le min/max observe, si elle existe deja -- quel motif le reseau
+reconnait/reconstruit en ce moment -- sinon une couleur neutre : LEARN
+n'ecrit jamais (output self) pour ces deux classes, seuls RUN-HOPFIELD/
+RUN-AUTO-ASSOC le font (meme remarque que pour le viewer de src/gui.lisp).
+NODE-LABEL (nil par defaut) affiche l'indice de la cellule."
+  (let* ((net (net ann))
+         (n (in-size ann))
+         (out (output ann)))
+    (multiple-value-bind (cols rows) (grid-shape n)
+      (declare (ignore rows))
+      (let* ((pairs (loop for i below n
+                          append (loop for j from (1+ i) below n
+                                       when (>= (abs (aref net i j)) threshold)
+                                         collect (list i j))))
+             (max-w (if (and color pairs)
+                        (reduce #'max pairs :key (lambda (p) (abs (aref net (first p) (second p)))))
+                        1))
+             (out-min (and out (plusp (length out)) (reduce #'min out)))
+             (out-max (and out (plusp (length out)) (reduce #'max out))))
+        (with-output-to-string (stream)
+          (format stream "graph ~A {~%" (dot-quote (string-downcase (string (name ann)))))
+          (format stream "  node [shape=circle style=filled fixedsize=true width=0.5];~%")
+          (dotimes (i n)
+            (let* ((col (mod i cols)) (row (floor i cols))
+                   (fill (if (and out-max (/= out-max out-min))
+                             (sequential-hex (/ (- (elt out i) out-min) (- out-max out-min)))
+                             "#CCCCCC")))
+              (format stream "  n~D [pos=~A, fillcolor=~A, label=~A];~%"
+                      i (dot-quote (format nil "~F,~F!" (* scale col) (* scale (- row)))) (dot-quote fill)
+                      (dot-quote (if node-label (princ-to-string i) "")))))
+          (dolist (pair pairs)
+            (let ((w (aref net (first pair) (second pair))))
+              (format stream "  n~D -- n~D ~A;~%" (first pair) (second pair)
+                      (edge-attrs w :color color :edge-label edge-label :max-weight max-w))))
+          (format stream "}~%"))))))
+
+(defmethod write-dot ((ann hopfield) &optional path
+                       &key (format :dot) (engine "neato") color (edge-label t) node-label
+                         (scale 1.2) (threshold 0))
+  "Grille de cellules de ANN (CELL-GRID-DOT-SOURCE), pas la vue EDGES/NODES
+generique -- toutes les cellules sont deja connectees entre elles (pas de
+voisinage ici) ; la grille sert juste a obtenir une disposition lisible
+plutot que la « boule de poils » qu'un moteur libre produirait sur un graphe
+aussi dense. ENGINE \"neato\" par defaut, meme raison que pour SOM
+(POS=\"x,y!\" respecte directement)."
+  (when (not path) (setf path (format nil "~(~A~).~(~A~)" (name ann) format)))
+  (render-dot (cell-grid-dot-source ann :color color :edge-label edge-label :node-label node-label
+                                    :scale scale :threshold threshold)
+              path format engine)
+  (format t "~& ~S : graphe de grille ecrit dans ~S~@[, rendu par ~A~]"
+          (name ann) path (unless (string-equal (string format) "dot") engine))
+  (values))
+
+(defmethod write-dot ((ann auto-assoc) &optional path
+                       &key (format :dot) (engine "neato") color (edge-label t) node-label
+                         (scale 1.2) (threshold 0))
+  "Comme WRITE-DOT sur HOPFIELD (CELL-GRID-DOT-SOURCE) : NET a la meme forme
+(tableau IN-SIZE x IN-SIZE symetrique) pour les deux classes."
+  (when (not path) (setf path (format nil "~(~A~).~(~A~)" (name ann) format)))
+  (render-dot (cell-grid-dot-source ann :color color :edge-label edge-label :node-label node-label
+                                    :scale scale :threshold threshold)
               path format engine)
   (format t "~& ~S : graphe de grille ecrit dans ~S~@[, rendu par ~A~]"
           (name ann) path (unless (string-equal (string format) "dot") engine))

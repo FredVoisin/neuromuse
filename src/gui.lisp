@@ -1133,13 +1133,9 @@ Tk, Ltk et l'affichage sans toucher a un reseau."
   (status "")
   (signals ""))
 
-(defun grid-shape (n)
-  "COLS puis ROWS pour disposer N cellules en grille a peu pres carree,
-quelle que soit N (pas forcement un carre parfait, a la difference du SOM
-dont la grille EST toujours carree par construction) : COLS = la racine
-carree arrondie au superieur, ROWS autant de lignes que necessaire."
-  (let ((cols (max 1 (ceiling (sqrt (max 1 n))))))
-    (values cols (max 1 (ceiling n cols)))))
+;; GRID-SHAPE a demenage dans src/maths.lisp (pure, generique, aucune
+;; dependance a Ltk -- reprise ici telle quelle, cf. WRITE-DOT sur
+;; hopfield/auto-assoc dans read-write.lisp pour l'autre usage).
 
 (defmethod gui-snapshot ((source auto-assoc))
   (let* ((n (in-size source))
