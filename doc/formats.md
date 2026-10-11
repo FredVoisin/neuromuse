@@ -1,19 +1,20 @@
 # Output Formats: Saving, Tracing, and Visualizing a Network
 
 Three complementary ways `src/read-write.lisp` writes a network's state to disk — none of them
-change anything about training itself, they just read what's already there:
-
-- **`save`** — serializes (most of) a network to a reloadable Lisp form: the way to persist a trained
-  network and pick up where you left off.
-- **`trace-activation`** / **`trace-output`** — append one line per call to a log file, meant to be
-  called from inside a training/running loop without changing it otherwise: the way to record how a
-  network behaves *over time*.
-- **`write-dot`** — writes a network's current connectivity (weights and all) as a graph, in
-  [Graphviz](https://graphviz.org/)'s DOT format, optionally rendered straight to PNG/SVG: the way to
-  *look at* a network's structure.
+change anything about training itself, they just read what's already there.
 
 See [EXAMPLES.md](EXAMPLES.md) for the general training workflow, [MLP-exemples.md](MLP-exemples.md)
 and [SOM-exemples.md](SOM-exemples.md) for the `xor` and `my-som` networks used as examples below.
+
+## Contents
+
+1. [`save`: reload a network as-is](#1-save-reload-a-network-as-is)
+2. [`trace-activation` and `trace-output`: a log over time](#2-trace-activation-and-trace-output-a-log-over-time)
+3. [`write-dot`: the network as a graph](#3-write-dot-the-network-as-a-graph)
+   - [Rendering to PNG or SVG directly](#rendering-to-png-or-svg-directly)
+   - [Demo: `xor`](#demo-xor)
+   - [Demo: `my-som`](#demo-my-som)
+- [Further Reading](#further-reading)
 
 ---
 
@@ -45,7 +46,7 @@ Reload with plain `load`:
 (load "xor.lisp")   ;; rebinds xor.lisp's :name symbol to the reconstructed instance
 ```
 
-## 2. `trace-activation` / `trace-output`: a log over time
+## 2. `trace-activation` and `trace-output`: a log over time
 
 Both are meant to be dropped into an existing loop without changing anything else about it:
 
@@ -83,7 +84,7 @@ weight (rounded to 3 decimals). It works on *any* `ann` subclass unchanged — i
 (write-dot my-som "map.dot")     ;; same, explicit path
 ```
 
-### Rendering to PNG/SVG directly
+### Rendering to PNG or SVG directly
 
 Pass `:format`, and optionally `:engine` (any Graphviz layout engine — `"dot"`, the default, lays out
 hierarchically; `"neato"`, `"fdp"`, `"sfdp"` lay out by force; `"circo"`, `"twopi"` lay out radially).
@@ -108,7 +109,9 @@ neato -Tsvg map.dot -o map.svg
 `:format :dot` (the default) never touches an external process at all — the DOT text itself is always
 the portable fallback, on any Lisp, with any Graphviz engine, now or later.
 
-### Demo: `xor` (MLP-exemples.md)
+### Demo: `xor`
+
+The network built and trained in [MLP-exemples.md](MLP-exemples.md):
 
 ```lisp
 (make-mlp xor 2 1 2)
@@ -122,7 +125,9 @@ Three input/hidden/output layers, nodes named `(layer index)` (layer 0 = input),
 `(2 0)` — six weighted edges in total, `dot`'s hierarchical layout puts the layers in order
 top-to-bottom.)*
 
-### Demo: `my-som` (SOM-exemples.md)
+### Demo: `my-som`
+
+The network built and trained in [SOM-exemples.md](SOM-exemples.md):
 
 ```lisp
 (make-instance 'som :name 'my-som :size 144 :input 18)
