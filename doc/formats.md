@@ -162,13 +162,13 @@ top-to-bottom.)*
 
 ### SOM: the grid instead of the connections
 
-A som's `write-dot` method takes `:mode`, `:component`, `:labels`, and `:scale` in place of `:color`,
-and defaults `:engine` to `"neato"` instead of `"dot"` — a different method, not the generic one with
-different defaults. It draws `(grid-neighbour-pairs ann)` (`src/som.lisp`: unique pairs of neurons that
-are actual grid neighbours — 4-connected for a `:square` lattice, 6-connected for `:hex`, whichever
-`(topology my-som)` says — not the input connections `edges` would give) at **fixed positions**
-(`pos="x,y!"`, which `neato` honors directly — hence the engine default) instead of letting the engine
-lay them out:
+A som's `write-dot` method takes `:mode` and `:component` in addition to `:color`/`:edge-label`/
+`:node-label`, plus `:labels` and `:scale` — and defaults `:engine` to `"neato"` instead of `"dot"` —
+a different method, not the generic one with different defaults. It draws `(grid-neighbour-pairs ann)`
+(`src/som.lisp`: unique pairs of neurons that are actual grid neighbours — 4-connected for a `:square`
+lattice, 6-connected for `:hex`, whichever `(topology my-som)` says — not the input connections `edges`
+would give) at **fixed positions** (`pos="x,y!"`, which `neato` honors directly — hence the engine
+default) instead of letting the engine lay them out:
 
 ```lisp
 (make-instance 'som :name 'my-som :size 144 :input 18)
@@ -177,11 +177,25 @@ lay them out:
 (write-dot my-som "plane-3.png" :format :png :mode :component :component 3)  ;; one of 18 planes
 ```
 
-**`:mode :u-matrix`** (the default) colors each edge, grayscale, by the distance between the two
-neurons' weight vectors (`(euclidian (weights n1) (weights n2))`) — dark edges mark cluster boundaries.
-Each node is colored by its *average* distance to its grid neighbours, same scale. This coloring is
-what `:color` (t by default — this is the one method where it defaults on, since it's the whole point
-of the default mode) turns off, for a plain black-and-white topology diagram:
+**What an edge means here is not what it means for an mlp.** A som has no neuron-to-neuron connection
+to show in the first place — each neuron's only weights point at the *input* (`(weights neuron)`), never
+at another neuron, so unlike the generic method's edges, these aren't synaptic weights at all:
+
+- **That the edge exists** encodes grid *topology*, not a weight: it means these two neurons are
+  immediate neighbours on the map (per `(topology my-som)`'s lattice), a purely spatial/structural fact
+  fixed at construction, independent of what the som has learned.
+- **What the edge is colored/labeled with** (`:mode :u-matrix`, the default) is a *derived* quantity —
+  the Euclidean distance between the two neighbours' weight vectors, `(euclidian (weights n1)
+  (weights n2))` — not a weight read directly off the net. Similar weights (small distance) between
+  neighbours means they're part of the same cluster on the map; dissimilar weights (large distance)
+  mark a cluster boundary — classic U-matrix reading. `:mode :component` doesn't color edges at all by
+  default (only nodes carry information in that mode); `:edge-label t` can still print that same
+  distance as text regardless of mode or `:color`.
+
+**`:mode :u-matrix`** (the default) colors each edge grayscale by that distance (see above), and each
+node by its *average* distance to its grid neighbours, same scale — the classic U-matrix picture. This
+coloring is what `:color` (t by default — this is the one method where it defaults on, since it's the
+whole point of the default mode) turns off, for a plain black-and-white topology diagram instead:
 
 ```lisp
 (write-dot my-som "map.png" :format :png)                  ;; U-matrix, colored (the default)
