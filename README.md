@@ -137,12 +137,13 @@ For a full walkthrough and more examples, see [EXAMPLES.md](doc/EXAMPLES.md).
 
 ## Documentation
 
-- **[INSTALLATION.md](doc/INSTALLATION.md)** — Environment setup, Emacs/SLIME workflow, troubleshooting
-- **[EXAMPLES.md](doc/EXAMPLES.md)** — Detailed walkthroughs: XOR, accelerometer data, custom problems
-- **[PHILOSOPHY.md](doc/PHILOSOPHY.md)** ([français](doc/PHILOSOPHY.fr.md)) — Why neuromuse exists (Nice 2005 presentation)
-- **[HISTORY.md](doc/HISTORY.md)** — 25 years of development, key collaborations, artistic applications
-- **[GALLERY.md](doc/GALLERY.md)** — Visual history: early experiments, performances, research projects
-- **[PUBLICATIONS.md](doc/PUBLICATIONS.md)** — Academic papers and references
+- **[PHILOSOPHY](doc/PHILOSOPHY.md)** ([français](doc/PHILOSOPHY.fr.md)) — Why neuromuse exists (Nice 2005 presentation)
+- **[INSTALLATION](doc/INSTALLATION.md)** — Environment setup, Emacs/SLIME workflow, troubleshooting
+- **[EXAMPLES](doc/EXAMPLES.md)** — Detailed walkthroughs: XOR, accelerometer data, custom problems
+- **[FORMATS](doc/formats.md)** — Trace, save, read, write neural nets
+- **[HISTORY](doc/HISTORY.md)** — 25 years of development, key collaborations, artistic applications
+- **[GALLERY](doc/GALLERY.md)** — Visual history: early experiments, performances, research projects
+- **[PUBLICATIONS](doc/PUBLICATIONS.md)** — Academic papers and references
 
 ## Available Architectures
 
