@@ -102,6 +102,16 @@ SELF, comme tout LEARN."
     (setf (epoch self) (1+ (epoch self)))
     (values self)))
 
+(defmethod edges ((self hopfield))
+  "Les arcs de SELF : (net self) est un tableau IN-SIZE x IN-SIZE
+symetrique -- un seul arc par paire (i < j), pas les deux sens. Noeuds
+identifies par l'indice de cellule (un entier), pas de couche d'entree
+distincte des cellules elles-memes (contrairement a mlp/som)."
+  (let ((net (net self)) (n (in-size self)))
+    (loop for i below n
+          append (loop for j from (1+ i) below n
+                       collect (list i j (aref net i j))))))
+
 (defmethod run-hopfield ((self hopfield) &key in)
   "Rappel a seuil binaire : pour chaque cellule i, (binary (sum_j NET[j][i]
 * IN[j])) -- IN par defaut (input self). Ecrit et renvoie (output self),

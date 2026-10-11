@@ -7,6 +7,15 @@
 (defclass som (ANN)
   ((radius
     :initform 1 :initarg :radius :accessor radius :type number)
+   (radius-schedule
+    ;; NIL (defaut) : pas de politique, RADIUS reste une valeur statique,
+    ;; modifiee a la main comme aujourd'hui (cf. examples/pinson_som.lisp).
+    ;; Sinon, une fonction d'un argument (self) : appelee pour EFFET -- elle
+    ;; fait elle-meme (setf (radius self) ...) -- jamais par LEARN lui-meme,
+    ;; seulement par qui decide du rythme (boucle TRAIN-*, demon UDP, cron,
+    ;; REPL) ; remplacable a tout instant par (setf (radius-schedule self)
+    ;; ...), y compris en situ. Meme principe que LEARN-FACT-SCHEDULE (ANN).
+    :initform nil :initarg :radius-schedule :accessor radius-schedule)
    (neighbourhood
     :initform #'voisins :initarg :neighbourhood :accessor neighbourhood)
    (winner
@@ -298,8 +307,14 @@ gagnant) et faisait echouer LEARN."
 	      (let ((synapse (nth i (net vn))))
 		(setf (cadr synapse)
 		      (+ (cadr synapse) (* correction (- (elt input i) (cadr synapse)))))))))
+    (setf (current-error ann) (cadr winner))  ;; distance du gagnant, homogeneite avec mlp/perceptron
     (setf (epoch ann) (1+ (epoch ann)))
     (values ann)))  ;; le som appris, pour pouvoir le reinjecter dans une fonction
+
+(defmethod edges ((self som))
+  "Les arcs de SELF : ceux de chaque neurone de (net self), cf. EDGES sur
+NEURON."
+  (mapcan #'edges (net self)))
 
 #|
 (defmethod nnsave ((self som) &optional (path "saved-som.lisp"))

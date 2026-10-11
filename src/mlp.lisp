@@ -387,6 +387,21 @@
     (setf (current-error mlp) e)  ;; l'erreur du pas, homogeneite : learn ne renvoie que mlp
     (values mlp)))
 
+(defmethod edges ((self mlp))
+  "Les arcs de SELF : (net self) est une liste de matrices, une par
+transition de couche ; dans chacune, (nth j (nth i matrice)) est le poids
+de la source j (couche precedente) vers la cible i (couche suivante), meme
+convention que MULTIPLY-MATRIX-AND-VECTOR. Noeuds identifies par
+(COUCHE INDICE), couche 0 = entree. Vaut aussi pour RMLP, meme forme de
+NET (herite sans methode propre)."
+  (loop for matrix in (net self)
+        for layer from 0
+        append (loop for row in matrix
+                     for i from 0
+                     append (loop for w in row
+                                  for j from 0
+                                  collect (list (list layer j) (list (1+ layer) i) w)))))
+
 (defmethod run-mlp ((mlp rmlp) &key in)  ;in pour method rmlp...
     (let ((hidden-answer-cell (list))
 	  (net (noise mlp (net-temp mlp))))

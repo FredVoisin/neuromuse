@@ -303,3 +303,16 @@
 		 (car winner)
 		 (mapcar #'(lambda (x) (if (< x max) 0 1)) winner-rep)))
        (values rosom))))  ;; le rosom appris (= self), pour pouvoir le reinjecter dans une fonction
+
+(defmethod edges ((self rosom))
+  "Les arcs de SELF : ceux du SOM de contenu (source (:input j)) et ceux du
+SOM de contexte, retagues (:context j) -- (net self) est
+(content-neurones context-neurones), deux espaces de dimensions distincts
+(l'entree d'un cote, l'etat de phase/frequence INPUT-CONTEXT de l'autre),
+donc pas la meme source malgre le meme j."
+  (destructuring-bind (content-neurons context-neurons) (net self)
+    (nconc (mapcan #'edges content-neurons)
+           (mapcan (lambda (n)
+                     (mapcar (lambda (e) (cons (list :context (second (first e))) (rest e)))
+                             (edges n)))
+                   context-neurons))))

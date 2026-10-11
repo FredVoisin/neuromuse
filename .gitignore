@@ -15,3 +15,6 @@
 /output-trace.lisp
 /pinson-trace-chant*.lisp
 /chant*.lisp
+
+# Local-only notes/discussions, not meant to be versioned
+/fred/

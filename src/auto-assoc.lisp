@@ -104,6 +104,16 @@ Renvoie SELF, comme tout LEARN."
     (setf (epoch self) (1+ (epoch self)))
     (values self)))
 
+(defmethod edges ((self auto-assoc))
+  "Les arcs de SELF : (net self) est un tableau IN-SIZE x IN-SIZE
+symetrique -- un seul arc par paire (i < j), pas les deux sens. Noeuds
+identifies par l'indice de cellule (un entier), meme convention que
+EDGES sur HOPFIELD."
+  (let ((net (net self)) (n (in-size self)))
+    (loop for i below n
+          append (loop for j from (1+ i) below n
+                       collect (list i j (aref net i j))))))
+
 (defmethod run-auto-assoc ((self auto-assoc) &key in (fct #'tanh))
   "Rappel : pour chaque cellule i, (FCT (somme_j NET[i][j] * IN[j])) -- IN
 par defaut (input self) (FIX : le code de 2001, RUN-AA, utilisait

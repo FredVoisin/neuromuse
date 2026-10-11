@@ -79,6 +79,37 @@
   ;; (net neurone) = ((source poids derniere-activation) ...)
   (mapcar #'cadr (net self)))
 
+(defgeneric edges (net)
+  (:documentation "NET vu comme un graphe pondere : liste de (SOURCE CIBLE POIDS).
+Une methode par representation concrete de (net ANN) -- liste de neurones
+(som/rosom), liste de matrices (mlp/rmlp/perceptron), tableau 2D
+(hopfield/auto-assoc) -- puisque c'est la seule chose qui varie reellement ;
+NODES s'en deduit mecaniquement (cf. plus bas), pas de methode a ecrire
+classe par classe pour NODES."))
+
+(defgeneric nodes (net)
+  (:documentation "Noeuds de NET vu comme un graphe : par defaut, les
+sources et cibles distinctes de (EDGES NET). Pas de methode a specialiser
+par classe -- NODES se deduit toujours de EDGES, qui lui porte la
+connaissance specifique a chaque representation de net."))
+
+(defmethod nodes (net)
+  (remove-duplicates
+   (loop for (source target) in (edges net) append (list source target))
+   :test #'equal))
+
+(defmethod edges ((self neuron))
+  "Les arcs entrants de SELF, un par synapse de (net self) : (SOURCE SELF
+POIDS). SOURCE est (:input j), j l'indice de la dimension d'entree portee
+par cette synapse -- le second element du marqueur stocke dans la synapse,
+(j i), n'est que l'indice de SELF lui-meme (cf. INIT dans som.lisp), pas un
+identifiant partage entre neurones ; on ne garde donc que j. (Un ROSOM
+retague les synapses de ses neurones de contexte en (:context j) -- cf.
+EDGES sur ROSOM dans rosom.lisp -- puisque ce sont deux espaces de
+dimensions distincts.)"
+  (mapcar (lambda (synapse) (list (list :input (first (first synapse))) self (second synapse)))
+          (net self)))
+
 (defmethod initialize-instance :after ((self neuron) &key name)
   (let ((neuron (if name
 		    (make-new-symbol name)
@@ -136,6 +167,15 @@
     :initform 0.0 :initarg :net-temp :accessor net-temp :type float)
    (learn-fact
     :initform 0.0 :initarg :learn-fact :accessor learn-fact :type float)
+   (learn-fact-schedule
+    ;; NIL (defaut) : pas de politique, LEARN-FACT reste une valeur statique,
+    ;; modifiee a la main comme aujourd'hui. Sinon, une fonction d'un
+    ;; argument (self) : appelee pour EFFET -- elle fait elle-meme
+    ;; (setf (learn-fact self) ...) -- jamais par LEARN lui-meme, seulement
+    ;; par qui decide du rythme (boucle TRAIN-*, demon UDP, cron, REPL) ;
+    ;; remplacable a tout instant par (setf (learn-fact-schedule self) ...),
+    ;; y compris en situ. Meme principe que RADIUS-SCHEDULE sur SOM.
+    :initform nil :initarg :learn-fact-schedule :accessor learn-fact-schedule)
    (attention
     :initform '() :initarg :attention :accessor attention)
    (properties

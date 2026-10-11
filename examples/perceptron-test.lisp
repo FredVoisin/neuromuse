@@ -136,7 +136,7 @@
 (setf (out-fun chiffres-b) #'boltzmann
       (temp chiffres-b) 1.0
       (learn-fact chiffres-b) 0.01
-      (threshold chiffres-b) 0.1)
+      (target-error chiffres-b) 0.1)
 
 (train-perceptron chiffres-b *chiffres* *chiffres-buts* :verbose t)
 

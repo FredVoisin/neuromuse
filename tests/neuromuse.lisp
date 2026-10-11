@@ -284,4 +284,38 @@
     (setf (input r) (coerce (list 0.1 0.5 0.9) 'vector))
     (is (length (activation r)) 4 "one activation value per content neuron")))
 
+(subtest "nodes/edges: vue graphe generique sur (net ANN)"
+  (make-mlp graph-mlp-test 2 1 2)
+  (is (length (nodes graph-mlp-test)) 5 "2 entrees + 2 cachees + 1 sortie")
+  (is (length (edges graph-mlp-test)) 6 "2*2 entree->cachee + 2*1 cachee->sortie")
+  (is (third (first (edges graph-mlp-test))) (caar (first (net graph-mlp-test))) :test #'=
+      "le poids de l'arc est bien celui de la matrice")
+
+  (let ((p (make-instance 'perceptron :in-size 2 :out-size 1 :bias t
+                          :net (init-perceptron-net 2 1 :bias t))))
+    (is (length (nodes p)) 4 "2 entrees + 1 biais + 1 sortie")
+    (is (length (edges p)) 3 "une synapse par ligne de net, biais compris"))
+
+  (let ((s (make-instance 'som :name 'graph-som-test :size 4 :input 3)))
+    (is (length (nodes s)) 7 "4 neurones + 3 noeuds d'entree")
+    (is (length (edges s)) 12 "4 neurones * 3 synapses")
+    (ok (every (lambda (e) (eq (first (first e)) :input)) (edges s))
+        "toutes les sources d'un SOM sont taguees :input"))
+
+  (let ((h (make-instance 'hopfield :in-size 4 :net (init-hopfield-net 4))))
+    (is (length (nodes h)) 4)
+    (is (length (edges h)) 6 "C(4,2) : un seul arc par paire, non dirige"))
+
+  (let ((a (make-instance 'auto-assoc :in-size 4 :net (init-auto-assoc-net 4))))
+    (is (length (nodes a)) 4)
+    (is (length (edges a)) 6))
+
+  (let ((r (make-instance 'rosom :name 'graph-rosom-test)))
+    (init r :size 4 :input 3)
+    (is (length (nodes r)) 15
+        "4 neurones contenu + 3 entrees + 4 neurones contexte + 4 dims contexte")
+    (ok (find :input (edges r) :key #'caar) "le SOM de contenu tague ses sources :input")
+    (ok (find :context (edges r) :key #'caar)
+        "le SOM de contexte tague ses sources :context, distinctes de l'entree")))
+
 (finalize)

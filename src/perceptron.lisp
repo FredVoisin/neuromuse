@@ -33,7 +33,7 @@
    (goal :initform '() :initarg :goal :accessor goal)
    (learn-fact :initform 0.1 :initarg :learn-fact :accessor learn-fact :type float)
    (out-fun :initform #'binary :initarg :out-fun :accessor out-fun :type function)
-   (threshold :initform 0.0 :initarg :threshold :accessor threshold :type number)
+   (target-error :initform 0.0 :initarg :target-error :accessor target-error :type number)
    (stop :initform 1000 :initarg :stop :accessor stop :type integer))
   (:documentation
    "Perceptron simple (Rosenblatt), sans couche cachée.
@@ -48,7 +48,9 @@ par exemple d'apprendre le ET ou le OU logique. Sans biais (défaut, comme en
 OUT-FUN est la fonction de transfert des cellules de sortie : #'binary (défaut,
 perceptron déterministe) ou #'boltzmann (perceptron probabiliste « B » de 1999 ;
 TEMP est alors la température et doit être > 0).
-THRESHOLD est le taux d'erreur (entre 0 et 1) toléré en fin d'apprentissage,
+TARGET-ERROR est le taux d'erreur (entre 0 et 1) toléré en fin d'apprentissage
+(nom propre au perceptron : contrairement au THRESHOLD du mlp, qui est aussi un
+paramètre des fonctions de transfert, celui-ci ne sert qu'à TRAIN-PERCEPTRON),
 STOP le nombre maximum d'époques par appel à TRAIN-PERCEPTRON."))
 
 (defmethod print-object ((self perceptron) stream)
@@ -172,17 +174,32 @@ SETF elle-meme a chaque stimulus)."
                              collect (widrow-hoff w (elt goal j) (nth j output) xi l)))))
     (when (verbose self)
       (format t "~&~S : ~S <<< ~S, ~D erreur~:P" stimulus goal output e))
-    (setf (current-error self) e)
+    (setf (output self) output
+          (current-error self) e)
     (values self)))
+
+(defmethod edges ((self perceptron))
+  "Les arcs de SELF : (net self) est IN-SIZE lignes (IN-SIZE + 1 si BIAS)
+de OUT-SIZE poids, (nth j (nth i net)) le poids de l'entree i vers la
+sortie j -- cf. la docstring de la classe. Noeuds identifies par
+(COUCHE INDICE), couche 0 = entree (le biais eventuel y est le dernier
+indice, IN-SIZE), couche 1 = sortie."
+  (loop for row in (net self)
+        for i from 0
+        append (loop for w in row
+                     for j from 0
+                     collect (list (list 0 i) (list 1 j) w))))
 
 (defmethod train-perceptron ((self perceptron) stimuli goals &key verbose)
   "Apprentissage par époques de la liste de STIMULI vers la liste de GOALS,
 jusqu'à ce que le taux d'erreur d'une époque (fraction des stimuli mal classés)
-soit <= (threshold self), ou après (stop self) époques.
-Chaque taux d'erreur est empilé dans (history-error self), le dernier restant
-lisible dans (current-error self). Renvoie SELF (le perceptron appris), pour
-pouvoir le réinjecter dans une fonction -- même convention que LEARN
-(mlp/rmlp/som/rosom)."
+soit <= (target-error self), ou après (stop self) époques.
+Chaque taux d'erreur est empilé dans (history-error self), le plus récent
+restant lisible dans (car (history-error self)) -- (current-error self), lui,
+continue de porter le nombre d'erreurs du dernier pas de LEARN (pas le taux
+d'époque), comme pour mlp/rmlp/som/rosom : interrogeable à tout instant, même
+en cours d'apprentissage. Renvoie SELF (le perceptron appris), pour pouvoir le
+réinjecter dans une fonction -- même convention que LEARN."
   (assert (= (length stimuli) (length goals)))
   (setf (previous self) (copy-tree (net self)))
   (let ((n (length stimuli)))
@@ -194,11 +211,9 @@ pouvoir le réinjecter dans une fonction -- même convention que LEARN
              (rate (float (/ wrong n))))
         (incf (epoch self))
         (push rate (history-error self))
-        (setf (last-error self) (current-error self)
-              (current-error self) rate)
         (when verbose
           (format t "~&Epoch ~D : ~D erreur~:P (~,1F %)" (epoch self) wrong (* 100 rate)))
-        (when (<= rate (threshold self))
+        (when (<= rate (target-error self))
           (setf (last-stop self) (list (epoch self) 'completed))
           (when verbose
             (format t "~&>> Fin de l'apprentissage à l'époque ~D.~%" (epoch self)))
@@ -206,7 +221,7 @@ pouvoir le réinjecter dans une fonction -- même convention que LEARN
     (setf (last-stop self) (list (epoch self) 'interrupted))
     (when verbose
       (format t "~&>> Apprentissage interrompu à l'époque ~D (taux d'erreur ~,1F %).~%"
-              (epoch self) (* 100 (current-error self))))
+              (epoch self) (* 100 (car (history-error self)))))
     (values self)))
 
 (defmethod clear ((self perceptron))
