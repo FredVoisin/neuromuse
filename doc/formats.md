@@ -113,15 +113,19 @@ weight, normalized by the net's largest `|weight|`, instead of, or alongside, th
 
 The palette (`diverging-hex`, `src/read-write.lisp`) isn't a plain red/blue fade through white — it's
 the one the original (2001-era) MLP visualizer used, on a black background: blue at the most negative
-weight, green at the median negative, yellow at the median positive, red at the most positive, linearly
+weight, cyan at the median negative, yellow at the median positive, red at the most positive, linearly
 interpolated between those four stops (see `img/ecarlate-sin.png`, from *L'Écarlate*, for the look this
 is drawn from — `src/gui.lisp`'s own live heatmap uses a separate, simpler white-to-red/white-to-blue
-convention, not changed here).
+convention, not changed here). Pixel-sampled from that reference image rather than guessed: the bright
+green in it is UI text (titles, "INPUT"/"OUTPUT" labels), not an edge color at all — true green is in
+fact the rarest hue among the edges themselves, cyan and orange/yellow the most common, so the palette
+uses cyan, not green, as its cool median stop (a pale green still appears, but only where the
+cyan→yellow interpolation passes near the zero crossing, not as a stop of its own).
 
 `:edge-label`/`:node-label` are the same two knobs on every `write-dot` method (generic, som,
 hopfield/auto-assoc) — just not always with the same default, since what a node shows by default
 differs per shape of graph (see each section below). `:color` is also accepted by every method, but
-*not* with the same meaning: this red/yellow/green/blue spectrum by weight sign for the generic method
+*not* with the same meaning: this red/yellow/cyan/blue spectrum by weight sign for the generic method
 and hopfield/auto-assoc, grayscale by neighbour distance for a som (see its own section) — each method
 only reads the keywords
 it documents, so passing one a method doesn't recognize (e.g. `:color` to a method that predates this
