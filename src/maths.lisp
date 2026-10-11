@@ -120,6 +120,24 @@
 (defmethod boltzmann ((x list) &key (thresh 0) (temp 1.0) (learn nil) (slope 1))
   (mapcar #'(lambda (a) (boltzmann a :temp temp :thresh thresh :learn learn :slope slope)) x))
 
+(defgeneric softmax (x)
+  (:documentation "Distribution de probabilite de X (liste ou vecteur) :
+exp(xi) / somme(exp(xj)) -- le maximum de X est soustrait avant l'exponentielle
+pour la stabilite numerique (SOFTMAX est invariant par translation, le
+resultat est le meme, mais exp ne deborde jamais). Pure (X n'est jamais mute,
+contrairement a LINEAR/BOLTZMANN sur vecteur) -- utilisee par
+fred/transformer.lisp (attention multi-tetes), pas (encore) par une
+architecture de src/."))
+
+(defmethod softmax ((x list))
+  (let* ((m (reduce #'max x))
+         (e (mapcar #'(lambda (xi) (exp (- xi m))) x))
+         (s (apply #'+ e)))
+    (mapcar #'(lambda (ei) (/ ei s)) e)))
+
+(defmethod softmax ((x vector))
+  (coerce (softmax (coerce x 'list)) 'vector))
+
 ;;; apprentissage : Widrow-Hoff rule = delta rule
 (defun widrow-hoff (wij tj oj xi l)
   (+ wij (* l (- tj oj) xi)))
@@ -373,6 +391,10 @@ et formate pour <inhibit-synaps>."
     (dotimes (n (length vector) (apply #'+ result))
       (push (aref vector n) result))))
 
+(defun dot-product (a b)
+  "Produit scalaire de A et B (listes ou vecteurs, cf. MULTIPLY-2-VECTORS)."
+  (vector-sum (multiply-2-vectors a b)))
+
 (defun multiply-two-matrices (a-matrix b-matrix
 			      &key (result
 				    (make-array
@@ -421,6 +443,53 @@ returns
         (setf (elt result i)
               (+ (elt result i)
 		 (* (nth j (elt a-matrix i)) (elt b-vector j))))))))
+
+(defun matrix-vector (matrix x)
+  "A-MATRIX . X -- meme resultat que MULTIPLY-MATRIX-AND-VECTOR, mais en un
+seul parcours de chaque ligne de MATRIX (DOT-PRODUCT) plutot que par NTH/ELT
+indexes dans une boucle imbriquee -- O(lignes x colonnes) au lieu de
+O(lignes x colonnes^2) quand MATRIX est une liste de listes. X peut etre une
+liste ou un vecteur (DOT-PRODUCT), toujours converti en liste. A utiliser a
+la place de MULTIPLY-MATRIX-AND-VECTOR des que la matrice est grande ou
+l'appel frequent (boucle d'apprentissage) ; MULTIPLY-MATRIX-AND-VECTOR reste
+tel quel, rien ne l'oblige a changer."
+  (let ((x (coerce x 'list)))
+    (mapcar #'(lambda (row) (dot-product row x)) matrix)))
+
+(defun retropropagate-signal (matrix signal)
+  "Signal d'erreur ramene a l'entree de MATRIX : transposee(MATRIX) . SIGNAL.
+Meme resultat que (hidden-error-estimation (error-retropropagation matrix
+signal)) (mlp.lisp), en O(lignes x colonnes) au lieu de O(lignes x
+colonnes^2) -- memes raisons que MATRIX-VECTOR ; HIDDEN-ERROR-ESTIMATION/
+ERROR-RETROPROPAGATION restent definies telles quelles."
+  (let ((acc (make-list (length (car matrix)) :initial-element 0.0)))
+    (loop for row in matrix
+          for s in signal
+          unless (zerop s)
+            do (setf acc (mapcar #'(lambda (a w) (+ a (* s w))) acc row)))
+    acc))
+
+(defun accumulate-weights (matrix signals inputs learn &key (radius 0))
+  "MATRIX + LEARN . somme sur les positions de SIGNAL (x) INPUT -- la
+correction de UPDATE-HIDDEN-WEIGHTS/UPDATE-OUTPUT-WEIGHTS (mlp.lisp),
+generalisee a plusieurs positions (une sequence, pas un seul stimulus) et
+cumulee avant d'etre ajoutee a MATRIX. Tous les signaux doivent avoir ete
+calcules avant, avec les poids d'origine (SIGNALS/INPUTS ne referencent
+jamais MATRIX en cours de calcul). RADIUS > 0 (defaut 0, sans effet) repartit
+en plus la correction cumulee sur les neurones voisins d'indice (DIFFUSE-ROWS,
+meme falloff gaussien que le voisinage d'un SOM) -- cf. (radius ann)."
+  (let* ((inputs (mapcar #'(lambda (x) (coerce x 'list)) inputs))
+         (correction
+           (loop for row in matrix
+                 for i from 0
+                 collect (let ((row (make-list (length row) :initial-element 0.0)))
+                           (loop for s in signals
+                                 for x in inputs
+                                 for si = (* learn (nth i s))
+                                 unless (zerop si)
+                                   do (setf row (mapcar #'(lambda (c xj) (+ c (* si xj))) row x)))
+                           row))))
+    (add-2-matrices matrix (diffuse-rows correction radius))))
 
 (defun add-2-matrices (a-matrix b-matrix
 		       &key (result (make-listarray (length a-matrix)
@@ -527,14 +596,26 @@ returns
                (elt v2 i))
             e))))
 
-(defun add-two-vectors (v1 v2)
+(defgeneric add-two-vectors (v1 v2)
+  (:documentation "Somme terme a terme de V1 et V2 (listes ou vecteurs)."))
+
+(defmethod add-two-vectors ((v1 list) (v2 list))
+  (mapcar #'+ v1 v2))
+
+(defmethod add-two-vectors ((v1 t) (v2 t))
   (let ((e '()))
     (dotimes (i (length v1) (apply #'vector (reverse e)))
       (push (+ (aref v1 i)
                (aref v2 i))
             e))))
 
-(defun multiply-vector (f v)
+(defgeneric multiply-vector (f v)
+  (:documentation "V (liste ou vecteur) multiplie par le scalaire F."))
+
+(defmethod multiply-vector (f (v list))
+  (mapcar #'(lambda (x) (* f x)) v))
+
+(defmethod multiply-vector (f (v t))
   (let ((e '()))
     (dotimes (i (length v) (apply #'vector (reverse e)))
       (push (* f
@@ -1003,6 +1084,89 @@ identite exacte (MATRIX inchangee), meme garde que NEIGHBOURHOOD-CORRECTION
                   (loop for i from 0 below m
                         sum (* (gaussian-hat 1 radius (abs (- i i2)))
                                (nth j (nth i matrix))))))))))
+
+;;************  RETROPROPAGATION : BRIQUES GENERIQUES  **************
+;; Fonctions pures (aucun argument mute, aucun acces a un slot ANN), dont
+;; certaines deplacees de mlp.lisp (HIDDEN-SIGNAL-ERROR : derivee de la
+;; fonction de transfert, generique malgre son nom, aucune dependance au mlp)
+;; et d'autres ajoutees pour fred/transformer.lisp, local -- voir
+;; fred/lambda-calcul-neuromuse.md (encodage de position, normalisation de
+;; couche et leur retropropagation). Genericite d'architecture : rien ici ne
+;; suppose mlp/som/transformer -- place apres MULTIPLY-2-VECTORS/
+;; SUBSTRACT-2-VECTORS/DOT-PRODUCT, dont tout ceci depend.
+
+(defun hidden-signal-error (hidden-activation hidden-error-estimation)
+  "Signal d'erreur avant une fonction de transfert LOGISTIC, connaissant
+HIDDEN-ACTIVATION (sa sortie) et HIDDEN-ERROR-ESTIMATION (le signal apres) :
+(1 - a) (e a). Deplace de mlp.lisp tel quel (ou LEARN de mlp/rmlp l'utilise
+encore) -- pure, generique, aucune dependance au reste de mlp.lisp."
+  (assert (= (length hidden-activation) (length hidden-error-estimation)))
+  (multiply-2-vectors
+   (substract-2-vectors
+    (make-list (length hidden-activation) :initial-element 1)
+    hidden-activation)
+   (multiply-2-vectors
+    hidden-error-estimation
+    hidden-activation)))
+
+(defun transfer-signal-error (fun activation error)
+  "Signal d'erreur avant la fonction de transfert FUN, connaissant ACTIVATION
+(sa sortie) et ERROR (le signal apres). Pour #'logistic, HIDDEN-SIGNAL-ERROR ;
+pour #'linear, ERROR tel quel (derivee 1)."
+  (cond ((eq fun #'logistic) (hidden-signal-error activation error))
+        ((eq fun #'linear) error)
+        (t (error "Pas de derivee connue pour la fonction de transfert ~S." fun))))
+
+(defun with-bias (x)
+  "X (liste ou vecteur) suivi d'une entree de biais, toujours a 1.0 -- meme
+convention que le biais de PERCEPTRON (cf. PERCEPTRON-INPUT, perceptron.lisp),
+ici comme fonction pure reutilisable plutot que specifique a une classe."
+  (append (coerce x 'list) (list 1.0)))
+
+(defun positional-encoding (pos size)
+  "Encodage de position sinusoidal de Vaswani et al. (« Attention Is All You
+Need », 2017), un vecteur de SIZE nombres pour la position POS."
+  (loop for i from 0 below size
+        for freq = (expt 10000.0 (- (/ (* 2 (floor i 2)) size)))
+        collect (if (evenp i) (sin (* pos freq)) (cos (* pos freq)))))
+
+(defun layer-norm (x ln &optional (epsilon 1e-5))
+  "Normalisation de couche de X (une trame) avec LN = (gains biais) : centre
+X, le reduit par son ecart-type, puis applique GAINS/BIAIS terme a terme.
+Renvoie trois valeurs : la sortie, X centre-reduit (XHAT) et l'inverse de
+l'ecart-type (INV-SIGMA) -- ces deux dernieres valeurs sont ce dont
+LAYER-NORM-RETROPROPAGATION a besoin, pas a recalculer depuis la sortie."
+  (let* ((n (length x))
+         (mean (/ (apply #'+ x) n))
+         (centered (mapcar #'(lambda (a) (- a mean)) x))
+         (inv-sigma (/ 1.0 (sqrt (+ epsilon (/ (dot-product centered centered) n)))))
+         (xhat (multiply-vector inv-sigma centered)))
+    (values (add-two-vectors (multiply-2-vectors (first ln) xhat) (second ln))
+            xhat
+            inv-sigma)))
+
+(defun layer-norm-retropropagation (signal xhat inv-sigma ln)
+  "Retropropagation d'un LAYER-NORM : SIGNAL est le signal d'erreur apres la
+normalisation, XHAT/INV-SIGMA ceux renvoyes par LAYER-NORM pour la meme trame.
+Renvoie trois valeurs : le signal d'erreur a l'entree, et les signaux des
+gains et des biais de LN (a cumuler sur toute la sequence par l'appelant,
+cf. UPDATE-LAYER-NORM)."
+  (let* ((n (length signal))
+         (dxhat (multiply-2-vectors (first ln) signal))
+         (mean-d (/ (apply #'+ dxhat) n))
+         (mean-dx (/ (dot-product dxhat xhat) n)))
+    (values (mapcar #'(lambda (d xh) (* inv-sigma (- d mean-d (* xh mean-dx)))) dxhat xhat)
+            (multiply-2-vectors signal xhat)
+            signal)))
+
+(defun update-layer-norm (ln d-gain d-bias learn)
+  "LN = (gains biais) corrige par LEARN . (D-GAIN D-BIAS), les signaux cumules
+renvoyes par LAYER-NORM-RETROPROPAGATION -- meme regle que les poids
+synaptiques ordinaires (ACCUMULATE-WEIGHTS), sans RADIUS : gains et biais
+sont scalaires par dimension, pas une matrice de synapses entre deux couches,
+DIFFUSE-ROWS n'a pas de sens ici."
+  (list (add-two-vectors (first ln) (multiply-vector learn d-gain))
+        (add-two-vectors (second ln) (multiply-vector learn d-bias))))
 
 ;;************         DIVERS      ********************************
 

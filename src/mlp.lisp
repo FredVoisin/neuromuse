@@ -137,15 +137,9 @@
     (substract-2-vectors theorical-output actual-output)
     actual-output)))
 
-(defun hidden-signal-error (hidden-activation hidden-error-estimation)
-  (assert (= (length hidden-activation) (length hidden-error-estimation)))
-  (multiply-2-vectors
-   (substract-2-vectors
-    (make-list (length hidden-activation) :initial-element 1)
-    hidden-activation)
-   (multiply-2-vectors
-    hidden-error-estimation
-    hidden-activation)))
+;; HIDDEN-SIGNAL-ERROR a demenage dans maths.lisp (pure, generique, aucune
+;; dependance au reste de mlp.lisp -- cf. la note au-dessus de sa nouvelle
+;; definition) ; LEARN de mlp/rmlp continue de l'appeler sous le meme nom.
 
 (defun hidden-error-estimation (error-retropopagation)
   (let ((f '()))
@@ -155,26 +149,18 @@
           (setf temp (+ temp (nth i (nth j error-retropopagation)))))))))
 
 (defun update-hidden-weights (hidden-layer input hidden-signal-error n &key (radius 0))
-  "Correction du pas de retropropagation pour HIDDEN-LAYER. RADIUS > 0 (defaut
-0, donc sans effet) repartit en plus la correction de chaque neurone cible
-sur ses voisins d'indice dans la couche (DIFFUSE-ROWS, maths.lisp, meme
-falloff gaussien que le voisinage d'un SOM) -- experimental, cf.
-fred/lambda-calcul-neuromuse.md."
-  (let ((DW (make-listarray (length hidden-layer) (length (car hidden-layer)))))
-    (dotimes (i (length hidden-signal-error))
-      (dotimes (j (length input))
-        (setf (nth j (nth i DW))
-	      (* (elt hidden-signal-error i) (elt input j) n))))
-    (add-2-matrices hidden-layer (diffuse-rows DW radius))))
+  "Correction du pas de retropropagation pour HIDDEN-LAYER, pour UN stimulus --
+enveloppe fine autour d'ACCUMULATE-WEIGHTS (maths.lisp), sa generalisation a
+une sequence de stimuli (cf. fred/transformer.lisp) ; (list x) ramene une
+sequence a un seul element. RADIUS > 0 (defaut 0, sans effet) repartit en
+plus la correction sur les neurones voisins d'indice dans la couche
+(DIFFUSE-ROWS, meme falloff gaussien que le voisinage d'un SOM) --
+experimental, cf. fred/lambda-calcul-neuromuse.md."
+  (accumulate-weights hidden-layer (list hidden-signal-error) (list input) n :radius radius))
 
 (defun update-output-weights (output-layer hidden-answer output-signal-error n &key (radius 0))
   "Comme UPDATE-HIDDEN-WEIGHTS, pour OUTPUT-LAYER."
-  (let ((DZ (make-listarray (length output-layer) (length (car output-layer)))))
-    (dotimes (i (length output-signal-error))
-      (dotimes (j (length hidden-answer))
-        (setf (nth j (nth i DZ))
-	      (* (elt output-signal-error i) (elt hidden-answer j) n))))
-    (add-2-matrices output-layer (diffuse-rows DZ radius))))
+  (accumulate-weights output-layer (list output-signal-error) (list hidden-answer) n :radius radius))
 
 (defun error-retropropagation (output-layer output-signal-error)
   (let ((dd (make-listarray (length output-layer) (length (car output-layer)))))
@@ -200,31 +186,33 @@ fred/lambda-calcul-neuromuse.md."
 	(e 10000))
     (dotimes (down (- (length (net mlp)) 1))  ;; 1- activation = top->down
       (if (zerop down)
-	  (push (funcall hidden-func (multiply-matrix-and-vector (car net) input)
+	  (push (funcall hidden-func (matrix-vector (car net) input)
 			 :thresh thresh
 			 :slope slope)
 		hidden-answer-cell)
-	  (push (funcall hidden-func (multiply-matrix-and-vector (nth down net)
-								 (nth (1- down) hidden-answer-cell))
+	  (push (funcall hidden-func (matrix-vector (nth down net)
+						    (nth (1- down) hidden-answer-cell))
 			 :thresh thresh
 			 :slope slope)
 		hidden-answer-cell)))
-    (setf output-answer-cell (funcall out-func (multiply-matrix-and-vector (car (last net))
-									   (car hidden-answer-cell))
+    (setf output-answer-cell (funcall out-func (matrix-vector (car (last net))
+							       (car hidden-answer-cell))
 				      :slope slope
 				      :thresh thresh)
-	  out-signal-error (output-signal-error goal output-answer-cell))  ; output / goal
+	  ;; signal d'erreur de sortie, selon OUT-FUN (TRANSFER-SIGNAL-ERROR,
+	  ;; maths.lisp) -- OUTPUT-SIGNAL-ERROR (plus bas, inchangee) supposait
+	  ;; toujours une derivee logistique, quel que soit OUT-FUN
+	  out-signal-error (transfer-signal-error out-func output-answer-cell
+						  (substract-2-vectors goal output-answer-cell)))
     (setf (output mlp) output-answer-cell)
     (dotimes (up (length hidden-answer-cell))  ;; 2- signal error = bottom->up
       (if (zerop up)
-	  (push (hidden-signal-error (car hidden-answer-cell)
-				     (hidden-error-estimation
-				      (error-retropropagation (car (last net)) out-signal-error)))
+	  (push (transfer-signal-error hidden-func (car hidden-answer-cell)
+				       (retropropagate-signal (car (last net)) out-signal-error))
 		hidden-signal-error)
-	  (push (hidden-signal-error (nth up hidden-answer-cell)
-				     (hidden-error-estimation
-				      (error-retropropagation (nth (- (length net) up 1) net)
-							      (car hidden-signal-error)))) ;(nth (- up 1)
+	  (push (transfer-signal-error hidden-func (nth up hidden-answer-cell)
+				       (retropropagate-signal (nth (- (length net) up 1) net)
+							      (car hidden-signal-error)))
 		hidden-signal-error)))
     (setf hidden-answer-cell (reverse hidden-answer-cell))
     (dotimes (down (length hidden-signal-error))  ;;3- update = top->down
@@ -249,13 +237,13 @@ fred/lambda-calcul-neuromuse.md."
 	  (net (noise mlp (net-temp mlp))))
      (dotimes (w (- (length net) 1))
        (if (zerop w)
-         (push (funcall (hidden-fun mlp) (multiply-matrix-and-vector (car net) (if in in (input mlp))))
+         (push (funcall (hidden-fun mlp) (matrix-vector (car net) (if in in (input mlp))))
 	       hidden-answer-cell)
-         (push (funcall (hidden-fun mlp) (multiply-matrix-and-vector (nth w net) (car hidden-answer-cell)))
+         (push (funcall (hidden-fun mlp) (matrix-vector (nth w net) (car hidden-answer-cell)))
                hidden-answer-cell)))
      (setf (output mlp)
 	   (funcall (out-fun mlp)
-		    (multiply-matrix-and-vector (car (last net)) (car hidden-answer-cell))
+		    (matrix-vector (car (last net)) (car hidden-answer-cell))
 		    :slope (slope mlp)
 		    :temp (temp mlp)
 		    :thresh 0))
@@ -349,33 +337,32 @@ fred/lambda-calcul-neuromuse.md."
 	(e 10000))
     (dotimes (down (- (length net) 1))  ;; 1- activation = top->down
       (if (zerop down)
-	  (push (funcall hidden-func (multiply-matrix-and-vector (car net) input)
+	  (push (funcall hidden-func (matrix-vector (car net) input)
 			 :thresh thresh
 			 :slope slope)
 		hidden-answer-cell)
-	  (push (funcall hidden-func (multiply-matrix-and-vector (nth down net)
-								 (car hidden-answer-cell))
+	  (push (funcall hidden-func (matrix-vector (nth down net)
+						    (car hidden-answer-cell))
 			 :thresh thresh
 			 :slope slope)
 		hidden-answer-cell))
       (when  (= down (recurrent-layer mlp))
 	(setf (recurrent-layer-activation mlp) (car hidden-answer-cell))))
-    (setf output-answer-cell (funcall out-func (multiply-matrix-and-vector (car (last net))
-									   (car hidden-answer-cell))
+    (setf output-answer-cell (funcall out-func (matrix-vector (car (last net))
+							       (car hidden-answer-cell))
 				      :slope slope
 				      :thresh thresh)
-	  out-signal-error (output-signal-error goal output-answer-cell))  ; output / goal
+	  out-signal-error (transfer-signal-error out-func output-answer-cell
+						  (substract-2-vectors goal output-answer-cell)))
     (setf (output mlp) output-answer-cell)
     (dotimes (up (length hidden-answer-cell))  ;; 2- signal error = bottom->up
       (if (zerop up)
-	  (push (hidden-signal-error (car hidden-answer-cell)
-				     (hidden-error-estimation
-				      (error-retropropagation (car (last net)) out-signal-error)))
+	  (push (transfer-signal-error hidden-func (car hidden-answer-cell)
+				       (retropropagate-signal (car (last net)) out-signal-error))
 		hidden-signal-error)
-	  (push (hidden-signal-error (nth up hidden-answer-cell)
-				     (hidden-error-estimation
-				      (error-retropropagation (nth (- (length net) up 1) net)
-							      (car hidden-signal-error)))) ;(nth (- up 1)
+	  (push (transfer-signal-error hidden-func (nth up hidden-answer-cell)
+				       (retropropagate-signal (nth (- (length net) up 1) net)
+							      (car hidden-signal-error)))
 		hidden-signal-error)))
     (setf hidden-answer-cell (reverse hidden-answer-cell))
     (dotimes (down (length hidden-signal-error))  ;;3- update = top->down
@@ -415,19 +402,19 @@ NET (herite sans methode propre)."
 	  (net (noise mlp (net-temp mlp))))
      (dotimes (w (1- (length net)))
        (if (zerop w)
-         (push (funcall (hidden-fun mlp) (multiply-matrix-and-vector (car net)
-								     (if in in
-									 (append (input mlp)
-										 (recurrent-layer-activation mlp)))))
+         (push (funcall (hidden-fun mlp) (matrix-vector (car net)
+							 (if in in
+							     (append (input mlp)
+								     (recurrent-layer-activation mlp)))))
 	       hidden-answer-cell)
-         (push (funcall (hidden-fun mlp) (multiply-matrix-and-vector (nth w net)
-								     (car hidden-answer-cell)))
+         (push (funcall (hidden-fun mlp) (matrix-vector (nth w net)
+							 (car hidden-answer-cell)))
 		      hidden-answer-cell))
        (when (= w (recurrent-layer mlp))
 	 (setf (recurrent-layer-activation mlp) (car hidden-answer-cell))))
      (setf (output mlp)
 	   (funcall (out-fun mlp)
-		    (multiply-matrix-and-vector (car (last net)) (car hidden-answer-cell))
+		    (matrix-vector (car (last net)) (car hidden-answer-cell))
 		    :slope (slope mlp)
 		    :temp (temp mlp)
 		    :thresh 0)))
