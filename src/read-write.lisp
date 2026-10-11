@@ -180,14 +180,27 @@ de l'U-matrix pour ne pas confondre les deux lectures."
     (format nil "#~2,'0X~2,'0XFF" v v)))
 
 (defun diverging-hex (fraction)
-  "FRACTION dans [-1,1] -> \"#RRGGBB\", bleu (negatif) - blanc (0) - rouge
-(positif) -- meme convention que la heatmap de src/gui.lisp (rouge = poids
-positif, bleu = negatif, normalise par le plus grand |poids|)."
-  (let* ((f (max -1 (min 1 fraction)))
-         (v (round (* 255 (- 1 (abs f))))))
-    (if (minusp f)
-        (format nil "#~2,'0X~2,'0XFF" v v)
-        (format nil "#FF~2,'0X~2,'0X" v v))))
+  "FRACTION dans [-1,1] -> \"#RRGGBB\" : la palette du visualiseur MLP
+historique (cf. img/ecarlate-sin.png, L'Ecarlate, 2001 -- fond noir, arcs
+colores sur tout le spectre), pas la palette blanc-rouge/blanc-bleu de la
+heatmap de src/gui.lisp (differente, pas touchee ici). Quatre points de
+controle, interpolation lineaire entre eux : bleu (-1, negatif extreme),
+vert (-0.5, negatif median), jaune (+0.5, positif median), rouge (+1,
+positif extreme) -- la transition vert -> jaune traverse donc le zero sans
+point de controle qui lui soit propre."
+  (let ((f (max -1 (min 1 fraction))))
+    (flet ((lerp (a b u) (round (+ a (* u (- b a)))))
+           (rgb (r g b) (format nil "#~2,'0X~2,'0X~2,'0X" r g b)))
+      (cond
+        ((<= f -0.5)
+         (let ((u (/ (- f -1.0) 0.5)))
+           (rgb 0 (lerp 0 255 u) (lerp 255 0 u))))
+        ((<= f 0.5)
+         (let ((u (/ (- f -0.5) 1.0)))
+           (rgb (lerp 0 255 u) 255 0)))
+        (t
+         (let ((u (/ (- f 0.5) 0.5)))
+           (rgb 255 (lerp 255 0 u) 0)))))))
 
 (defun render-dot (dot-text path format engine &key extra-args)
   "Ecrit DOT-TEXT (une chaine, deja une source DOT complete) dans PATH si

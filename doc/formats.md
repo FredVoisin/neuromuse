@@ -101,10 +101,9 @@ som method assumes, same situation as `save` (`write-dot` errors clearly rather 
 
 ### Coloring edges by weight, and hiding labels
 
-The generic method takes `:color` (nil by default) and `:edge-label` (t by default): color edges red
-(positive) / blue (negative), normalized by the net's largest `|weight|` — the same convention as the
-heatmap in `src/gui.lisp` — instead of, or alongside, the numeric label. `:node-label` (t by default)
-controls whether each node shows its own identifier at all:
+The generic method takes `:color` (nil by default) and `:edge-label` (t by default): color edges by
+weight, normalized by the net's largest `|weight|`, instead of, or alongside, the numeric label.
+`:node-label` (t by default) controls whether each node shows its own identifier at all:
 
 ```lisp
 (write-dot xor "xor.png" :format :png :color t)                                  ;; colored AND labeled
@@ -112,11 +111,19 @@ controls whether each node shows its own identifier at all:
 (write-dot xor "xor.png" :format :png :color t :edge-label nil :node-label nil)  ;; color only, nothing else
 ```
 
+The palette (`diverging-hex`, `src/read-write.lisp`) isn't a plain red/blue fade through white — it's
+the one the original (2001-era) MLP visualizer used, on a black background: blue at the most negative
+weight, green at the median negative, yellow at the median positive, red at the most positive, linearly
+interpolated between those four stops (see `img/ecarlate-sin.png`, from *L'Écarlate*, for the look this
+is drawn from — `src/gui.lisp`'s own live heatmap uses a separate, simpler white-to-red/white-to-blue
+convention, not changed here).
+
 `:edge-label`/`:node-label` are the same two knobs on every `write-dot` method (generic, som,
 hopfield/auto-assoc) — just not always with the same default, since what a node shows by default
 differs per shape of graph (see each section below). `:color` is also accepted by every method, but
-*not* with the same meaning: red/blue by weight sign for the generic method and hopfield/auto-assoc,
-grayscale by neighbour distance for a som (see its own section) — each method only reads the keywords
+*not* with the same meaning: this red/yellow/green/blue spectrum by weight sign for the generic method
+and hopfield/auto-assoc, grayscale by neighbour distance for a som (see its own section) — each method
+only reads the keywords
 it documents, so passing one a method doesn't recognize (e.g. `:color` to a method that predates this
 option) is silently ignored rather than an error: CLOS checks keyword validity against the union of
 *all* methods applicable to that `ann`'s class, not just the one actually invoked.
