@@ -177,6 +177,12 @@ default) instead of letting the engine lay them out:
 (write-dot my-som "plane-3.png" :format :png :mode :component :component 3)  ;; one of 18 planes
 ```
 
+<img src="../img/som-umatrix-demo.png" alt="U-matrix render of an 8x8 SOM, grayscale nodes and edges with a visible darker cluster boundary" width="200">
+
+*(An 8×8 som, 5 inputs, after 200 training steps, `:mode :u-matrix` — the default — rendered with
+`neato`. The darker band is a cluster boundary: neighbours there have more dissimilar weight vectors
+than elsewhere on the map.)*
+
 **What an edge means here is not what it means for an mlp.** A som has no neuron-to-neuron connection
 to show in the first place — each neuron's only weights point at the *input* (`(weights neuron)`), never
 at another neuron, so unlike the generic method's edges, these aren't synaptic weights at all:
