@@ -154,21 +154,27 @@
         (dotimes (j (length error-retropopagation) (push temp f))
           (setf temp (+ temp (nth i (nth j error-retropopagation)))))))))
 
-(defun update-hidden-weights (hidden-layer input hidden-signal-error n)
+(defun update-hidden-weights (hidden-layer input hidden-signal-error n &key (radius 0))
+  "Correction du pas de retropropagation pour HIDDEN-LAYER. RADIUS > 0 (defaut
+0, donc sans effet) repartit en plus la correction de chaque neurone cible
+sur ses voisins d'indice dans la couche (DIFFUSE-ROWS, maths.lisp, meme
+falloff gaussien que le voisinage d'un SOM) -- experimental, cf.
+fred/lambda-calcul-neuromuse.md."
   (let ((DW (make-listarray (length hidden-layer) (length (car hidden-layer)))))
     (dotimes (i (length hidden-signal-error))
       (dotimes (j (length input))
         (setf (nth j (nth i DW))
 	      (* (elt hidden-signal-error i) (elt input j) n))))
-    (add-2-matrices hidden-layer DW)))
+    (add-2-matrices hidden-layer (diffuse-rows DW radius))))
 
-(defun update-output-weights (output-layer hidden-answer output-signal-error n)
+(defun update-output-weights (output-layer hidden-answer output-signal-error n &key (radius 0))
+  "Comme UPDATE-HIDDEN-WEIGHTS, pour OUTPUT-LAYER."
   (let ((DZ (make-listarray (length output-layer) (length (car output-layer)))))
     (dotimes (i (length output-signal-error))
       (dotimes (j (length hidden-answer))
         (setf (nth j (nth i DZ))
 	      (* (elt output-signal-error i) (elt hidden-answer j) n))))
-    (add-2-matrices output-layer DZ)))
+    (add-2-matrices output-layer (diffuse-rows DZ radius))))
 
 (defun error-retropropagation (output-layer output-signal-error)
   (let ((dd (make-listarray (length output-layer) (length (car output-layer)))))
@@ -182,6 +188,7 @@
 	(net (noise mlp (* (learn-fact mlp) (net-temp mlp))))
 	(input (input mlp))
 	(learn (learn-fact mlp))
+	(radius (radius mlp))
 	(hidden-func (hidden-fun mlp))
 	(out-func (out-fun mlp))
 	(thresh (threshold mlp))
@@ -224,15 +231,15 @@
       (if (zerop down)
 	  (setf (car (net mlp)) (update-hidden-weights (car net) input
 						       (car hidden-signal-error)
-						       learn))
+						       learn :radius radius))
 	  (setf (nth down (net mlp)) (update-hidden-weights (nth down net)
 							    (nth (- down 1) hidden-answer-cell)
 							    (nth down hidden-signal-error)
-							    learn))))
+							    learn :radius radius))))
     (setf (car (last (net mlp))) (update-output-weights (car (last net))
 							(car (last hidden-answer-cell))
 							out-signal-error
-							learn)
+							learn :radius radius)
 	  e (check-error output-answer-cell goal thresh))
     (setf (current-error mlp) e)  ;; l'erreur du pas, homogeneite : learn ne renvoie que mlp
     (values mlp)))
@@ -330,6 +337,7 @@
 	(input (append (input mlp) (recurrent-layer-activation mlp)))
 	(net (noise mlp (* (learn-fact mlp) (net-temp mlp))))
 	(learn (learn-fact mlp))
+	(radius (radius mlp))
 	(hidden-func (hidden-fun mlp))
 	(out-func (out-fun mlp))
 	(thresh (threshold mlp))
@@ -374,15 +382,15 @@
       (if (zerop down)
 	  (setf (car (net mlp)) (update-hidden-weights (car net) input
 						       (car hidden-signal-error)
-						       learn))
+						       learn :radius radius))
 	  (setf (nth down (net mlp)) (update-hidden-weights (nth down net)
 							    (nth (- down 1) hidden-answer-cell)
 							    (nth down hidden-signal-error)
-							    learn))))
+							    learn :radius radius))))
     (setf (car (last (net mlp))) (update-output-weights (car (last net))
 							(car (last hidden-answer-cell))
 							out-signal-error
-							learn)
+							learn :radius radius)
 	  e (check-error output-answer-cell goal thresh))
     (setf (current-error mlp) e)  ;; l'erreur du pas, homogeneite : learn ne renvoie que mlp
     (values mlp)))

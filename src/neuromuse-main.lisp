@@ -167,15 +167,23 @@ dimensions distincts.)"
     :initform 0.0 :initarg :net-temp :accessor net-temp :type float)
    (learn-fact
     :initform 0.0 :initarg :learn-fact :accessor learn-fact :type float)
-   (learn-fact-schedule
-    ;; NIL (defaut) : pas de politique, LEARN-FACT reste une valeur statique,
-    ;; modifiee a la main comme aujourd'hui. Sinon, une fonction d'un
-    ;; argument (self) : appelee pour EFFET -- elle fait elle-meme
-    ;; (setf (learn-fact self) ...) -- jamais par LEARN lui-meme, seulement
-    ;; par qui decide du rythme (boucle TRAIN-*, demon UDP, cron, REPL) ;
-    ;; remplacable a tout instant par (setf (learn-fact-schedule self) ...),
-    ;; y compris en situ. Meme principe que RADIUS-SCHEDULE sur SOM.
-    :initform nil :initarg :learn-fact-schedule :accessor learn-fact-schedule)
+   (radius
+    ;; Generalise depuis SOM (qui le redefinit a 1, son defaut historique --
+    ;; cf. som.lisp) a tout ANN. 0 par defaut : aucune portee spatiale, sans
+    ;; effet pour les classes qui ne le consultent pas (perceptron, hopfield,
+    ;; auto-assoc) et sans effet non plus pour mlp/rmlp tant qu'il reste a 0
+    ;; (cf. DIFFUSE-ROWS, maths.lisp, et LEARN sur MLP/RMLP).
+    :initform 0 :initarg :radius :accessor radius :type number)
+   (learn-schedule
+    ;; NIL (defaut) : pas de politique, LEARN-FACT et RADIUS restent des
+    ;; valeurs statiques, modifiees a la main comme aujourd'hui. Sinon, une
+    ;; fonction d'un argument (self) : appelee pour EFFET -- elle fait
+    ;; elle-meme (setf (learn-fact self) ...) et/ou (setf (radius self) ...),
+    ;; l'une et/ou l'autre selon ce qu'elle juge pertinent -- jamais appelee
+    ;; par LEARN lui-meme, seulement par qui decide du rythme (boucle
+    ;; TRAIN-*, demon UDP, cron, REPL). Remplacable a tout instant par
+    ;; (setf (learn-schedule self) ...), y compris en situ.
+    :initform nil :initarg :learn-schedule :accessor learn-schedule)
    (attention
     :initform '() :initarg :attention :accessor attention)
    (properties

@@ -168,6 +168,23 @@
     (let ((e1 (current-error mlp-xor-test)))
       (ok (< e1 e0) "error on (0 0) after training is lower than before training"))))
 
+(subtest "mlp: radius generalise depuis ANN (diffusion gaussienne de la correction)"
+  (is (radius mlp-xor-test) 0 "mlp herite le defaut neutre d'ANN, radius n'affecte rien par defaut")
+  (setf *random-state* (sb-ext:seed-random-state 7))
+  (make-mlp mlp-radius-off 2 1 3)
+  (setf (learn-fact mlp-radius-off) 0.5 (radius mlp-radius-off) 0
+        (input mlp-radius-off) (list 1 0) (goal mlp-radius-off) (list 1))
+  (learn mlp-radius-off)
+  (setf *random-state* (sb-ext:seed-random-state 7))
+  (make-mlp mlp-radius-on 2 1 3)
+  (setf (learn-fact mlp-radius-on) 0.5 (radius mlp-radius-on) 2
+        (input mlp-radius-on) (list 1 0) (goal mlp-radius-on) (list 1))
+  (learn mlp-radius-on)
+  (ok (not (equal (net mlp-radius-off) (net mlp-radius-on)))
+      "a graine et entree identiques, RADIUS > 0 change les poids appris (correction diffusee)")
+  (is (current-error mlp-radius-off) (current-error mlp-radius-on) :test #'=
+      "l'erreur du pas (calculee avant la mise a jour) ne depend pas de RADIUS"))
+
 (subtest "rmlp: construction and run"
   (make-rmlp rmlp-test 2 1 0 3)
   (is (recurrent-layer rmlp-test) 0)

@@ -6,16 +6,12 @@
 
 (defclass som (ANN)
   ((radius
-    :initform 1 :initarg :radius :accessor radius :type number)
-   (radius-schedule
-    ;; NIL (defaut) : pas de politique, RADIUS reste une valeur statique,
-    ;; modifiee a la main comme aujourd'hui (cf. examples/pinson_som.lisp).
-    ;; Sinon, une fonction d'un argument (self) : appelee pour EFFET -- elle
-    ;; fait elle-meme (setf (radius self) ...) -- jamais par LEARN lui-meme,
-    ;; seulement par qui decide du rythme (boucle TRAIN-*, demon UDP, cron,
-    ;; REPL) ; remplacable a tout instant par (setf (radius-schedule self)
-    ;; ...), y compris en situ. Meme principe que LEARN-FACT-SCHEDULE (ANN).
-    :initform nil :initarg :radius-schedule :accessor radius-schedule)
+    ;; Redefinit le defaut herite d'ANN (0) : 3, la valeur effectivement
+    ;; utilisee en pratique (examples/pinson_som.lisp, examples/labouche_som.lisp)
+    ;; plutot que l'ancien defaut de classe, 1, jamais vraiment utilise tel
+    ;; quel. LEARN-SCHEDULE (ANN) couvre aussi bien RADIUS que LEARN-FACT,
+    ;; pour l'ajustement automatique plutot que manuel.
+    :initform 3 :initarg :radius :accessor radius :type number)
    (neighbourhood
     :initform #'voisins :initarg :neighbourhood :accessor neighbourhood)
    (winner

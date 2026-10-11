@@ -983,6 +983,27 @@ les neurones a moins de RADIUS pas hexagonaux."
 (defun gaussian-hat (learn error distance)
   (* learn (exp (/ (- (expt distance 2)) (expt (* 2 error) 2)))))
 
+(defun diffuse-rows (matrix radius)
+  "Repartit chaque colonne de MATRIX (liste de lignes) sur les lignes
+voisines, pondere par GAUSSIAN-HAT : la ligne resultat I2 recoit, pour
+chaque colonne, la somme sur toutes les lignes I de (gaussian-hat 1 radius
+|I-I2|) * MATRIX[I][colonne] -- meme falloff gaussien que la correction de
+voisinage d'un SOM (NEIGHBOURHOOD-CORRECTION, som.lisp), ici applique a
+l'indice de ligne plutot qu'a une distance de grille. RADIUS proche de 0 :
+identite exacte (MATRIX inchangee), meme garde que NEIGHBOURHOOD-CORRECTION
+-- une ligne ne recoit alors que sa propre contribution."
+  (if (< radius 1e-6)
+      matrix
+      (let* ((m (length matrix))
+             (n (length (car matrix)))
+             (result (make-listarray m n #'(lambda () 0.0))))
+        (dotimes (i2 m result)
+          (dotimes (j n)
+            (setf (nth j (nth i2 result))
+                  (loop for i from 0 below m
+                        sum (* (gaussian-hat 1 radius (abs (- i i2)))
+                               (nth j (nth i matrix))))))))))
+
 ;;************         DIVERS      ********************************
 
 (defun inventaire (liste &key (test #'equal))
