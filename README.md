@@ -125,6 +125,8 @@ For a full walkthrough and more examples, see [EXAMPLES.md](doc/EXAMPLES.md).
 
 ## What's New
 
+**October 2026** — Major updates : architectures and methods (learn, etc) generalized and unified. New architectures. Matrix computation optimized. Neural nets explicitely as graphs, with export to .dot ([graphviz](https://graphviz.org/)) format.
+
 **Sept 2026** — Perceptron added with demos, MLP demos, Ltk-based GUI looking like legacy versions.
 
 **July 2026** — The project has been reorganized as a proper ASDF system with:
