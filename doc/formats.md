@@ -11,9 +11,10 @@ and [SOM-exemples.md](SOM-exemples.md) for the `xor` and `my-som` networks used 
 1. [`save`: reload a network as-is](#1-save-reload-a-network-as-is)
 2. [`trace-activation` and `trace-output`: a log over time](#2-trace-activation-and-trace-output-a-log-over-time)
 3. [`write-dot`: the network as a graph](#3-write-dot-the-network-as-a-graph)
+   - [Coloring edges by weight](#coloring-edges-by-weight)
    - [Rendering to PNG or SVG directly](#rendering-to-png-or-svg-directly)
    - [Demo: `xor`](#demo-xor)
-   - [Demo: `my-som`](#demo-my-som)
+   - [SOM: the grid instead of the connections](#som-the-grid-instead-of-the-connections)
 - [Further Reading](#further-reading)
 
 ---
@@ -72,30 +73,50 @@ has no method for them).
 
 ## 3. `write-dot`: the network as a graph
 
-Every network already has a uniform graph view — `(nodes ann)`/`(edges ann)`, one `edges` method per
-class, `nodes` derived from it mechanically (see `src/neuromuse-main.lisp`). `write-dot` is just that
-view, written out as [DOT](https://graphviz.org/doc/info/lang.html): one node per element of
-`(nodes ann)`, one directed edge `source -> target` per element of `(edges ann)`, labeled with the
-weight (rounded to 3 decimals). It works on *any* `ann` subclass unchanged — including `rosom`, which
-`save` still doesn't support:
+`write-dot` has one method per *shape* of graph, not one per class — what a network's connectivity
+means to look at differs enough between an mlp and a som that one generic rendering can't serve both
+well. Two shapes exist today:
+
+- **mlp/rmlp/perceptron/hopfield/auto-assoc** — the uniform graph view every `ann` subclass already
+  has, `(nodes ann)`/`(edges ann)` (one `edges` method per class, `nodes` derived from it mechanically,
+  see `src/neuromuse-main.lisp`): one node per element of `(nodes ann)`, one directed edge
+  `source -> target` per element of `(edges ann)`. This is the *input/output* connectivity — which
+  weight feeds which unit — which is exactly what defines these architectures.
+- **som** — the neighbour structure of the grid instead: a som is defined by *which neurons sit next to
+  which*, not by its (very densely bipartite, and not very informative to look at) connections to the
+  input. Own section below.
+
+`rosom` isn't supported by either yet — `(net rosom)` doesn't match what either method assumes, same
+situation as `save` (`write-dot` errors clearly rather than misreading it). `hopfield`/`auto-assoc` use
+the generic method as-is; a grid-positioned layout for them (their cells don't have an inherent 2D
+position, but historically got displayed on one — see `doc/auto-assoc-exemples.md`) hasn't been built.
 
 ```lisp
-(write-dot xor)                  ;; writes xor.dot in the current directory, DOT source only
-(write-dot my-som "map.dot")     ;; same, explicit path
+(write-dot xor)   ;; writes xor.dot in the current directory, DOT source only
+```
+
+### Coloring edges by weight
+
+The generic method takes `:color` (nil by default) and `:label` (t by default): color edges red
+(positive) / blue (negative), normalized by the net's largest `|weight|` — the same convention as the
+heatmap in `src/gui.lisp` — instead of, or alongside, the numeric label:
+
+```lisp
+(write-dot xor "xor.png" :format :png :color t)                 ;; colored AND labeled
+(write-dot xor "xor.png" :format :png :color t :label nil)      ;; colored only, no text
 ```
 
 ### Rendering to PNG or SVG directly
 
-Pass `:format`, and optionally `:engine` (any Graphviz layout engine — `"dot"`, the default, lays out
-hierarchically; `"neato"`, `"fdp"`, `"sfdp"` lay out by force; `"circo"`, `"twopi"` lay out radially).
-`write-dot` writes the DOT source to a temporary file, renders it with the external engine
-(`sb-ext:run-program`, so this needs SBCL and a working Graphviz install — `apt install graphviz` on
-Debian), and deletes the temporary file once the render succeeds:
+Pass `:format`, and optionally `:engine` (any Graphviz layout engine — `"dot"`, the default for the
+generic method, lays out hierarchically; `"neato"`, `"fdp"`, `"sfdp"` lay out by force; `"circo"`,
+`"twopi"` lay out radially). `write-dot` writes the DOT source to a temporary file, renders it with the
+external engine (`sb-ext:run-program`, so this needs SBCL and a working Graphviz install —
+`apt install graphviz` on Debian), and deletes the temporary file once the render succeeds:
 
 ```lisp
-(write-dot xor "xor.png" :format :png)                      ;; dot -Tpng, hierarchical layout
-(write-dot xor "xor.svg" :format :svg)                      ;; same, SVG
-(write-dot my-som "map.png" :format :png :engine "neato")   ;; force-directed layout
+(write-dot xor "xor.png" :format :png)    ;; dot -Tpng, hierarchical layout
+(write-dot xor "xor.svg" :format :svg)    ;; same, SVG
 ```
 
 If the engine can't be found or fails, `write-dot` warns and keeps the `.dot` file instead of silently
@@ -103,7 +124,6 @@ losing your run — nothing is lost, you can always render it by hand afterward:
 
 ```sh
 dot -Tpng xor.dot -o xor.png
-neato -Tsvg map.dot -o map.svg
 ```
 
 `:format :dot` (the default) never touches an external process at all — the DOT text itself is always
@@ -125,26 +145,48 @@ Three input/hidden/output layers, nodes named `(layer index)` (layer 0 = input),
 `(2 0)` — six weighted edges in total, `dot`'s hierarchical layout puts the layers in order
 top-to-bottom.)*
 
-### Demo: `my-som`
+### SOM: the grid instead of the connections
 
-The network built and trained in [SOM-exemples.md](SOM-exemples.md):
+A som's `write-dot` method takes `:mode`, `:component`, `:labels`, and `:scale` in place of `:color`,
+and defaults `:engine` to `"neato"` instead of `"dot"` — a different method, not the generic one with
+different defaults. It draws `(grid-neighbour-pairs ann)` (`src/som.lisp`: unique pairs of neurons that
+are actual grid neighbours — 4-connected for a `:square` lattice, 6-connected for `:hex`, whichever
+`(topology my-som)` says — not the input connections `edges` would give) at **fixed positions**
+(`pos="x,y!"`, which `neato` honors directly — hence the engine default) instead of letting the engine
+lay them out:
 
 ```lisp
 (make-instance 'som :name 'my-som :size 144 :input 18)
 ;; ... train as in SOM-exemples.md ...
-(write-dot my-som "map.png" :format :png :engine "neato")
+(write-dot my-som "map.png" :format :png)                       ;; U-matrix (default mode)
+(write-dot my-som "plane-3.png" :format :png :mode :component :component 3)  ;; one of 18 planes
 ```
 
-Every neuron connects to every input dimension (a star/bipartite structure, not a layered one like an
-mlp's), so nodes are either `neuron` instances (one per grid cell, 144 here) or `(:input j)` (one per
-input dimension, 18 here) — `neato`'s force-directed layout reads this kind of densely-connected graph
-better than `dot`'s hierarchical one, though at 144×18 = 2592 edges it's still dense enough that
-cropping to a handful of neurons (`(net my-som)` is a plain list — `(write-dot <a toy som>)` on a much
-smaller one, say `:size 9`, is far more legible than the full map).
+**`:mode :u-matrix`** (the default) colors each edge, grayscale, by the distance between the two
+neurons' weight vectors (`(euclidian (weights n1) (weights n2))`) — dark edges mark cluster boundaries.
+Each node is colored by its *average* distance to its grid neighbours, same scale.
 
-A `rosom`'s graph is the same idea, twice over: content neurons' edges tagged `(:input j)`, context
-neurons' edges tagged `(:context j)` — two different dimension spaces (input vs. `input-context`'s
-per-neuron phase state), kept visually distinct even though both use the same `j` indices.
+**`:mode :component`** needs `:component <k>`, the index of one input dimension (0 to `(1- (in-size
+my-som))`): colors each node, white to blue, by that one weight component — one of `(in-size my-som)`
+"component planes," showing how a single input dimension is distributed across the map. Call once per
+dimension (`(dotimes (k (in-size my-som)) (write-dot my-som (format nil "plane-~D.png" k) :format :png
+:mode :component :component k))` for all of them at once) — edges stay drawn, undecorated, just for
+reference.
+
+**`:labels`** (nil by default) annotates each node with a value you supply — a sequence as long as
+`(net my-som)`, in that order. Nothing in `som.lisp` keeps a history of which neuron won how often (same
+reason the live viewer in `src/gui.lisp` accumulates its own `winner-history` rather than reading one
+off the network), so a best-matching-unit count has to be tallied by the caller first, e.g. with
+`inventaire-h` (`src/maths.lisp`) over a logged sequence of winners, then passed in:
+
+```lisp
+(write-dot my-som "map.png" :format :png :labels (mapcar #'second (inventaire-h winner-log)))
+```
+
+A `:boundary :torus` map's wraparound edges (first and last neuron of a row/column) still get drawn —
+`grid-neighbour-pairs` computes the topology correctly either way — but on this flat layout they end up
+collinear with, and so visually indistinguishable from, the ordinary edges along that same row/column:
+the topology is right, the picture just doesn't make the wraparound obvious.
 
 ---
 
@@ -153,5 +195,8 @@ per-neuron phase state), kept visually distinct even though both use the same `j
 - [EXAMPLES.md](EXAMPLES.md) — general training workflow.
 - [MLP-exemples.md](MLP-exemples.md), [SOM-exemples.md](SOM-exemples.md) — the `xor`/`my-som` networks
   used above.
-- `src/neuromuse-main.lisp` — `nodes`/`edges`, the generic graph view `write-dot` reads.
-- `src/read-write.lisp` — `save`, `write-dot`, `trace-activation`/`trace-output`, full docstrings.
+- `src/neuromuse-main.lisp` — `nodes`/`edges`, the generic graph view the mlp/rmlp/perceptron/hopfield/
+  auto-assoc `write-dot` method reads.
+- `src/som.lisp` — `grid-neighbour-pairs`, the grid topology the som `write-dot` method reads.
+- `src/read-write.lisp` — `save`, `write-dot` (both methods), `trace-activation`/`trace-output`, full
+  docstrings.

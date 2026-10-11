@@ -312,6 +312,29 @@ gagnant) et faisait echouer LEARN."
 NEURON."
   (mapcan #'edges (net self)))
 
+(defun grid-neighbour-pairs (ann)
+  "Paires uniques (I J), I < J, des neurones directement voisins sur la
+grille de ANN -- 4-connexe pour un lattice :square (haut/bas/gauche/droite),
+6-connexe pour :hex (meme topologie que celle que LEARN utilise pour
+l'apprentissage, cf. MANHATTAN avec :lattice, maths.lisp, qui compte les pas
+hexagonaux sur une grille :hex et gere deja :boundary :torus). Pas la
+fenetre gaussienne de LEARN : juste la topologie, pour WRITE-DOT
+(read-write.lisp) -- un SOM se definit par ce voisinage de grille, pas par
+ses connexions a l'entree (EDGES, ci-dessus)."
+  (let* ((n (length (net ann)))
+         (topos (topology ann))
+         (side (floor (expt n (/ 1 (cadr topos)))))
+         (lattice (getf (cddr topos) :lattice :square))
+         (boundary (getf (cddr topos) :boundary :bounded))
+         (pairs '()))
+    (dotimes (i n (nreverse pairs))
+      (let ((ci (2d i n)))
+        (dolist (v (voisins ci 1 side :boundary boundary))
+          (let ((j (d2 (first v) (second v) n)))
+            (when (and (< i j)
+                       (= 1 (manhattan ci v :side side :lattice lattice :boundary boundary)))
+              (push (list i j) pairs))))))))
+
 #|
 (defmethod nnsave ((self som) &optional (path "saved-som.lisp"))
   (let ((slots (structure-slot-names (type-of self))))
