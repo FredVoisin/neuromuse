@@ -183,10 +183,10 @@ Training visibly reshapes the graph. Two renders of the same 2-4-1 xor mlp (`:co
 `:node-label nil`), one before training and one after:
 
 <img src="../img/xor0.png" alt="xor mlp graph at random initialization, edge colors scattered with no visible pattern" width="200">
-<img src="../img/xor1.png" alt="xor mlp graph after 9000 training epochs, edge colors settled into a few dominant bands" width="200">
+<img src="../img/xor1.png" alt="xor mlp graph after 3000 training epochs, edge colors settled into a few dominant bands" width="200">
 
 *(Left: freshly initialized weights (`xor0.png`) — edge colors scattered across the palette with no
-structure. Right: the same network after 9000 epochs of training that converged on all four XOR
+structure. Right: the same network after 3000 epochs of training that converged on all four XOR
 patterns (`xor1.png`) — weights have settled into a handful of saturated colors rather than the
 initial scatter, visible structure left by training, not just a cosmetic difference.)*
 
