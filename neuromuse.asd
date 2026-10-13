@@ -3,7 +3,7 @@
 |#
 
 (defsystem "neuromuse"
-  :version "2.12.0"
+  :version "2026"
   :author "Fred Voisin"
   :license " GNU GENERAL PUBLIC LICENSE V3"
   :depends-on (:sb-bsd-sockets)
