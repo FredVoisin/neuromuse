@@ -1,4 +1,4 @@
-# Philosophie : pourquoi neuromuse existe
+# Philosophie du projet neuromuse
 
 *[English version](PHILOSOPHY.md)*
 
@@ -18,16 +18,14 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
 
 <p align="center">
   <img src="../img/wwwneuromuse2005.png" alt="Page d'accueil du site neuromuse.net en 2005" width="500"><br>
-  <sub>Le site neuromuse.net tel qu'il se présentait en 2005, hébergé au CIRM (Nice).</sub>
+  <sub>Page d'accueil du site <a href="https://euromuse.net">neuromuse.net</a> en 2005, hébergé au CIRM (Nice).</sub>
 </p>
 
 ---
 
-
-*Note de l'auteur : ce qui suit a été ajouté par claude.ia en Sept. 2026, traduit de la [version anglaise](PHILOSOPHY.md) très discutable, éventuellement superflue, à corriger !*
+*Note de l'auteur : ce qui suit a été écrit par claude.ia en sept. 2026, traduit de la [version anglaise](PHILOSOPHY.md), discutable, à corriger !*
 
 ## Principes fondamentaux
-
 
 ### 1. **L'art est le processus, pas seulement le produit**
 
