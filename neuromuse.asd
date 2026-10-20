@@ -20,6 +20,7 @@
 		 (:file "som")
 		 (:file "rosom")
 		 (:file "transformer")
+		 (:file "midi")
 		 (:file "read-write")
 		 (:file "osc")
 		 (:file "udp"))))
