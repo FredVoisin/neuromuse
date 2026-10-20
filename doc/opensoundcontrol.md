@@ -52,16 +52,24 @@ run it at the REPL, send something from Pd/Max, see it printed.
 
 One method on `ann` itself, so it works for *every* architecture — including one that lives outside
 `:neuromuse` entirely, like `fred/transformer.lisp`'s `transformer` class, since all it needs is a
-`setf`-able accessor. A control message is `(address "slot" value)` — the address is never read:
+`setf`-able accessor. The slot name is the **last segment of the OSC address** — the usual OSC
+convention, and what most controllers/patches naturally produce:
 
 ```lisp
-("/neuromuse/control" "learn-fact" 0.1)   ;; -> (setf (learn-fact ann) 0.1)
+("/neuromuse/control/learn-fact" 0.1)   ;; -> (setf (learn-fact ann) 0.1)
 ```
 
-`osc-control` resolves `"learn-fact"` to the symbol `NEUROMUSE::LEARN-FACT` via `find-symbol` and calls
-its `setf` function if one exists, or `warn`s ("OSC control : pas d'accesseur ...") if it doesn't —
-works for any slot with a `setf`-able accessor (`learn-fact`, `temp`, `net-temp`, `threshold`,
-`radius`...), not a fixed list.
+Falls back to an older convention, slot name as the first argument instead, when the address's last
+segment doesn't name an existing accessor (e.g. a generic address shared by several parameters):
+
+```lisp
+("/neuromuse/control" "learn-fact" 0.1)   ;; -> (setf (learn-fact ann) 0.1), same result
+```
+
+`osc-control` resolves the slot name to a symbol via `find-symbol` in `:neuromuse` and calls its
+`setf` function if one exists, or `warn`s if it doesn't (unknown slot name, in either form) — works
+for any slot with a `setf`-able accessor (`learn-fact`, `temp`, `net-temp`, `threshold`, `radius`...),
+not a fixed list.
 
 ```lisp
 (setf (superdaemon acdll-transformer) t
@@ -146,14 +154,14 @@ message, then route on the address:
  [route /neuromuse/note /neuromuse/section]
 ```
 
-**Pd sending control to neuromuse** (`osc-control-server`, §2) — build an OSC message whose second
-and third arguments are the slot name and the new value, format it as a packet, and send it to the
-port the control server is listening on:
+**Pd sending control to neuromuse** (`osc-control-server`, §2) — put the slot name at the end of the
+address and the new value as the single argument, format it as a packet, and send it to the port the
+control server is listening on:
 
 ```
-[... learn-fact 0.1(   (a message box, or anything producing that list)
+[... 0.1(                           (a message box, or anything producing that value)
       |
- [oscformat /neuromuse/control]
+ [oscformat /neuromuse/control/learn-fact]
       |
  [udpsend 127.0.0.1 9002]
 ```

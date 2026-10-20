@@ -172,19 +172,30 @@ numeriques de chaque message recu deviennent l'entree du reseau"))
 		   (sleep (latence ann))))
 	   (sb-bsd-sockets:socket-close s)))
 
-;; control : message (adresse "slot" valeur), par exemple
+;; control : le nom du slot est le dernier segment du chemin de l'adresse
+;; (convention OSC habituelle -- la plupart des controleurs/patches
+;; construisent l'adresse ainsi), par exemple
+;;   ("/neuromuse/control/learn-fact" 0.1)  ->  (setf (learn-fact ann) 0.1)
+;; ou, a defaut (quand ce segment ne nomme pas un accesseur existant),
+;; l'ancienne convention, slot en premier argument :
 ;;   ("/neuromuse/control" "learn-fact" 0.1)  ->  (setf (learn-fact ann) 0.1)
-;; l'adresse n'est pas lue ; le slot est un accesseur du reseau.
 
 (defun osc-control (ann message)
   "Applique a ANN le message de controle MESSAGE (voir ci-dessus)."
-  (let ((slot (second message))
-	(value (third message)))
-    (when (stringp slot)
-      (let ((accessor (find-symbol (string-upcase slot) :neuromuse)))
-	(if (and accessor (fboundp (list 'setf accessor)))
-	    (funcall (fdefinition (list 'setf accessor)) value ann)
-	    (warn "OSC control : pas d'accesseur ~S" slot))))))
+  (let* ((address (first message))
+	 (args (rest message))
+	 (slash (position #\/ address :from-end t))
+	 (path-slot (and slash (< (1+ slash) (length address)) (subseq address (1+ slash))))
+	 (path-accessor (and path-slot (find-symbol (string-upcase path-slot) :neuromuse))))
+    (if (and path-accessor (fboundp (list 'setf path-accessor)))
+	(funcall (fdefinition (list 'setf path-accessor)) (first args) ann)
+	(let ((slot (and (stringp (first args)) (first args))))
+	  (if slot
+	      (let ((accessor (find-symbol (string-upcase slot) :neuromuse)))
+		(if (and accessor (fboundp (list 'setf accessor)))
+		    (funcall (fdefinition (list 'setf accessor)) (second args) ann)
+		    (warn "OSC control : pas d'accesseur ~S" slot)))
+	      (warn "OSC control : impossible de determiner le slot pour ~S" message))))))
 
 #+sbcl (defgeneric osc-control-server (ann port lenght)
 	 (:documentation "control server for neural nets, OSC"))
