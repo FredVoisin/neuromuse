@@ -1,4 +1,4 @@
-;;;;; MISC (generic Lisp utilities and UDP wire-format helpers)
+;;;;; utils.lisp - generic Lisp utilities 
 
 (in-package :neuromuse)
 
@@ -17,7 +17,7 @@
        array))))
 
 ;(make-listarray 2 3)
-;(make-listarray 2 4 #'(lambda () (random 1.0)))3
+;(make-listarray 2 4 #'(lambda () (random 1.0)))
 
 (defun ldlp (l)
   "Test if every element of l is a list of lists."
@@ -53,10 +53,6 @@
 (defun test-t (list test)
   (if (member test list :test #'equalp)
     list nil))
-
-;; make-new-symbol is defined in neuromuse-main.lisp (loaded before this
-;; file); it used to be duplicated here too, which just produced an SBCL
-;; "redefining" warning on every load for an identical definition.
 
 ;; formatage
 
@@ -112,5 +108,14 @@ containing the whole rest of the given `string', if any."
           collect (subseq string start index)
           count 1 into word-count
           while index)))
+
+;;; ------------------------------------------------------------------
+;;; 3. Utilitaires communs aux exemples
+
+(defun differences (seq reference)
+  (loop for x in seq
+        for y in reference
+        for i from 0
+        unless (equal x y) collect i))
 
 ; eof

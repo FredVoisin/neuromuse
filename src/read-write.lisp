@@ -136,6 +136,22 @@ tout le reste opere sur IT."
   (error "SAVE ne gere pas encore ROSOM : (net rosom) est (neurones-contenu
 neurones-contexte), pas une liste plate de neurones comme pour SOM. A faire."))
 
+
+;;; In case of, to save/load ANN net only
+
+(defun save-weights (path &key (net acdll-rmlp))
+  "Ecrit les poids de NET dans PATH."
+  (with-open-file (out path :direction :output :if-exists :supersede)
+    (with-standard-io-syntax (prin1 (net net) out)))
+  path)
+
+(defun load-weights (path &key (net acdll-rmlp))
+  "Recharge dans NET des poids ecrits par SAVE-WEIGHTS (meme topologie)."
+  (with-open-file (in path)
+    (setf (net net) (with-standard-io-syntax (read in))))
+  net)
+
+
 ;;; ------------------------------------------------------------------
 ;;; WRITE-DOT : (net ann) au format DOT (Graphviz), pour neato/dot/fdp/...
 ;;; ------------------------------------------------------------------
