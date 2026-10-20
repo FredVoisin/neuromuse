@@ -125,7 +125,7 @@ For a full walkthrough and more examples, see [EXAMPLES.md](doc/EXAMPLES.md).
 
 ## What's New
 
-**October 2026** — Major updates : architectures and methods (learn, etc) generalized and unified. New architectures. Matrix computation optimized. Neural nets explicitely as graphs, with export to .dot ([graphviz](https://graphviz.org/)) format.
+**October 2026** — Major updates : architectures and methods (learn, etc) generalized and unified. New architectures. Matrix computation optimized. Neural nets explicitely as graphs, with export to .dot ([graphviz](https://graphviz.org/)) format. OpenSoundControl layer.
 
 **Sept 2026** — Perceptron added with demos, MLP demos, Ltk-based GUI looking like legacy versions.
 
@@ -158,6 +158,7 @@ For a full walkthrough and more examples, see [EXAMPLES.md](doc/EXAMPLES.md).
 
 Open issues and PRs welcome. Known items:
 
+- Graphical representions of transformers' net  
 - Port graphical network rendering (originally built on Macintosh Common Lisp's CLOS toolbox) to SBCL —
   **en cours**: a first Ltk-based version lives in `src/gui.lisp` (heatmap and neuron-graph views, live activity)
 - Extend `rmlp` to support Jordan-style recurrence alongside Elman
