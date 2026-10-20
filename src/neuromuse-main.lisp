@@ -1,6 +1,6 @@
-;;;; neuromuse version 2.2
+;;;; neuromuse version 202610
 ;;;; LISP code to simulate artificial neural networks
-;;;; (C) Frederic Voisin 2000-2021
+;;;; Frederic Voisin 2000-2026
 ;;;; <fred@fredvoisin.com>, <www.neuromuse.net>
 ;;;;
 ;;;; neuromuse.lisp
@@ -10,14 +10,14 @@
 
 (defvar *lisp-version* (lisp-implementation-type))
 
-(format t "Neuromuse v. 2.2 for ~S on ~S with cpu ~S !~%"
+(format t "Neuromuse v. 2026 for ~S on ~S with cpu ~S !~%"
 	(if *lisp-version* *lisp-version* 'unknown)
 	(machine-instance) (machine-version))
 
 ;(format t "Loading:~%")
 ;(format t "neuromuse-main.lisp...~%")
 
-(format t "Auteur :  Frederic Voisin, 2000-2021~&")
+(format t "Auteur :  Frederic Voisin, 2000-2026~&")
 
 ;; #+sbcl (require 'sb-thread)
 

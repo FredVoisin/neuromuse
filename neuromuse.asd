@@ -19,6 +19,7 @@
 		 (:file "auto-assoc")
 		 (:file "som")
 		 (:file "rosom")
+		 (:file "transformer")
 		 (:file "read-write")
 		 (:file "osc")
 		 (:file "udp"))))
