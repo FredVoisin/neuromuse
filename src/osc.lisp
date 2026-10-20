@@ -172,30 +172,52 @@ numeriques de chaque message recu deviennent l'entree du reseau"))
 		   (sleep (latence ann))))
 	   (sb-bsd-sockets:socket-close s)))
 
-;; control : le nom du slot est le dernier segment du chemin de l'adresse
-;; (convention OSC habituelle -- la plupart des controleurs/patches
+;; control : le nom (slot ou action) est le dernier segment du chemin de
+;; l'adresse (convention OSC habituelle -- la plupart des controleurs/patches
 ;; construisent l'adresse ainsi), par exemple
 ;;   ("/neuromuse/control/learn-fact" 0.1)  ->  (setf (learn-fact ann) 0.1)
 ;; ou, a defaut (quand ce segment ne nomme pas un accesseur existant),
-;; l'ancienne convention, slot en premier argument :
+;; l'ancienne convention, nom en premier argument :
 ;;   ("/neuromuse/control" "learn-fact" 0.1)  ->  (setf (learn-fact ann) 0.1)
+;;
+;; Si le nom resolu n'est pas un accesseur SETF-able mais une fonction
+;; ordinaire -- typiquement une methode de generation specialisee sur ANN,
+;; p. ex. GENERATE dans fred/transformer.lisp -- elle est appelee directement
+;; avec ANN et les arguments restants, plutot que de forcer un SETF :
+;;   ("/neuromuse/control/generate" 32)     ->  (generate ann 32)
+;;   ("/neuromuse/control" "generate" 32)    ->  (generate ann 32)
+;; meme serveur, meme thread (osc-control-server) : "control" couvre donc a
+;; la fois le reglage continu d'un parametre et le declenchement ponctuel
+;; d'une action, selon ce que le nom designe.
 
 (defun osc-control (ann message)
-  "Applique a ANN le message de controle MESSAGE (voir ci-dessus)."
-  (let* ((address (first message))
-	 (args (rest message))
-	 (slash (position #\/ address :from-end t))
-	 (path-slot (and slash (< (1+ slash) (length address)) (subseq address (1+ slash))))
-	 (path-accessor (and path-slot (find-symbol (string-upcase path-slot) :neuromuse))))
-    (if (and path-accessor (fboundp (list 'setf path-accessor)))
-	(funcall (fdefinition (list 'setf path-accessor)) (first args) ann)
-	(let ((slot (and (stringp (first args)) (first args))))
-	  (if slot
-	      (let ((accessor (find-symbol (string-upcase slot) :neuromuse)))
-		(if (and accessor (fboundp (list 'setf accessor)))
-		    (funcall (fdefinition (list 'setf accessor)) (second args) ann)
-		    (warn "OSC control : pas d'accesseur ~S" slot)))
-	      (warn "OSC control : impossible de determiner le slot pour ~S" message))))))
+  "Applique a ANN le message de controle MESSAGE (voir ci-dessus) : regle un
+parametre (SETF sur un accesseur) ou declenche une action (appel direct
+d'une fonction ordinaire, p. ex. une generation), selon ce que nomme
+l'adresse."
+  (labels ((apply-named (name args)
+             "Si NAME nomme, dans :NEUROMUSE, un accesseur SETF-able, regle ce
+slot de ANN avec (first args) ; sinon, si NAME nomme une fonction ordinaire,
+l'appelle avec ANN et ARGS. Renvoie T si NAME a resolu a l'un des deux."
+             (let ((symbol (find-symbol (string-upcase name) :neuromuse)))
+               (cond
+                 ((and symbol (fboundp (list 'setf symbol)))
+                  (funcall (fdefinition (list 'setf symbol)) (first args) ann)
+                  t)
+                 ((and symbol (fboundp symbol))
+                  (apply symbol ann args)
+                  t)))))
+    (let* ((address (first message))
+           (args (rest message))
+           (slash (position #\/ address :from-end t))
+           (path-name (and slash (< (1+ slash) (length address)) (subseq address (1+ slash)))))
+      (unless (and path-name (apply-named path-name args))
+        (let ((name (and (stringp (first args)) (first args))))
+          (cond
+            ((null name)
+             (warn "OSC control : impossible de determiner le nom (accesseur ou fonction) pour ~S" message))
+            ((not (apply-named name (rest args)))
+             (warn "OSC control : pas d'accesseur ni de fonction ~S" name))))))))
 
 #+sbcl (defgeneric osc-control-server (ann port lenght)
 	 (:documentation "control server for neural nets, OSC"))

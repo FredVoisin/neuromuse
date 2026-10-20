@@ -44,7 +44,7 @@ Two thin wrappers over `sb-bsd-sockets`, the OSC equivalents of `udp.lisp`'s `se
 `receive-osc` is a quick way to check what's actually arriving on a port before wiring a real server —
 run it at the REPL, send something from Pd/Max, see it printed.
 
-## 2. `osc-control-server`: remote control of any network
+## 2. `osc-control-server`: remote control — and triggering — of any network
 
 ```lisp
 #+sbcl (defmethod osc-control-server ((ann ann) (port number) (lenght number)) ...)
@@ -52,24 +52,38 @@ run it at the REPL, send something from Pd/Max, see it printed.
 
 One method on `ann` itself, so it works for *every* architecture — including one that lives outside
 `:neuromuse` entirely, like `fred/transformer.lisp`'s `transformer` class, since all it needs is a
-`setf`-able accessor. The slot name is the **last segment of the OSC address** — the usual OSC
-convention, and what most controllers/patches naturally produce:
+`setf`-able accessor or an ordinary function. The name — a parameter to set, or an action to trigger —
+is the **last segment of the OSC address** — the usual OSC convention, and what most
+controllers/patches naturally produce:
 
 ```lisp
 ("/neuromuse/control/learn-fact" 0.1)   ;; -> (setf (learn-fact ann) 0.1)
 ```
 
-Falls back to an older convention, slot name as the first argument instead, when the address's last
-segment doesn't name an existing accessor (e.g. a generic address shared by several parameters):
+Falls back to an older convention, name as the first argument instead, when the address's last
+segment doesn't resolve (e.g. a generic address shared by several parameters/actions):
 
 ```lisp
 ("/neuromuse/control" "learn-fact" 0.1)   ;; -> (setf (learn-fact ann) 0.1), same result
 ```
 
-`osc-control` resolves the slot name to a symbol via `find-symbol` in `:neuromuse` and calls its
-`setf` function if one exists, or `warn`s if it doesn't (unknown slot name, in either form) — works
-for any slot with a `setf`-able accessor (`learn-fact`, `temp`, `net-temp`, `threshold`, `radius`...),
-not a fixed list.
+`osc-control` resolves the name to a symbol via `find-symbol` in `:neuromuse`, then:
+
+- if it names a `setf`-able accessor, sets that slot (`learn-fact`, `temp`, `net-temp`, `threshold`,
+  `radius`... any slot, not a fixed list) — a continuous *parameter*;
+- otherwise, if it names an ordinary function, calls it directly with `ann` and whatever arguments
+  follow — a one-shot *action*, e.g. a generation step defined on the network's own class:
+
+```lisp
+("/neuromuse/control/generate" 32)       ;; -> (generate ann 32)
+("/neuromuse/control" "generate" 32)     ;; -> (generate ann 32), same result
+```
+
+— so the exact same server/thread that adjusts `learn-fact` live can also kick off a trained network's
+generation (whatever that network calls it — `generate`, `play-events-osc`, its own free-generation
+function...), from a plain OSC message, with no extra server to run. `osc-control` `warn`s only when
+the resolved name is neither a `setf`-able accessor nor a callable function (unknown name, in either
+form).
 
 ```lisp
 (setf (superdaemon acdll-transformer) t
@@ -154,9 +168,10 @@ message, then route on the address:
  [route /neuromuse/note /neuromuse/section]
 ```
 
-**Pd sending control to neuromuse** (`osc-control-server`, §2) — put the slot name at the end of the
-address and the new value as the single argument, format it as a packet, and send it to the port the
-control server is listening on:
+**Pd sending control to neuromuse** (`osc-control-server`, §2) — put the slot name (or the name of an
+action to trigger, e.g. a generation function) at the end of the address and the value/arguments as
+the message's contents, format it as a packet, and send it to the port the control server is
+listening on:
 
 ```
 [... 0.1(                           (a message box, or anything producing that value)
@@ -164,6 +179,17 @@ control server is listening on:
  [oscformat /neuromuse/control/learn-fact]
       |
  [udpsend 127.0.0.1 9002]
+```
+
+Same shape to trigger an action instead of setting a parameter — e.g. a bang driving a 32-step
+generation:
+
+```
+[bang(  ->  [32(
+             |
+       [oscformat /neuromuse/control/generate]
+             |
+       [udpsend 127.0.0.1 9002]
 ```
 
 Same shape for `osc-input-server` (§3), sending numeric arguments at whatever address `osc-numbers`
