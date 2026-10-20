@@ -161,33 +161,43 @@ numeriques de chaque message recu deviennent l'entree du reseau"))
 #+sbcl (defmethod osc-input-server ((ann som) (port number) (lenght number))
 	 (warn-unless-superdaemon ann)
 	 (let ((s (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp)))
-	   (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
-	   (loop while (superdaemon ann) do
-		 (multiple-value-bind (buf len address port) (sb-bsd-sockets:socket-receive s nil lenght
-										       :element-type '(unsigned-byte 8))
-		   (let ((message (osc-decode buf len)))
-		     (when (verbose ann)
-		       (format t "Received ~A from ~A:~A~%" message address port))
-		     (setf (input ann) (coerce (osc-numbers message) 'vector)
-			   (winner ann) (find-winner ann)
-			   (output ann) (activation ann :n (car (id (winner ann))))))
-		   (sleep (attention ann))))
-	   (sb-bsd-sockets:socket-close s)))
+	   ;; UNWIND-PROTECT : SOCKET-CLOSE doit s'executer meme si ce thread est
+	   ;; interrompu par SB-THREAD:TERMINATE-THREAD pendant qu'il est bloque
+	   ;; dans SOCKET-RECEIVE -- sinon le socket fuit (un fd est partage par
+	   ;; tout le process sous Linux, pas par thread : le port reste occupe
+	   ;; indefiniment, sans qu'aucun thread n'y soit plus associe ni visible
+	   ;; dans SB-THREAD:LIST-ALL-THREADS).
+	   (unwind-protect
+		(progn
+		  (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
+		  (loop while (superdaemon ann) do
+			(multiple-value-bind (buf len address port) (sb-bsd-sockets:socket-receive s nil lenght
+											       :element-type '(unsigned-byte 8))
+			  (let ((message (osc-decode buf len)))
+			    (when (verbose ann)
+			      (format t "Received ~A from ~A:~A~%" message address port))
+			    (setf (input ann) (coerce (osc-numbers message) 'vector)
+				  (winner ann) (find-winner ann)
+				  (output ann) (activation ann :n (car (id (winner ann))))))
+			  (sleep (attention ann)))))
+	     (sb-bsd-sockets:socket-close s))))
 
 #+sbcl (defmethod osc-input-server ((ann mlp) (port number) (lenght number))
 	 (warn-unless-superdaemon ann)
 	 (let ((s (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp)))
-	   (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
-	   (loop while (superdaemon ann) do
-		 (multiple-value-bind (buf len address port) (sb-bsd-sockets:socket-receive s nil lenght
-										       :element-type '(unsigned-byte 8))
-		   (let ((message (osc-decode buf len)))
-		     (when (verbose ann)
-		       (format t "Received ~A from ~A:~A~%" message address port))
-		     (setf (input ann) (osc-numbers message)))
-		   (run-mlp ann)
-		   (sleep (latence ann))))
-	   (sb-bsd-sockets:socket-close s)))
+	   (unwind-protect
+		(progn
+		  (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
+		  (loop while (superdaemon ann) do
+			(multiple-value-bind (buf len address port) (sb-bsd-sockets:socket-receive s nil lenght
+											       :element-type '(unsigned-byte 8))
+			  (let ((message (osc-decode buf len)))
+			    (when (verbose ann)
+			      (format t "Received ~A from ~A:~A~%" message address port))
+			    (setf (input ann) (osc-numbers message)))
+			  (run-mlp ann)
+			  (sleep (latence ann)))))
+	     (sb-bsd-sockets:socket-close s))))
 
 ;; control : le nom (slot ou action) est le dernier segment du chemin de
 ;; l'adresse (convention OSC habituelle -- la plupart des controleurs/patches
@@ -242,15 +252,17 @@ l'appelle avec ANN et ARGS. Renvoie T si NAME a resolu a l'un des deux."
 #+sbcl (defmethod osc-control-server ((ann ann) (port number) (lenght number))
 	 (warn-unless-superdaemon ann)
 	 (let ((s (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp)))
-	   (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
-	   (loop while (superdaemon ann) do
-		 (multiple-value-bind (buf len address port) (sb-bsd-sockets:socket-receive s nil lenght
-										       :element-type '(unsigned-byte 8))
-		   (let ((message (osc-decode buf len)))
-		     (when (verbose ann)
-		       (format t "Received ~A from ~A:~A~%" message address port))
-		     (osc-control ann message))))
-	   (sb-bsd-sockets:socket-close s)))
+	   (unwind-protect
+		(progn
+		  (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
+		  (loop while (superdaemon ann) do
+			(multiple-value-bind (buf len address port) (sb-bsd-sockets:socket-receive s nil lenght
+											       :element-type '(unsigned-byte 8))
+			  (let ((message (osc-decode buf len)))
+			    (when (verbose ann)
+			      (format t "Received ~A from ~A:~A~%" message address port))
+			    (osc-control ann message)))))
+	     (sb-bsd-sockets:socket-close s))))
 
 #+sbcl (defgeneric osc-output-server (ann ip port &optional address)
 	 (:documentation "output server for neural nets, OSC : send activation to

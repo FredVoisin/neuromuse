@@ -150,6 +150,16 @@ later it's just gone (`(sb-thread:list-all-threads)` won't show it). All five se
 `warn-unless-superdaemon` first, so this now prints a `WARN` instead of failing silently — but the fix
 is still to set `(superdaemon ann) t` *before* starting the thread, not just reading the warning.
 
+**Socket leak on `terminate-thread`**: `osc-control-server` and `osc-input-server` hold one socket for
+their whole run, closed only after the loop exits *normally*. File descriptors are shared by the whole
+process under Linux, not per-thread, so killing one of these with `sb-thread:terminate-thread` while
+it's blocked in `socket-receive` used to skip that close entirely — the socket leaked, the port stayed
+bound forever, with no thread left anywhere to blame (`list-all-threads` shows nothing holding it).
+Both methods now close their socket from an `unwind-protect`, which still runs during the asynchronous
+unwind `terminate-thread` causes, so the port is always freed. This only prevents the leak going
+forward: a socket already orphaned by an older image (before this fix was loaded) has no live Lisp
+reference left to close it by — restarting the Lisp image is the only way to actually free that port.
+
 Stopping: `(setf (superdaemon ann) nil)` is checked only *between* iterations. An output server
 notices at its next `sleep`-paced wakeup — quick. A control or input server is blocked on
 `socket-receive`, so it won't notice until the next packet actually arrives, which may be never. For
