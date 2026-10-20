@@ -88,8 +88,8 @@ form).
 ```lisp
 (setf (superdaemon acdll-transformer) t
       (verbose acdll-transformer) t)        ;; optional: prints each message as it arrives
-(mk-process "acdll-transformer-osc-control"
-            (lambda () (osc-control-server acdll-transformer 9002 1024)))
+(start-daemon acdll-transformer "acdll-transformer-osc-control"
+              (lambda () (osc-control-server acdll-transformer 9002 1024)))
 ```
 
 ## 3. `osc-input-server`: driving a network's input
@@ -122,7 +122,7 @@ Same scope as `osc-input-server` — `som`/`mlp` only.
 
 ```lisp
 (setf (superdaemon xor) t (latence xor) 0.05)
-(mk-process "xor-osc-output" (lambda () (osc-output-server xor "127.0.0.1" 9001)))
+(start-daemon xor "xor-osc-output" (lambda () (osc-output-server xor "127.0.0.1" 9001)))
 ```
 
 For anything that doesn't fit "push the current output every `latence` seconds" — scheduling discrete
@@ -138,8 +138,17 @@ None of the three servers return on their own — each loops until `(superdaemon
 each needs its own thread. `mk-process` (`src/neuromuse-main.lisp`) wraps `sb-thread:make-thread`:
 
 ```lisp
+(setf (superdaemon ann) t)   ;; required -- see the warning below if forgotten
 (mk-process "a-name" (lambda () (osc-control-server ann port lenght)))
 ```
+
+**Silent trap**: each server's loop is `(loop while (superdaemon ann) do ...)` — tested *before*
+listening/sending anything. Launch one while `(superdaemon ann)` is still `NIL` (the default on a
+fresh network, and easy to forget after restarting a Lisp image) and the thread exits immediately,
+with no error at all: `mk-process` returns a perfectly normal-looking thread object, and a moment
+later it's just gone (`(sb-thread:list-all-threads)` won't show it). All five server methods call
+`warn-unless-superdaemon` first, so this now prints a `WARN` instead of failing silently — but the fix
+is still to set `(superdaemon ann) t` *before* starting the thread, not just reading the warning.
 
 Stopping: `(setf (superdaemon ann) nil)` is checked only *between* iterations. An output server
 notices at its next `sleep`-paced wakeup — quick. A control or input server is blocked on

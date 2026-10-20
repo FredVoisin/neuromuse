@@ -303,6 +303,29 @@ taille connu ; PERCEPTRON a deja ses propres ASSERT, inchanges)."))
 
 ;; #-(or sbcl mcl) (format t "Are threads implemented in this Lisp environnement !~%")
 
+#+sbcl (defun start-daemon (ann name process)
+  "Comme MK-PROCESS, mais enregistre en plus le thread cree dans (DAEMONS
+ANN) -- convention habituelle : tout thread associe a un reseau y est
+embarque, pour pouvoir le retrouver et l'arreter depuis l'instance
+elle-meme (KILL-DAEMONS) plutot que de le pister a part (une variable
+perdue a la fin de la session, ou SB-THREAD:LIST-ALL-THREADS a fouiller par
+nom). Renvoie le thread cree, meme valeur que MK-PROCESS :
+  (start-daemon acdll-transformer \"acdll-transformer-osc-control\"
+                (lambda () (osc-control-server acdll-transformer 9002 1024)))"
+  (let ((thread (mk-process name process)))
+    (push thread (daemons ann))
+    thread))
+
+#+sbcl (defun kill-daemons (ann)
+  "Termine tous les threads encore vivants de (DAEMONS ANN)
+(SB-THREAD:TERMINATE-THREAD -- marche meme bloque sur SOCKET-RECEIVE, cf.
+les serveurs OSC/UDP), puis vide la liste. Renvoie ANN."
+  (dolist (thread (daemons ann))
+    (when (sb-thread:thread-alive-p thread)
+      (sb-thread:terminate-thread thread)))
+  (setf (daemons ann) nil)
+  ann)
+
 #|
 ;;;; neuromuse suite...
 ; ai cas ou

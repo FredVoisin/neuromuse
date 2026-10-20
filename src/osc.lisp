@@ -137,13 +137,29 @@ BUFFER peut aussi etre une chaine (un caractere par octet)."
 
 ;;; Serveurs : comme input-server, control-server et output-server
 ;;; (udp.lisp), mais en OSC. Meme pilotage : ils tournent tant que
-;;; (superdaemon ann) est vrai, a lancer chacun dans son thread (mk-process).
+;;; (superdaemon ann) est vrai, a lancer chacun dans son thread (mk-process) --
+;;; piege classique : si SUPERDAEMON est encore NIL au lancement, le thread se
+;;; termine tout de suite, sans la moindre erreur (rien n'a ete ecoute ni
+;;; envoye). WARN-UNLESS-SUPERDAEMON, appele en tete de chacun des cinq
+;;; serveurs ci-dessous, le signale au lieu de laisser ce silence passer
+;;; inapercu.
+
+(defun warn-unless-superdaemon (ann)
+  "Avertit si (superdaemon ANN) est NIL : lance maintenant, ce serveur OSC se
+terminerait immediatement -- la boucle teste (superdaemon ann) avant de rien
+ecouter ni envoyer, sans la moindre erreur sinon. (setf (superdaemon ann) t)
+avant de (re)lancer le thread (mk-process)."
+  (unless (superdaemon ann)
+    (warn "~S : SUPERDAEMON est NIL -- ce serveur OSC va se terminer ~
+immediatement, sans rien ecouter ni envoyer. (setf (superdaemon ann) t) ~
+avant de (re)lancer ce thread." ann)))
 
 #+sbcl (defgeneric osc-input-server (ann port lenght)
 	 (:documentation "input server for neural nets, OSC : les arguments
 numeriques de chaque message recu deviennent l'entree du reseau"))
 
 #+sbcl (defmethod osc-input-server ((ann som) (port number) (lenght number))
+	 (warn-unless-superdaemon ann)
 	 (let ((s (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp)))
 	   (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
 	   (loop while (superdaemon ann) do
@@ -159,6 +175,7 @@ numeriques de chaque message recu deviennent l'entree du reseau"))
 	   (sb-bsd-sockets:socket-close s)))
 
 #+sbcl (defmethod osc-input-server ((ann mlp) (port number) (lenght number))
+	 (warn-unless-superdaemon ann)
 	 (let ((s (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp)))
 	   (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
 	   (loop while (superdaemon ann) do
@@ -223,6 +240,7 @@ l'appelle avec ANN et ARGS. Renvoie T si NAME a resolu a l'un des deux."
 	 (:documentation "control server for neural nets, OSC"))
 
 #+sbcl (defmethod osc-control-server ((ann ann) (port number) (lenght number))
+	 (warn-unless-superdaemon ann)
 	 (let ((s (make-instance 'sb-bsd-sockets:inet-socket :type :datagram :protocol :udp)))
 	   (sb-bsd-sockets:socket-bind s #(0 0 0 0) port)
 	   (loop while (superdaemon ann) do
@@ -240,6 +258,7 @@ ip port, as the arguments of an OSC message at ADDRESS"))
 
 #+sbcl (defmethod osc-output-server ((ann som) (ip string) (port number)
 				     &optional (address "/neuromuse/output"))
+	 (warn-unless-superdaemon ann)
 	 (loop while (superdaemon ann) do
 	      (send-osc (cons address (mapcar (lambda (x) (float x 1.0)) (coerce (output ann) 'list)))
 			ip port)
@@ -247,6 +266,7 @@ ip port, as the arguments of an OSC message at ADDRESS"))
 
 #+sbcl (defmethod osc-output-server ((ann mlp) (ip string) (port number)
 				     &optional (address "/neuromuse/output"))
+	 (warn-unless-superdaemon ann)
 	 (loop while (superdaemon ann) do
 	      (send-osc (cons address (mapcar (lambda (x) (float x 1.0)) (coerce (output ann) 'list)))
 			ip port)
