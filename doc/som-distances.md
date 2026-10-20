@@ -197,13 +197,13 @@ où `max-error` est la plus grande erreur de gagnant vue depuis `init`. L'erreur
 
 ----
 
-##A propos du voisinage normalisé##
+## A propos du voisinage normalisé
 
 D'une discussion avec claude.ia, il résulte ce qui suit :
 
 La normalisation change : l'unité de la largeur, son évolution au cours de l'apprentissage, et le rôle de radius. Elle a aussi deux limites, qu'il faut connaître.
 
-###1. La largeur ne dépend plus de l'échelle des données###
+### 1. La largeur ne dépend plus de l'échelle des données
 
 Avant, la largeur valait l'erreur brute du neurone, exprimée dans les unités de l'entrée, puis comparée à une distance en cases de la grille. Le voisinage dépendait donc de l'amplitude des données :
 avec des données dix fois plus grandes, les erreurs et la largeur sont dix fois plus grandes : toute la fenêtre de voisins est corrigée presque comme le gagnant ;
@@ -211,7 +211,7 @@ avec des données petites, la largeur tombe sous une case. Pour une erreur de 0,
 
 Avec :normalized, seul le rapport erreur / max-error compte. Multiplier toutes les données par 10 ne change plus rien au voisinage.
 
-###2. Le voisinage se resserre de lui-même###
+### 2. Le voisinage se resserre de lui-même
 
 Au début, les poids sont aléatoires et les erreurs grandes : le rapport est proche de 1 et la largeur vaut radius. La carte s'organise alors globalement, et la topologie se met en place. Quand la carte s'ajuste, les erreurs baissent par rapport au maximum vu, et le voisinage se resserre.
 C'est l'équivalent du rayon décroissant d'un SOM classique, sans calendrier à fixer. Cela explique les mesures :
@@ -219,7 +219,7 @@ C'est l'équivalent du rayon décroissant d'un SOM classique, sans calendrier à
 l'erreur topographique dmiminue mieux parce que les voisins sont vraiment entraînés ensemble au début ;
 l'erreur de quantification monte un peu, de 0,23 à 0,25, parce qu'un voisinage plus large tire les neurones les uns vers les autres. C'est le compromis habituel d'un SOM, qui sacrifie un peu de précision à la continuité de la carte.
 
-###3. Chaque voisin garde sa propre largeur###
+### 3. Chaque voisin garde sa propre largeur
 
 Comme dans le code de Nice, chaque voisin utilise sa propre erreur, maintenant divisée par max-error :
 
@@ -229,11 +229,11 @@ le gagnant, à distance zéro sur la grille, apprend toujours au taux learn-fact
 
 Le voisinage tire donc surtout les neurones qui détonnent, ce qui renforce la continuité de la carte. Ce trait vient de Nice (2004) et la normalisation le conserve.
 
-###4. `radius` change de rôle###
+### 4. `radius` change de rôle
 
 En `:raw`, le radius ne faisait que borner la fenêtre carrée de voisins ; la forme de la gaussienne n'en dépendait pas. Maintenant, il fixe aussi la largeur maximale de la gaussienne. Le rejeu de versions de SOM précédente aura un voisinage nettement plus large qu'avant.
 
-###5. Limite : max-error a une mémoire sans oubli###
+### 5. Limite : max-error a une mémoire sans oubli
 
 `max-error` ne fait que croître depuis init. Deux conséquences :
 
@@ -242,7 +242,7 @@ la plasticité ne revient qu'en partie : si de nouvelles données très différe
 
 Une variante courante consiste à faire oublier lentement le maximum, à chaque pas : max-error ← max(erreur, max-error × facteur), avec un facteur proche de 1, par exemple 0,999. La carte s'adapte alors à une échelle d'erreur qui évolue.
 
-**6. Limite : le taux d'apprentissage reste constant**
+### 6. Limite : le taux d'apprentissage reste constant
 
 Le PLSOM de Berglund et Sitte normalise aussi le taux d'apprentissage par le même rapport.
 `learn-fact` est fixe puisque destiné à être controlé manuellement, ou par une lambda (à préciser).
