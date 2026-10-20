@@ -146,10 +146,28 @@
 (defgeneric activation (self &key n)
   (:documentation "Calcul l'activation de 'self'."))
 
+(defmethod check-shape ((self som) &key input goal)
+  "SOM n'a pas de slot IN-SIZE explicite (contrairement a mlp/perceptron/
+transformer) : la dimension attendue est celle des synapses du premier
+neurone. GOAL est ignore (apprentissage non supervise). Sans ce controle,
+une entree de la mauvaise longueur n'est pas une erreur : NEURON-DISTANCE
+boucle en parallele sur l'entree et les synapses (LOOP ... IN ... FOR k
+BELOW (LENGTH INPUT)), donc s'arrete silencieusement a la plus courte des
+deux -- le neurone gagnant est alors faux sans qu'aucune erreur ne soit
+levee."
+  (declare (ignore goal))
+  (when (and input (net self))
+    (let ((expected (length (net (first (net self))))))
+      (assert (= (length input) expected) ()
+              "~S attend une entree de longueur ~D (synapses du premier
+neurone), recue ~D." self expected (length input))))
+  self)
+
 (defmethod activation ((ann som) &key (n nil))
   (let ((input (input ann))  ;; descendre la variable au niveau neuron
 	(temp (temp ann))
 	(net (net ann)))
+    (check-shape ann :input input)
     (when (not temp) (setf temp .0))
     (if n
         (setf (output (nth n net))
@@ -213,6 +231,7 @@ bruit, se lisent avec WEIGHTS."
     (funcall (distance ann) input (nreverse compared))))
 
 (defmethod find-winner ((ann som) &key (inf #'< ) (equality #'= ))
+  (check-shape ann :input (input ann))
   (let ((win '((nil 696969)) ))
     (loop for k from 0 to (1- (length (net ann)))
           do

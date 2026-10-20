@@ -169,6 +169,21 @@ experimental, cf. fred/lambda-calcul-neuromuse.md."
         (setf (nth j (nth i dd)) (elt output-signal-error i))))
     (hadamar-product output-layer dd)))
 
+(defmethod check-shape ((self mlp) &key input goal)
+  "Vaut aussi pour RMLP (herite sans methode propre) : (input self)/(goal
+self) restent de taille IN-SIZE/OUT-SIZE pour les deux (le contexte
+recurrent de RMLP est concatene a part, dans LEARN/RUN-MLP, jamais par
+l'appelant)."
+  (when input
+    (assert (= (length input) (in-size self)) ()
+            "~S attend une entree de longueur ~D, recue ~D."
+            self (in-size self) (length input)))
+  (when goal
+    (assert (= (length goal) (out-size self)) ()
+            "~S attend un but de longueur ~D, recu ~D."
+            self (out-size self) (length goal)))
+  self)
+
 (defmethod learn ((mlp mlp))
   (let ((goal (goal mlp))
 	(net (noise mlp (* (learn-fact mlp) (net-temp mlp))))
@@ -184,6 +199,7 @@ experimental, cf. fred/lambda-calcul-neuromuse.md."
 	out-signal-error
 	(hidden-signal-error (list))
 	(e 10000))
+    (check-shape mlp :input input :goal goal)
     (dotimes (down (- (length (net mlp)) 1))  ;; 1- activation = top->down
       (if (zerop down)
 	  (push (funcall hidden-func (matrix-vector (car net) input)
@@ -235,6 +251,7 @@ experimental, cf. fred/lambda-calcul-neuromuse.md."
 (defmethod run-mlp ((mlp mlp) &key in)  ;in pour method rmlp...
     (let ((hidden-answer-cell (list))
 	  (net (noise mlp (net-temp mlp))))
+     (check-shape mlp :input (or in (input mlp)))
      (dotimes (w (- (length net) 1))
        (if (zerop w)
          (push (funcall (hidden-fun mlp) (matrix-vector (car net) (if in in (input mlp))))
@@ -335,6 +352,7 @@ experimental, cf. fred/lambda-calcul-neuromuse.md."
 	out-signal-error
 	(hidden-signal-error (list))
 	(e 10000))
+    (check-shape mlp :input (input mlp) :goal goal)
     (dotimes (down (- (length net) 1))  ;; 1- activation = top->down
       (if (zerop down)
 	  (push (funcall hidden-func (matrix-vector (car net) input)
@@ -400,6 +418,7 @@ NET (herite sans methode propre)."
 (defmethod run-mlp ((mlp rmlp) &key in)  ;in pour method rmlp...
     (let ((hidden-answer-cell (list))
 	  (net (noise mlp (net-temp mlp))))
+     (check-shape mlp :input (or in (input mlp)))
      (dotimes (w (1- (length net)))
        (if (zerop w)
          (push (funcall (hidden-fun mlp) (matrix-vector (car net)

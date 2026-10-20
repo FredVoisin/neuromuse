@@ -69,6 +69,16 @@ que de compter dessus.)"
               :net (init-hopfield-net ,in-size)
               :creation-date (get-universal-time))))))
 
+(defmethod check-shape ((self hopfield) &key input goal)
+  "HOPFIELD n'a pas de but separe (apprentissage hebbien non supervise) :
+GOAL est ignore."
+  (declare (ignore goal))
+  (when input
+    (assert (= (length input) (in-size self)) ()
+            "~S attend une entree de longueur ~D, recue ~D."
+            self (in-size self) (length input)))
+  self)
+
 (defmethod learn ((self hopfield))
   "Un pas d'apprentissage hebbien : presente (input self) (un vecteur/une
 liste bipolaire, 0/1 par cellule) et renforce chaque synapse i<j selon la
@@ -76,6 +86,7 @@ coincidence des deux cellules (regle de Hebb, la contribution de ce pas
 normalisee par IN-SIZE puis ajoutee au poids existant -- cf. le fix plus
 bas pour ce qui a change par rapport a TRAIN-HOPFIELD en 2001). Renvoie
 SELF, comme tout LEARN."
+  (check-shape self :input (input self))
   (let ((input (input self))
         (tnet (net self)))
     (dotimes (i (length input))
@@ -116,6 +127,7 @@ distincte des cellules elles-memes (contrairement a mlp/som)."
   "Rappel a seuil binaire : pour chaque cellule i, (binary (sum_j NET[j][i]
 * IN[j])) -- IN par defaut (input self). Ecrit et renvoie (output self),
 meme convention que RUN-MLP/RUN-PERCEPTRON."
+  (check-shape self :input (or in (input self)))
   (let* ((input (or in (input self)))
          (tnet (net self))
          (v (list)))

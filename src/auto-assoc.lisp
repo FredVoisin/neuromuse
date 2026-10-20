@@ -80,6 +80,16 @@ le maintient symetrique a chaque mise a jour."))
               :net (init-auto-assoc-net ,in-size)
               :creation-date (get-universal-time))))))
 
+(defmethod check-shape ((self auto-assoc) &key input goal)
+  "AUTO-ASSOC n'a pas de but separe (il apprend a reproduire (input self)
+lui-meme) : GOAL est ignore."
+  (declare (ignore goal))
+  (when input
+    (assert (= (length input) (in-size self)) ()
+            "~S attend une entree de longueur ~D, recue ~D."
+            self (in-size self) (length input)))
+  self)
+
 (defmethod learn ((self auto-assoc))
   "Un pas d'apprentissage : presente (input self), et corrige chaque
 synapse par la regle de Widrow-Hoff (WIDROW-HOFF, maths.lisp) a partir de
@@ -89,6 +99,7 @@ l'activation de chaque cellule : activation_i = somme_j NET[i][j] * IN[j]
 de la cellule I valait alors IN[I] * (somme de sa ligne de poids), qui ne
 depend pas du reste de l'entree ; cf. RUN-AUTO-ASSOC plus bas, meme fix).
 Renvoie SELF, comme tout LEARN."
+  (check-shape self :input (input self))
   (let ((input (input self))
         (l (learn-fact self)))
     (dotimes (i (length input))
@@ -122,6 +133,7 @@ ci-dessus). Ecrit et renvoie (output self), comme
 RUN-MLP/RUN-PERCEPTRON/RUN-HOPFIELD -- mais ici une LISTE (comme
 (output mlp)), pas un vecteur (RUN-HOPFIELD renvoie un vecteur ; meme
 asymetrie qu'en 2001, non harmonisee ici)."
+  (check-shape self :input (or in (input self)))
   (let ((input (or in (input self)))
         (answer (list)))
     (dotimes (i (length input))

@@ -245,6 +245,22 @@ dimensions distincts.)"
 (defmethod id ((self null))
   0)
 
+(defgeneric check-shape (self &key input goal)
+  (:documentation
+   "Verifie que INPUT (defaut (input self)) et GOAL (defaut (goal self), si
+la classe en a un) ont bien la taille/forme attendue par SELF, avant tout
+calcul -- signale une erreur claire (taille attendue vs. recue) plutot que
+de laisser planter une multiplication matricielle, un NTH/SUBSEQ ou un AREF
+hors bornes loin de la vraie cause, ou -- pire, pour som/rosom -- de
+tronquer silencieusement l'entree sans rien dire. Renvoie SELF, comme LEARN
+et les autres methodes de ce nom dans la bibliotheque, pour s'enchainer
+pareil. Methode par defaut : ne verifie rien (classes sans protocole de
+taille connu ; PERCEPTRON a deja ses propres ASSERT, inchanges)."))
+
+(defmethod check-shape ((self ann) &key input goal)
+  (declare (ignore input goal))
+  self)
+
 (defgeneric activation (self &key neuron)
   (:documentation "To compute activation of 'self'."))
 

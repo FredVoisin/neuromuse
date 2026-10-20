@@ -98,10 +98,23 @@
 ; (input-context titi)
 ; (conteur 13 titi)
 
+(defmethod check-shape ((self rosom) &key input goal)
+  "ROSOM garde la dimension d'entree dans (CAR (TOPOLOGY self)) (le CADR est
+le nombre de neurones, cf. le fix de FIND-WINNER plus bas) -- pas dans la
+longueur des synapses comme SOM, puisque (net self) est
+(contenu contexte), pas une liste plate. GOAL est ignore (non supervise)."
+  (declare (ignore goal))
+  (when input
+    (assert (= (length input) (car (topology self))) ()
+            "~S attend une entree de longueur ~D, recue ~D."
+            self (car (topology self)) (length input)))
+  self)
+
 (defmethod activation ((self rosom) &key (n nil))
   (let ((input (input self))  ;; descendre la variable au niveau neuron
 	(temp (temp self))
 	(net (car (net self))))  ;; attention on prend seulement som du rosom
+    (check-shape self :input input)
     (if n
 	(let ((neuron (nth n net)))
 	  (loop for k from 0 to (1- (car (topology self)))
@@ -125,6 +138,7 @@
   ;; loop bound is the neuron count (CADR of TOPOLOGY, as everywhere else
   ;; in this file), not the input size (CAR) -- using CAR here walked past
   ;; the end of the neuron list into NIL neurons.
+  (check-shape self :input (input self))
   (let ((win '((-1 696969))) (som (car (net self))) (vector (input self)))
     (loop for k from 0 to (1- (cadr (topology self)))
           do
