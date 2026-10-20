@@ -284,4 +284,190 @@ ip port, as the arguments of an OSC message at ADDRESS"))
 			ip port)
 	      (sleep (latence ann))))
 
+;;; ------------------------------------------------------------------
+;;; Lecteur temps reel generique : un reseau (TRANSFORMER ou RMLP) ou une
+;;; partition (:version, sans reseau) joue(e) note par note vers HOST:PORT,
+;;; au tempo. Promu depuis fred/acdll/examples/acdll-transformer.lisp --
+;;; generalise a n'importe quel reseau/partition (plus seulement
+;;; acdll-transformer/acdll-rmlp vers *hote*/*port*) : cf.
+;;; fred/lambda-calcul-neuromuse.md pour l'historique.
+;;;
+;;; SCORE/SECTIONS : deux listes paralleles -- SCORE un evenement par temps
+;;; (liste de (hauteur duree), ou NIL si rien n'attaque), SECTIONS la
+;;; valeur du neurone de section au meme temps -- cf. VERSION-EVENTS/
+;;; VERSION-SECTIONS (fred/acdll/examples/acdll-data.lisp) ou tout
+;;; equivalent : ce fichier ne connait aucune convention de partition
+;;; particuliere, seulement cette forme generique.
+;;;
+;;; DECODE/ENCODE (vecteur <-> (accord section)) : propres au vocabulaire
+;;; d'entrainement du reseau (ENCODE-CHORD/DECODE-CHORD et leur TONIC pour
+;;; acdll, DUKAS-ENCODE-CHORD/DUKAS-DECODE-CHORD pour Dukas, etc.) -- aucun
+;;; defaut ici, ce fichier ne connait aucun codage particulier non plus.
+
+(defvar *osc-stop* nil
+  "Mis a T par STOP-OSC : la lecture s'arrete au temps suivant.")
+
+(defvar *osc-player* nil
+  "Le thread de la lecture en cours, s'il y en a une.")
+
+(defun wait-until (time)
+  "Attend jusqu'a TIME, en unites de GET-INTERNAL-REAL-TIME."
+  (let ((delay (/ (- time (get-internal-real-time))
+                  internal-time-units-per-second)))
+    (when (plusp delay) (sleep delay))))
+
+(defun play-events-osc (next-event host port &key (tempo 92) (events 64) (velocity 90)
+                                        (verbose t)
+                                        (note-address "/neuromuse/note")
+                                        (section-address "/neuromuse/section"))
+  "Joue EVENTS evenements fournis par NEXT-EVENT (un generateur -- cf.
+TRANSFORMER-GENERATOR/RMLP-GENERATOR/VERSION-GENERATOR, ou toute fonction
+sans argument renvoyant (accord section) a chaque appel), un par temps, a
+TEMPO noires par minute, envoyes en OSC a HOST:PORT. Chaque note (hauteur
+duree) recoit un note-on (NOTE-ADDRESS) a son temps d'attaque et un
+note-off DUREE temps plus tard (ou avant, si la meme hauteur est rejouee
+entre-temps) ; un changement de section envoie SECTION-ADDRESS. L'evenement
+suivant est calcule juste apres l'envoi du precedent, pendant le temps qui
+les separe ; les echeances sont absolues (pas de derive si un calcul prend
+du temps)."
+  (let* ((beat (round (* internal-time-units-per-second (/ 60 tempo))))
+         (start (+ (get-internal-real-time) beat))
+         (active '())                  ; (hauteur . temps restants)
+         (section nil)
+         (event (funcall next-event)))
+    (setf *osc-stop* nil)
+    (unwind-protect
+         (dotimes (k events)
+           (when *osc-stop* (return))
+           (wait-until (+ start (* k beat)))
+           (destructuring-bind (chord sec) event
+             ;; notes qui finissent, et notes rejouees : note-off d'abord
+             (setf active (loop for (pitch . left) in active
+                                if (or (<= left 1) (assoc pitch chord))
+                                  do (send-osc (list note-address pitch 0) host port)
+                                else collect (cons pitch (1- left))))
+             (dolist (note chord)
+               (send-osc (list note-address (first note) velocity) host port)
+               (push (cons (first note) (second note)) active))
+             (unless (eql sec section)
+               (setf section sec)
+               (send-osc (list section-address (float sec)) host port))
+             (when verbose
+               (format t "~&~3D  section ~4,2F  ~S" k sec chord)
+               (force-output)))
+           (setf event (funcall next-event)))
+      ;; fin ou interruption : laisser sonner les notes restantes, puis arret
+      (unless *osc-stop*
+        (wait-until (+ start (* (+ events (reduce #'max active :key #'cdr
+                                                          :initial-value 1)
+                                   -1)
+                                beat))))
+      (dolist (a active)
+        (send-osc (list note-address (car a) 0) host port))))
+  (values))
+
+;;; Generateurs : chacun est une fonction sans argument qui renvoie, a
+;;; chaque appel, l'evenement suivant sous la forme (accord section).
+
+(defun version-generator (score sections &key (cycle t))
+  "Rejoue SCORE/SECTIONS tels quels (aucun reseau), en boucle si CYCLE."
+  (let ((i 0) (len (length score)))
+    (lambda ()
+      (when (and cycle (>= i len)) (setf i 0))
+      (prog1 (if (< i len)
+                 (list (nth i score) (nth i sections))
+                 (list nil (car (last sections))))
+        (incf i)))))
+
+(defun transformer-generator (net score sections &key (cycle t) decode encode)
+  "NET (une instance TRANSFORMER) en generation libre a partir du premier
+evenement de SCORE/SECTIONS : chaque sortie est decodee (DECODE), reencodee
+(ENCODE) et ajoutee a la sequence (fenetre glissante de (window net)
+trames). Si CYCLE, repart du debut toutes les (length SCORE) evenements ;
+sinon continue indefiniment -- au-dela de la fenetre, le reseau voit des
+positions decalees par rapport a l'apprentissage, et invente."
+  (let* ((start (list (first score) (first sections)))
+         (len (length score))
+         (frames '())
+         (i 0))
+    (lambda ()
+      (when (and cycle (zerop (mod i len)))
+        (setf frames '()))
+      (incf i)
+      (let ((event (if frames
+                       (funcall decode (run-transformer net :in (last frames (window net))))
+                       start)))
+        (setf frames (append (last frames (1- (window net)))
+                             (list (funcall encode (first event) (second event)))))
+        event))))
+
+(defun rmlp-generator (net score sections &key (cycle t) decode encode)
+  "NET (une instance RMLP) en generation libre a partir du premier evenement
+de SCORE/SECTIONS : chaque prediction est reinjectee (memoire recurrente
+comprise). Si CYCLE, repart du debut (memoire a zero) toutes les
+(length SCORE) evenements ; sinon continue indefiniment. Pas de :IN pour
+RUN-MLP, qui court-circuiterait la memoire (le contexte ne serait pas
+ajoute a l'entree) -- (input net) est mis a jour par SETF, puis RUN-MLP
+appele sans argument."
+  (let* ((start (list (first score) (first sections)))
+         (len (length score))
+         (current nil)
+         (i 0))
+    (lambda ()
+      (when (or (null current) (and cycle (zerop (mod i len))))
+        (setf (recurrent-layer-activation net)
+              (make-list (nth (recurrent-layer net) (hidden-size net)) :initial-element 0))
+        (setf current nil))
+      (incf i)
+      (setf current
+            (if current
+                (destructuring-bind (event section) current
+                  (setf (input net) (funcall encode event section))
+                  (funcall decode (run-mlp net)))
+                start)))))
+
+(defun play-osc (net score sections &key host port (tempo 92) events (velocity 90)
+                                          (cycle t) (thread t) (verbose t)
+                                          decode encode
+                                          (note-address "/neuromuse/note")
+                                          (section-address "/neuromuse/section"))
+  "Joue en temps reel, vers HOST:PORT, la generation de NET a partir du
+premier element de SCORE/SECTIONS (cf. ci-dessus) :
+  une instance TRANSFORMER   -> TRANSFORMER-GENERATOR
+  une instance RMLP          -> RMLP-GENERATOR
+  :version                   -> VERSION-GENERATOR (rejoue SCORE/SECTIONS
+                                 tels quels, sans reseau -- pour regler Pd)
+DECODE/ENCODE : requis pour un reseau (ignores pour :version), propres a
+son vocabulaire d'entrainement -- cf. l'en-tete de ce bloc. EVENTS : nombre
+de temps joues, par defaut (length SCORE). CYCLE : voir les generateurs.
+THREAD (vrai par defaut) : lecture dans son propre thread, la main revient
+tout de suite ; (stop-osc) l'arrete."
+  (let* ((n (or events (length score)))
+         (generator (etypecase net
+                      (transformer (transformer-generator net score sections
+                                                           :cycle cycle :decode decode :encode encode))
+                      (rmlp (rmlp-generator net score sections
+                                            :cycle cycle :decode decode :encode encode))
+                      (symbol (if (eq net :version)
+                                  (version-generator score sections :cycle cycle)
+                                  (error "PLAY-OSC : NET ~S non reconnu (TRANSFORMER, RMLP, ou :VERSION)." net)))))
+         (job (lambda ()
+                (play-events-osc generator host port :tempo tempo :events n
+                                                      :velocity velocity :verbose verbose
+                                                      :note-address note-address
+                                                      :section-address section-address))))
+    (stop-osc)
+    (if thread
+        (setf *osc-player*
+              (mk-process (format nil "osc-player-~(~A~)" (if (symbolp net) net (name net))) job))
+        (funcall job))))
+
+(defun stop-osc ()
+  "Arrete la lecture en cours (notes coupees) et attend la fin du thread."
+  (when (and *osc-player* (sb-thread:thread-alive-p *osc-player*))
+    (setf *osc-stop* t)
+    (sb-thread:join-thread *osc-player* :default nil))
+  (setf *osc-player* nil)
+  (values))
+
 ;eof
