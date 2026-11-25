@@ -22,7 +22,7 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
 </p>
 
 ---
-*Note : ce qui suit est une version revue et corrigée d'une discussion avec claude.ia au sujet du code, ainsi présenté en sept. 2026, [en anglais](PHILOSOPHY.md)*
+*Ce qui suit est une version revue et corrigée d'une discussion avec claude.ia au sujet du code, ainsi présenté en sept. 2026, [en anglais](PHILOSOPHY.md). Il s'agit donc de ce que claude.ia a compris à la lecture du code initial et des productions artistiques qu'il a permises, synthèse réécrite par l'auteur (Fred Voisin).*
 
 ## Principes
 
