@@ -26,7 +26,7 @@ From 2006 to 2008, neuromuse evolved into a stable real-time multi-agent system 
 
 **Major artistic works:**
 - **"Symphonie des machines"** (2006, Meier & Voisin, Sophia-Antipolis) — 25 neuromuse agents running on an Infineon compute cluster (donated Sun servers and PCs), coordinated via Pure Data, rendering real-time music
-- **"Last Manoeuvres in the Dark"** (2008, Giraud & Siboni, Palais de Tokyo, Paris) — music information retrieval feeding SOM-based stylistic analysis, with neural activation decoding to a sculpture array of Darth Vader helmets. The agents were ROSOM agents listening over UDP: C and Java implementations were tested, and the Java one ran on distributed ARM boards (Calao motherboards) under Linux.
+- **"Last Manoeuvres in the Dark"** (2008, Giraud & Siboni, Palais de Tokyo, Paris) — music information retrieval feeding SOM-based stylistic analysis, with neural activation decoding to a sculpture array of Darth Vader helmets. The agents were ROSOM agents listening over UDP: C and Java implementations, by John MacCallum (CNMAT), were tested, and the Java one ran on distributed ARM boards (Calao motherboards) under Linux.
 
 ## 2007–2010: Teaching & Consolidation
 
@@ -78,7 +78,7 @@ bringing neuromuse's historical sources online is acknowledged in [`legacy/READM
 - **Kasper T. Toeplitz** — composer, co-author of "Taire" and "L'Écarlate"
 - **Arshia Cont** — real-time music systems researcher
 - **Ali Momeni** — music technology developer
-- **John McCallum** — composer at CNMAT, distributed ARM architecture expertise
+- **John MacCallum** — composer at CNMAT, distributed ARM architecture expertise; C and Java implementations of the ROSOM agent for "Last Manoeuvres in the Dark" (2008)
 - **Jean-Luc Hervé** — composer, "Effet Lisière" collaboration
 - **Florian Iochem** — musician and researcher, bringing neuromuse's historical sources online (2026)
 

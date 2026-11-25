@@ -120,7 +120,7 @@ A selection of images spanning 25 years of development, artistic applications, a
   <tr>
     <td align="center" width="50%">
       <img src="https://fredvoisin.com/images/gallery/neuromuse-calao-cluster.jpg" alt="Calao ARM cluster" width="360"><br>
-      <sub>Distributed ARM cluster (Calao boards) running neuromuse ROSOM agents in Java, listening over UDP (a C implementation was also tested).</sub>
+      <sub>Distributed ARM cluster (Calao boards) running neuromuse ROSOM agents in Java, listening over UDP (a C implementation was also tested; both by John MacCallum, CNMAT).</sub>
     </td>
     <td align="center" width="50%">
       <img src="https://fredvoisin.com/images/gallery/neuromuse-avatit-arms.jpg" alt="Avatit robot control" width="360"><br>
