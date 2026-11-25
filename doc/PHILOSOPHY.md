@@ -4,7 +4,7 @@
 
 ## Presentation (Nice, May 2005)
 
-### neuromuse — Musical Studies and Applications of Neuromimic Networks
+### neuromuse — Musical Studies and Applications of Artificcal Neural Networks
 
 Composers, musicians, choreographers, and dancers increasingly resort to computing in their projects—from the work of creation, to exploring possibilities, to realization, according to different modes of human-machine communication. Computing—the universal machine—is a privileged tool for formalization, experimentation, simulation, and realization.
 
