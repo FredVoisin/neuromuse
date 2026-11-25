@@ -23,7 +23,7 @@ It was within the framework of choreographic research, in 2000, that I came to w
 
 ---
 
-*Author's note: what follows is a revised and corrected version of the text generated in English during a discussion with Claude.ai in Sept. 2026, translated from the revised [French version](PHILOSOPHY.fr.md). It still needs correcting. The original LLM-generated draft is kept as a trace of what an LLM could infer — or paraphrase — of the "code philosophy" from the code and the presentation above: see [the September 2026 draft](https://github.com/FredVoisin/neuromuse/blob/1c683e76327471f07f7a007218f2d7ca724273b1/doc/PHILOSOPHY.md).*
+*What follows is a revised and corrected version of a discussion with claude.ia about the code, presented in English in Sept. 2026, and translated here from the [French version](PHILOSOPHY.fr.md). It is thus what claude.ia understood from reading the original code and the artistic works it made possible, a synthesis rewritten by the author (Fred Voisin). The original LLM-generated draft is kept as a trace: see [the September 2026 draft](https://github.com/FredVoisin/neuromuse/blob/1c683e76327471f07f7a007218f2d7ca724273b1/doc/PHILOSOPHY.md).*
 
 ## Principles
 
@@ -85,3 +85,4 @@ If you're studying:
 
 - Voisin, F., Meier, R. (2004). "Playing Integrated Music Knowledges with Artificial Neural Networks." *Journées d'Informatique Musicale*, Ircam/Centre Pompidou, Paris.
 - Voisin, F., Meier, R. (2009). "On Analytical vs. Schizophrenic Procedures for Computing Music." *Contemporary Music Review*, 28(2), pp. 205–219. [DOI](https://doi.org/10.1080/07494460903322489)
+- Voisin, F. (2015). "De la brousse dans les synthés" [*From the bush in the synths*]. In P. Criton & J.-M. Chouvel (eds.), *Gilles Deleuze: la pensée-musique*. [HAL-01611947](https://hal.science/hal-01611947v1)
