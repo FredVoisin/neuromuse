@@ -71,7 +71,7 @@ Si vous êtes chorégraphe, musicien, plasticien ou designer sonore :
 
 - neuromuse permet de concevoir des systèmes qui *apprennent de votre pratique* — vos gestes, vos improvisations, vos partitions.
 - Vous pouvez entraîner un réseau à interpoler entre deux de vos vocabulaires gestuels, ou à générer des variations sur un thème.
-- Le système est vôtre : pas de boîte noire. pas de cloud propriétaire.
+- Le système est vôtre : pas de boîte noire. pas de cloud propriétaire. Qu'importe les machines.
 
 ## Pour les chercheurs
 
