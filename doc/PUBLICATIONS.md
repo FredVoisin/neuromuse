@@ -120,6 +120,7 @@ Neuromuse emerges from Fred Voisin's training in ethnomusicology and fieldwork w
 
 - **John MacCallum** (CNMAT, UC Berkeley) — for the C and Java implementations of the ROSOM agent listening over UDP, run on the distributed ARM (Calao) boards of "Last Manoeuvres in the Dark" (2008).
 - **Cyrille Henry** — for his help and contributions.
+- **Florian Iochem** ([musician and researcher](https://accra-recherche.unistra.fr/laccra/membres/doctorants/florian-iochem/), ACCRA, Université de Strasbourg) — for his work bringing neuromuse's historical sources online (see [`legacy/README.md`](../legacy/README.md)).
 
 ---
 
