@@ -98,7 +98,7 @@ bringing neuromuse's historical sources online is acknowledged in [`legacy/READM
 | Year | Milestone |
 |---|---|
 | 1999 | First perceptron written in MCL/OpenMusic at IRCAM |
-| 2001 | "Taire", neuromimetic version ([Fred Voisin](https://www.fredvoisin.com/articles/12-la-musique-de-taire-version-neuromimetique.html); [1999 original](https://www.myriam-gourfink.com/glossolalie-taire/) without neural networks, Myriam Gourfink) & "L'Écarlate" ([Ircam](https://ressources.ircam.fr/fr/media/x218df0_lecarlate-myriam-gourfink-kasper-t-toeplit)) premieres |
+| 2001 | "Taire", neuromimetic version ([Fred Voisin](https://www.fredvoisin.com/articles/12-la-musique-de-taire-version-neuromimetique.html)) & "L'Écarlate" ([Ircam](https://ressources.ircam.fr/fr/media/x218df0_lecarlate-myriam-gourfink-kasper-t-toeplit)) premieres |
 | 2003 | neurOMuse v1, OpenMusic library (CIRM) |
 | 2004–2005 | Max/Pd ports; CIRM residencies; Ars Electronica talk |
 | 2006–2008 | ROSOM agents in C and Java on distributed ARM (Calao) boards, "Symphonie des machines" ([gallery](GALLERY.md#symphonie-des-machines-2006)); "Last Manoeuvres in the Dark" at Palais de Tokyo ([credits](https://www.opasquet.fr/last-manoeuvres-in-the-dark/), [Robin Meier](https://robinmeier.net/?p=37), [review](https://we-make-money-not-art.com/palais_de_tokyo_built_in/), [gallery](GALLERY.md#last-manoeuvres-in-the-dark-2008)) |
