@@ -26,7 +26,7 @@ From 2006 to 2008, neuromuse evolved into a stable real-time multi-agent system 
 
 **Major artistic works:**
 - **"Symphonie des machines"** (2006, Meier & Voisin, Sophia-Antipolis) — 25 neuromuse agents running on an Infineon compute cluster (donated Sun servers and PCs), coordinated via Pure Data, rendering real-time music
-- **"Last Manoeuvres in the Dark"** (2008, Giraud & Siboni, Palais de Tokyo, Paris) — music information retrieval feeding SOM-based stylistic analysis, with neural activation decoding to a sculpture array of Darth Vader helmets. Here the neuromuse agents ran in Java, not Lisp, on distributed ARM boards (Calao motherboards) under Linux.
+- **"Last Manoeuvres in the Dark"** (2008, Giraud & Siboni, Palais de Tokyo, Paris) — music information retrieval feeding SOM-based stylistic analysis, with neural activation decoding to a sculpture array of Darth Vader helmets. The agents were ROSOM agents listening over UDP: C and Java implementations were tested, and the Java one ran on distributed ARM boards (Calao motherboards) under Linux.
 
 ## 2007–2010: Teaching & Consolidation
 
