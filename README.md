@@ -22,7 +22,7 @@ Traditional AI frameworks treat neural networks as black boxes to be optimized. 
 - It's opensource, no dependencies, diy
 
 <p align="center">
-  <img src="img/lisplogo_fancy_256a.png" alt="Caution: made with secret alien technology (Lisp logo by Conrad Barski, public domain)" width="96">
+  <img src="img/lisplogo_fancy_256.png" alt="Caution: made with secret alien technology (Lisp logo by Conrad Barski, public domain)" width="96">
 </p>
 
 ## Table of Contents
