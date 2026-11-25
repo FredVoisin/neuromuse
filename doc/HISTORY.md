@@ -78,9 +78,10 @@ bringing neuromuse's historical sources online is acknowledged in [`legacy/READM
 - **Kasper T. Toeplitz** — composer, co-author of "Taire" and "L'Écarlate"
 - **Arshia Cont** — real-time music systems researcher
 - **Ali Momeni** — music technology developer
-- **John MacCallum** — composer at CNMAT, distributed ARM architecture expertise; C and Java implementations of the ROSOM agent for "Last Manoeuvres in the Dark" (2008)
+- **John MacCallum** — composer at CNMAT, distributed ARM architecture expertise; C and Java implementations of the ROSOM agent listening over UDP, run on the distributed ARM (Calao) boards of "Last Manoeuvres in the Dark" (2008)
 - **Jean-Luc Hervé** — composer, "Effet Lisière" collaboration
-- **Florian Iochem** — musician and researcher, bringing neuromuse's historical sources online (2026)
+- **Cyrille Henry** — help and contributions
+- **Florian Iochem** — [musician and researcher](https://accra-recherche.unistra.fr/laccra/membres/doctorants/florian-iochem/), ACCRA, Université de Strasbourg; bringing neuromuse's historical sources online (2026, see [`legacy/README.md`](../legacy/README.md))
 
 ---
 
