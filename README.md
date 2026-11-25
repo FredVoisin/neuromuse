@@ -33,7 +33,8 @@ Traditional AI frameworks treat neural networks as black boxes to be optimized. 
 4. [What's New](#whats-new)
 5. [Documentation](#documentation)
 6. [Contributing & TO-DO](#contributing--to-do)
-7. [License](#license)
+7. [Contributors](#contributors)
+8. [License](#license)
 
 ## FAQ
 
@@ -170,6 +171,12 @@ Open issues and PRs welcome. Known items:
 - Graphical representions of transformers' net  
 - Extend explicitely `rmlp` to support Jordan-style recurrence alongside Elman
 - Investigate GPU optimization under modern CUDA (previous attempts hit platform limits)
+
+## Contributors
+
+Bringing neuromuse's [historical sources](legacy/) online owes a great deal to
+Florian Iochem, [musician and researcher](https://accra-recherche.unistra.fr/laccra/membres/doctorants/florian-iochem/).
+Many thanks to him.
 
 ## License
 

@@ -12,9 +12,3 @@ actuelle (`src/`).
 
 D'autres versions antérieures (1999, 2000) pourront être ajoutées
 ultérieurement.
-
-## Remerciements
-
-La mise en ligne de ces sources historiques doit beaucoup à
-Florian Iochem, [musicien chercheur](https://accra-recherche.unistra.fr/laccra/membres/doctorants/florian-iochem/).
-Qu'il en soit remercié.

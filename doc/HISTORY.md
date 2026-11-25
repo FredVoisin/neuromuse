@@ -52,7 +52,7 @@ Neuromuse found new life in:
 ## 2026: Restructuring and New Developments
 
 This restructuring follows on from Florian Iochem's doctoral thesis work, whose contribution in
-bringing neuromuse's historical sources online is acknowledged in [`legacy/README.md`](../legacy/README.md).
+bringing neuromuse's historical sources online is acknowledged in the [Contributors](../README.md#contributors) section of the README.
 
 **July 2026** — the master repository was reorganized as a proper ASDF system with:
 - Clean package structure (`:neuromuse`)
