@@ -104,7 +104,7 @@ bringing neuromuse's historical sources online is acknowledged in [`legacy/READM
 | 2006–2008 | Multi-agent systems; "Symphonie des machines"; ARM cluster work |
 | 2007+ | Teaching at Conservatoire de Montbéliard |
 | 2012+ | Deep learning emerges elsewhere; neuromuse goes quiet but persistent |
-| 2015 | Avatit robot control at IRCAM |
+| 2015 | Avatit robot control at IRCAM (night sessions, -2nd floor) |
 | 2026 | Codebase restructured; historical sources archived; Hopfield, auto-assoc, GUI, OSC, transformer added |
 
 ---
