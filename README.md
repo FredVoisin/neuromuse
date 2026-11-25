@@ -21,7 +21,7 @@ Traditional AI frameworks treat neural networks as black boxes to be optimized. 
 - Run on modest hardware (historically, a 68030 or PowerPC laptop; today - in 2026, even an iPhone 5s via neuromuse-ios)
 - It's opensource, no dependencies, diy
 
-<img src="img/lisplogo_fancy_256.png" alt="Caution: made with secret alien technology (Lisp logo by Conrad Barski, public domain)" width="96" align="center">
+<img src="img/lisplogo_fancy_256a.png" alt="Caution: made with secret alien technology (Lisp logo by Conrad Barski, public domain)" width="96" align="center">
 
 ## Table of Contents
 
