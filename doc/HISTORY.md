@@ -104,7 +104,7 @@ bringing neuromuse's historical sources online is acknowledged in [`legacy/READM
 | 2006–2008 | ROSOM agents in C and Java on distributed ARM (Calao) boards, "Symphonie des machines" ([gallery](GALLERY.md#symphonie-des-machines-2006)); "Last Manoeuvres in the Dark" at Palais de Tokyo ([credits](https://www.opasquet.fr/last-manoeuvres-in-the-dark/), [Robin Meier](https://robinmeier.net/?p=37), [review](https://we-make-money-not-art.com/palais_de_tokyo_built_in/), [gallery](GALLERY.md#last-manoeuvres-in-the-dark-2008)) |
 | 2007+ | Teaching at Conservatoire de Montbéliard |
 | 2012+ | Deep learning emerges elsewhere; neuromuse goes quiet but persistent |
-| 2015 | Avatit robot control at IRCAM (night sessions, -2nd floor) |
+| 2015 | Avatit robot control at IRCAM (night sessions, [-2nd floor](../img/avatit+arms.png)) |
 | 2017 | ["Mimer... c'est jouer !"](https://www.fredvoisin.com/articles/253-mimer-c-est-jouer.html) at LEAD (CNRS, Université de Bourgogne) |
 | 2026 | Codebase cleaned, with the help of claude.ia; historical sources archived; Hopfield, auto-assoc, GUI, OSC, transformer added |
 
