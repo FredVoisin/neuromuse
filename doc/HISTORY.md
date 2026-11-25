@@ -73,14 +73,14 @@ bringing neuromuse's historical sources online is acknowledged in [`legacy/READM
 
 ## Key Collaborators
 
-- **Robin Meier** — composer, Max/MSP specialist, co-author of foundational papers and pieces of code
-- **Myriam Gourfink** — choreographer, first major artistic collaborator
-- **Kasper T. Toeplitz** — composer, co-author of "Taire" and "L'Écarlate"
-- **Arshia Cont** — real-time music systems researcher
-- **Ali Momeni** — music technology developer
-- **John MacCallum** — composer at CNMAT, C and Java implementations of the ROSOM agent on the distributed ARM (Calao) boards of "Last Manoeuvres in the Dark" (2008)
-- **Jean-Luc Hervé** — composer, "Effet Lisière" collaboration
-- **Cyrille Henry** — inspiration and some Pd patches
+- **Robin Meier** — [composer](https://robinmeier.net), Max/MSP specialist, co-author of foundational papers and pieces of code
+- **Myriam Gourfink** — [choreographer](https://www.myriam-gourfink.com), first major artistic collaborator
+- **Kasper T. Toeplitz** — [composer](https://www.sleazeart.com), co-author of "Taire" and "L'Écarlate"
+- **Arshia Cont** — [real-time music systems researcher](https://forum.ircam.fr/article/metronaut-arshia-cont/) (Ircam, Antescofo), founder of the [Metronaut](https://metronautapp.com) iOS app
+- **Ali Momeni** — [music technology developer](https://alimomeni.net)
+- **John MacCallum** — [composer at CNMAT](https://cnmat.berkeley.edu/node/7608), C and Java implementations of the ROSOM agent on the distributed ARM (Calao) boards of "Last Manoeuvres in the Dark" (2008)
+- **Jean-Luc Hervé** — [composer](https://jeanlucherve.com), "Effet Lisière" collaboration
+- **Cyrille Henry** — [chdh](https://chdh.net); inspiration and some Pd patches
 - **Florian Iochem** — [musician and researcher](https://accra-recherche.unistra.fr/laccra/membres/doctorants/florian-iochem/), ACCRA, Université de Strasbourg; bringing neuromuse's historical sources online (2026, see [`legacy/README.md`](../legacy/README.md))
 
 ---
