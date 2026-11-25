@@ -36,10 +36,10 @@ On crée les conditions d'un comportement qui émerge, à l'échelle de dizaines
 - L'apprentissage se fait en direct, *en interaction* avec l'utilisateur. Une architecture neuromimétique choisie peut s'adapter et évoluer en même temps qu'elle apprend et joue.
 - Le système reste interprétable — on peut *comprendre* pourquoi tel choix a été fait ou telle évolution suivie, du fait d'un nombre minimaliste de "paramètres".
 - L'échelle est de l'ordre du neurone — les systèmes nécessitent des *dizaines ou centaines* de neurones — seulement, que l'on peut *multi-plier*.
-- Le système est *(multi-)agentique*, décrit dans un language "haut-niveau", fondé sur la programmation "objet" et le temps-réel. Chaque neurone, (sous-)réseau ou agent neuromimétique peut être contrôlé individuellement, en temps-réel.
+- Le système est (multi-)agentique — décrit dans un language "haut-niveau", *organologique* voire *organique*, Fondé sur la programmation "objet" et le *temps réel*. Chaque neurone, (sous-)réseau ou agent neuromimétique peut être contrôlé individuellement, localement ou à distance.
 
 ### 4. Le code participe de l'art
-Il est aussi *écrit pour être lu*. Par exemple, une méthode de src/mlp.lisp est un petit essai pédagogique sur la rétropropagation, écrit en Lisp éventuellement commenté.
+Le code est aussi *écrit pour être lu*. Par exemple, une méthode définie dans le fichier src/mlp.lisp est un petit essai pédagogique sur la rétropropagation, en expressions Lisp simples facilement compréhensibles et modificables par tout un chacun.
 Il permet :
 - **transparence** : on peut entendre le système apprendre en temps réel, voir ce qu'il « pense » et réagir en conséquence.
 - **dialogue** : le système *apprend en même temps qu'il fait* avec l'artiste qui peut l'adapter *au fur et à mesure*.
@@ -56,7 +56,7 @@ Le projet Neuromuse a été initié entre 1999 et 2001, à une époque où :
 - Lisp restait un environnement sérieux pour la recherche en IA (Ircam, CNMAT, Symbolic Technologies) ;
 - la question « un réseau peut-il apprendre une chorégraphie ? » était véritablement inédite.
 
-En 2026, le paysage a changé. "Deep learning" et LLM dominent à force de couteux GPUs. Dans ce contexte, Neuromuse offre un espace où on peut **penser avec** des systèmes neuronaux, **librement**.
+En 2026, le paysage a changé. "Deep learning" et LLM dominent à force de GPUs. Dans ce contexte, Neuromuse offre un espace où chacun peut **penser avec** des systèmes neuromimétiques, **librement**.
 
 ---
 
@@ -72,8 +72,8 @@ Si vous êtes chorégraphe, musicien, plasticien ou designer sonore :
 
 Si vous étudiez :
 
-- la **recherche d'information musicale**, la **reconnaissance gestuelle**, l'**IA créative** ou la **cognition incarnée** : neuromuse est un laboratoire pour des expériences à petite échelle ou grande échelle.
-- Le code est assez compact pour être compris de bout en bout, et suffisemment complet pour un travail réel en quelques lignes de code simple, facilement générables par une IA-LLM type chatGPT, Claude, Mistral... 
+- la *recherche d'information musicale*, la *reconnaissance gestuelle*, l'*IA créative* ou la **ognition incarnée* : neuromuse est un laboratoire pour des expériences à petite ou grande échelle.
+- Le code est assez compact pour être compris de bout en bout, et assez complet pour un travail productif en quelques simples lignes de code, facilement générables par une IA-LLM type chatGPT, Claude, Mistral, etc.
 - Le code peut facilement être étendu, adapté et utilisé comme outil pédagogique.
 
 ---
@@ -82,3 +82,5 @@ Si vous étudiez :
 
 - Voisin, F., Meier, R. (2004). « Playing Integrated Music Knowledges with Artificial Neural Networks. » *Journées d'Informatique Musicale*, Ircam/Centre Pompidou, Paris.
 - Voisin, F., Meier, R. (2009). « On Analytical vs. Schizophrenic Procedures for Computing Music. » *Contemporary Music Review*, 28(2), pp. 205–219. [DOI](https://doi.org/10.1080/07494460903322489)
+
+
