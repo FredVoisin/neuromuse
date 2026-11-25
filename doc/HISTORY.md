@@ -2,26 +2,29 @@
 
 ## 1999–2001: Birth at IRCAM
 
-Fred Voisin initiated neuromuse in 1999 to explore how artificial neural networks could serve contemporary music creation. The first implementation used Macintosh Common Lisp (MCL) and the Common Lisp Object System (CLOS), with OpenMusic (IRCAM's visual programming environment) and MIDI as the primary interface.
+Fred Voisin initiated neuromuse in 1999 to explore how artificial neural networks could serve contemporary music creation. The very first program, written at IRCAM in March 1999, was a single-layer perceptron in Macintosh Common Lisp (MCL), inside OpenMusic (IRCAM's visual programming environment; package `:om`) — preserved in [`legacy/neuromuse-1999-03/`](../legacy/neuromuse-1999-03/). It grew into `ANN 1.4.lisp`, a Common Lisp Object System (CLOS) library with MIDI as the primary real-time interface, the core of the future neuromuse.
 
 Key influences: David Wessel and Adrian Freed at UC Berkeley's CNMAT inspired the philosophical approach—networks as adaptive systems for live creative work, not just optimized classifiers.
 
 **First performances (2001):**
 - February 2001: "Taire" (Toeplitz & Myriam Gourfink), Centre National de la Danse, Paris — dance-derived input trained and controlled a generative sound system
-- June 2001: "L'Écarlate" (Toeplitz & Gourfink), IRCAM — recurrent MLP mapped live movement to synthesis parameters (frequency, amplitude, duration)
+- 7 June 2001: "L'Écarlate" (Kasper T. Toeplitz & Myriam Gourfink), IRCAM (Espace de projection, Agora festival) — the dancer's movement, analyzed live by [LabanOnLisp](https://github.com/FredVoisin/LabanOnLisp) on a separate computer, was streamed over MIDI (MidiShare) to neuromuse. A 180-cell auto-associative memory (`ecarl180`) measured how far each moment of movement sat from the learned choreographic "situations", alongside a Jordan-style recurrent MLP (`sin1C`) driving synthesis parameters. See [auto-assoc-exemples.md](auto-assoc-exemples.md) and the concert version of the code in [`legacy/neuromuse-2001-concert/`](../legacy/neuromuse-2001-concert/).
 
-Both works demonstrated the viability of real-time neural systems in performance, running on PowerPC laptops at symbolic (MIDI) resolution.
+Both works demonstrated the viability of real-time neural systems in performance, running in MCL on Mac OS 9 on PowerPC laptops (a PowerBook G3 "Pismo" for L'Écarlate) at symbolic (MIDI) resolution.
+
+## 2003: neurOMuse, an OpenMusic library
+
+At CIRM (Nice), neuromuse was packaged as **neurOMuse v1**, a library for OpenMusic 4.7 / MCL 5 (release archive dated 26 September 2003), preserved in [`legacy/neuromuse-2003-openmusic/`](../legacy/neuromuse-2003-openmusic/). The same year saw a demo/workshop at National Taiwan University, Taipei.
 
 ## 2004–2005: Expansion to Max/Pd
 
-Around 2004, Fred Voisin and collaborators Robin Meier, Arshia Cont, and Ali Momeni ported the MLP and SOM architectures from Lisp into Max/MSP and Pure Data for broader adoption in music production studios. This era saw workshops and residencies at CIRM (Centre International de Recherche Musicale, Nice) and invited talks at Ars Electronica (2005).
+Around 2004, Fred Voisin and collaborators Robin Meier, Arshia Cont, and Ali Momeni ported the MLP and SOM architectures from Lisp into Max/MSP and Pure Data for broader adoption in music production studios. This era saw workshops and residencies at CIRM (Centre International de Recherche Musicale, Nice), an invited talk at Ars Electronica (2005), and **"Caresses de Marquise"** (2004, 12-hour performance, Gare de l'Est, Paris), an early multi-agent experiment.
 
 ## 2006–2008: Real-Time Multi-Agent Systems
 
 From 2006 to 2008, neuromuse evolved into a stable real-time multi-agent system using various Common Lisp implementations (Lispworks, OpenMCL, CMU-CL, SBCL) with TCP/IP and multi-threading on Linux and macOS. This enabled distributed computing across modest clusters.
 
 **Major artistic works:**
-- **"Caresses de Marquise"** (2004, 12-hour performance, Gare de l'Est, Paris) — early multi-agent experiment
 - **"Symphonie des machines"** (2006, Meier & Voisin, Sophia-Antipolis) — 25 neuromuse agents running on an Infineon compute cluster (donated Sun servers and PCs), coordinated via Pure Data, rendering real-time music
 - **"Last Manoeuvres in the Dark"** (2008, Giraud & Siboni, Palais de Tokyo, Paris) — music information retrieval feeding SOM-based stylistic analysis, with neural activation decoding to a sculpture array of Darth Vader helmets. Agents ran on distributed ARM boards (Calao motherboards) under Linux.
 
@@ -46,28 +49,38 @@ Neuromuse found new life in:
 - **Ethnomusicological fieldwork** — analyzing and regenerating traditional music patterns
 - **Mobile platforms** — neuromuse-ios (iPhone 5s, via Theos jailbreak) demonstrates the system's portability
 
-## July 2026: Restructuring
+## 2026: Restructuring and New Developments
 
 This restructuring follows on from Florian Iochem's doctoral thesis work, whose contribution in
 bringing neuromuse's historical sources online is acknowledged in [`legacy/README.md`](../legacy/README.md).
 
-The master repository was reorganized as a proper ASDF system with:
+**July 2026** — the master repository was reorganized as a proper ASDF system with:
 - Clean package structure (`:neuromuse`)
 - Dedicated directories: `src/`, `tests/`, `examples/`, `doc/`
 - Bug fixes in instance saving, network constructors, UDP input
 - A full test suite using `:prove`
 - Expanded documentation for artists and researchers
 
+**September–October 2026** — historical sources and new features:
+- Historical versions archived in [`legacy/`](../legacy/): the March 1999 perceptron, the 2001 L'Écarlate concert code, and the 2003 neurOMuse OpenMusic library
+- Architectures ported from those sources: single-layer perceptron (1999), Hopfield network and auto-associative memory (2001)
+- An optional Ltk window (`neuromuse/gui`) to watch MLPs, SOMs, and auto-associative memories learn live
+- SOMs: configurable input-space and grid distances, torus and hexagonal topologies (see [som-distances.md](som-distances.md))
+- Activation tracing, saving for SOMs, and Graphviz export of networks (see [formats.md](formats.md))
+- Open Sound Control input/output and remote control (see [opensoundcontrol.md](opensoundcontrol.md)), Standard MIDI File reading, and a transformer class
+
 ---
 
 ## Key Collaborators
 
 - **Robin Meier** — composer, Max/MSP specialist, co-author of foundational papers
-- **Myriam Gourfink** — choreographer, first major artistic collaborators
+- **Myriam Gourfink** — choreographer, first major artistic collaborator
+- **Kasper T. Toeplitz** — composer, co-author of "Taire" and "L'Écarlate"
 - **Arshia Cont** — real-time music systems researcher
 - **Ali Momeni** — music technology developer
 - **John McCallum** — composer at CNMAT, distributed ARM architecture expertise
 - **Jean-Luc Hervé** — composer, "Effet Lisière" collaboration
+- **Florian Iochem** — musician and researcher, bringing neuromuse's historical sources online (2026)
 
 ---
 
@@ -83,14 +96,15 @@ The master repository was reorganized as a proper ASDF system with:
 
 | Year | Milestone |
 |---|---|
-| 1999 | First MLP written in MCL at IRCAM |
+| 1999 | First perceptron written in MCL/OpenMusic at IRCAM |
 | 2001 | "Taire" & "L'Écarlate" premieres |
+| 2003 | neurOMuse v1, OpenMusic library (CIRM) |
 | 2004–2005 | Max/Pd ports; CIRM residencies; Ars Electronica talk |
 | 2006–2008 | Multi-agent systems; "Symphonie des machines"; ARM cluster work |
 | 2007+ | Teaching at Conservatoire de Montbéliard |
 | 2012+ | Deep learning emerges elsewhere; neuromuse goes quiet but persistent |
 | 2015 | Avatit robot control at IRCAM |
-| 2026 | Codebase restructured; documentation expanded |
+| 2026 | Codebase restructured; historical sources archived; Hopfield, auto-assoc, GUI, OSC, transformer added |
 
 ---
 
