@@ -1,11 +1,11 @@
-<img src="img/lisplogo_fancy_256.png" alt="Caution: made with secret alien technology (Lisp logo by Conrad Barski, public domain)" width="96" align="right">
-
 # neuromuse
 
 **Artificial neural networks for music and artistic production with real-time applications** (since 1999)
 
 ----
 *Les lecteurs francophones peuvent commencer par lire [PHILOSOPHY.fr](doc/PHILOSOPHY.fr.md).*
+
+<img src="img/lisplogo_fancy_256.png" alt="Caution: made with secret alien technology (Lisp logo by Conrad Barski, public domain)" width="96" align="right">
 
 ## Overview
 
