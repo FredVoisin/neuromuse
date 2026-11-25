@@ -22,49 +22,43 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
 </p>
 
 ---
+*Note de l'auteur : ce qui suit est une version revue et corrigée de la version générée lors d'une discussion avec claude.ia en sept. 2026, [en anglais](PHILOSOPHY.md), qui reste à corriger*
 
-*Note de l'auteur : ce qui suit a été écrit par claude.ia en sept. 2026, traduit de la [version anglaise](PHILOSOPHY.md), discutable, à corriger !*
+## Principes
 
-## Principes fondamentaux
+### 1. L'art est le processus, non pas le produit
+L'apprentissage participe de l'œuvre : il est produit, entendu, vu et suivi en temps réel.
 
-### 1. **L'art est le processus, pas seulement le produit**
+### 2. La connaissance peut être implicite, intuitive, contradictoire**.
+L'intuition harmonique est en partie consciente, en partie ressentie, fondée sur l'expérience, voire le contrôle, d'un *temps réel* éventuellement multimodal.
+De même le vocabulaire d'un chorégraphe n'est pas seulement articulé, il est incarné.
 
-Les cadres classiques de l'IA traitent les réseaux comme des outils : on injecte des données, on en extrait des prédictions, on passe à autre chose. Neuromuse inverse cette logique. L'acte d'apprendre — les neurones qui s'activent, les poids qui s'ajustent, la courbe d'erreur qui descend — *est* l'œuvre. Cela compte pour plusieurs raisons :
+### 3. L'auto-adaptation au cœur
+On crée les conditions d'un comportement qui émerge, à l'échelle de dizaines ou centaines de neurones — bien assez pour créer du chaos :
+- L'apprentissage se fait en direct, **en interaction** avec l'utilisateur. Une architecture neuromimétique choisie peut s'adapter et évoluer en même temps qu'elle apprend et joue.
+- Le système reste interprétable — on peut **comprendre** pourquoi tel choix a été fait ou telle évolution suivie, notamment du fait d'un nombre minimaliste de "paramètres".
+- L'échelle est de l'ordre du neurone — les systèmes nécessitent des **dizaines ou centaines** de neurones — seulement, que l'on peut *multi-plier*.
+- Le système est **(multi-)agentique**, décrit dans un language "haut-niveau", fondé sur la programmation "objet" et le temps-réel. Chaque neurone, (sous-)réseau ou agent neuromimétique peut être contrôlé individuellement, en temps-réel.
 
-- **Transparence :** l'artiste peut regarder le réseau apprendre en temps réel, voir ce qu'il « pense », et réagir.
-- **Dialogue :** l'artiste ne se contente pas de *fabriquer* le système ; le système *fabrique* avec l'artiste.
-- **Incarnation :** neuromuse tournant sur du matériel modeste (même un iPhone 5s), le réseau peut habiter un espace physique — un bras robotisé, un ensemble de haut-parleurs — et y *exister* réellement.
-
-### 2. **La connaissance peut être implicite, intuitive, contradictoire**
-
-Les systèmes fondés sur la logique exigent une formalisation parfaite : chaque règle, chaque entrée, parfaitement étiquetée. La connaissance artistique et scientifique réelle n'est pas de cet ordre. Le vocabulaire gestuel d'un chorégraphe est incarné, jamais totalement articulé. L'intuition harmonique d'un musicien est en partie consciente, en partie ressentie.
-
-Neuromuse accepte ce désordre. Les réseaux apprennent à partir d'*exemples* (connaissance implicite) plutôt que de règles. Ils s'adaptent à l'ambiguïté, à la contradiction, à l'incomplétude — les conditions mêmes dans lesquelles travaillent réellement artistes et chercheurs.
-
-### 3. **L'auto-adaptation en est le cœur**
-
-Plutôt que de se demander « Comment programmer le comportement que je veux ? », neuromuse se demande « Comment mettre en place les conditions pour qu'un comportement adaptatif émerge ? ». Ce basculement est profond :
-
-- **L'apprentissage se fait en direct,** en dialogue avec l'utilisateur.
-- **Le système reste interprétable** — on peut toujours demander pourquoi il a fait tel choix.
-- **L'échelle se mesure en neurones, pas en paramètres.** Les réseaux de neuromuse tournent sur des dizaines ou des centaines de neurones, pas des milliards.
-
-### 4. **Le code est aussi un art**
-
-Le code de neuromuse est écrit pour être *lu* — par des artistes, des chercheurs, des étudiants. Une méthode dans `src/mlp.lisp` est un mini-essai sur le fonctionnement de la rétropropagation. Le langage Lisp lui-même, par sa structure homoiconique (le code comme donnée), reflète la nature auto-réflexive des systèmes apprenants.
+### 4. Le code participe de l'art
+Il est aussi *écrit pour être lu*. Par exemple, une méthode de src/mlp.lisp est un petit essai pédagogique sur la rétropropagation, écrit en Lisp éventuellement commenté.
+Il permet :
+- **transparence** :l'artiste peut entendre le système apprendre en temps réel, voir ce qu'il « pense » et réagir en conséquence.
+- **dialogue** : l'artiste ne se contente pas de *faire* le système — le système *apprend* en même temps qu'il *fait* avec l'artiste.
+- **incarnation** : en fonctionnant sur du matériel même modeste (iPhone 5s, Raspberry, etc), le réseau peut habiter un espace physique — un bras robotisé, un ensemble de haut-parleurs... et y *exister*.
 
 ---
 
 ## Contexte historique
 
-Neuromuse est né entre 1999 et 2001, à une époque où :
+Le projet Neuromuse a été initié entre 1999 et 2001, à une époque où :
 
 - les GPU n'existaient pas encore (CUDA a été lancé en 2006) ;
 - les réseaux de neurones étaient scientifiquement intéressants mais semblaient peu praticables pour un travail créatif en temps réel ;
 - Lisp restait un environnement sérieux pour la recherche en IA (Ircam, CNMAT, Symbolic Technologies) ;
 - la question « un réseau peut-il apprendre une chorégraphie ? » était véritablement inédite.
 
-Aujourd'hui, le paysage a changé. L'apprentissage profond domine. Mais neuromuse sert encore un but que les cadres modernes ne remplissent pas : c'est un espace où artistes et chercheurs peuvent **penser avec des systèmes neuronaux**, pas seulement les utiliser.
+En 2026, le paysage a changé. "Deep learning" et LLM dominent à force de couteux GPUs. Dans ce contexte, Neuromuse offre un espace où on peut **penser avec** des systèmes neuronaux, **librement**.
 
 ---
 
@@ -80,13 +74,13 @@ Si vous êtes chorégraphe, musicien, plasticien ou designer sonore :
 
 Si vous étudiez :
 
-- la **recherche d'information musicale**, la **reconnaissance gestuelle**, l'**IA créative** ou la **cognition incarnée** : neuromuse est un laboratoire pour des expériences à petite échelle, interprétables.
-- Le code est assez compact pour être compris de bout en bout, mais assez complet pour un travail réel.
-- Vous pouvez l'étendre, le combiner avec un travail de terrain ethnomusicologique, ou l'utiliser comme outil pédagogique.
+- la **recherche d'information musicale**, la **reconnaissance gestuelle**, l'**IA créative** ou la **cognition incarnée** : neuromuse est un laboratoire pour des expériences à petite échelle ou grande échelle.
+- Le code est assez compact pour être compris de bout en bout, et suffisemment complet pour un travail réel en quelques lignes de code simple, facilement générables par une IA-LLM type chatGPT, Claude, Mistral... 
+- Le code peut facilement être étendu, adapté et utilisé comme outil pédagogique.
 
 ---
 
-## Référence
+## Références
 
 - Voisin, F., Meier, R. (2004). « Playing Integrated Music Knowledges with Artificial Neural Networks. » *Journées d'Informatique Musicale*, Ircam/Centre Pompidou, Paris.
 - Voisin, F., Meier, R. (2009). « On Analytical vs. Schizophrenic Procedures for Computing Music. » *Contemporary Music Review*, 28(2), pp. 205–219. [DOI](https://doi.org/10.1080/07494460903322489)
