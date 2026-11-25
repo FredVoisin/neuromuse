@@ -105,7 +105,7 @@ bringing neuromuse's historical sources online is acknowledged in [`legacy/READM
 | 2007+ | Teaching at Conservatoire de Montbéliard |
 | 2012+ | Deep learning emerges elsewhere; neuromuse goes quiet but persistent |
 | 2015 | Avatit robot control at IRCAM (night sessions, -2nd floor) |
-| 2017 | Experiment with MLP in ["Mimer... c'est jouer !"](https://www.fredvoisin.com/articles/253-mimer-c-est-jouer.html) at LEAD (CNRS, Université de Bourgogne) |
+| 2017 | ["Mimer... c'est jouer !"](https://www.fredvoisin.com/articles/253-mimer-c-est-jouer.html) at LEAD (CNRS, Université de Bourgogne) |
 | 2026 | Codebase cleaned, with the help of claude.ia; historical sources archived; Hopfield, auto-assoc, GUI, OSC, transformer added |
 
 ---
