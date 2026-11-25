@@ -2,7 +2,8 @@
 
 **Artificial neural networks for music and artistic production with real-time applications** (since 1999)
 
-*Lecteurs francophones : vous pouvez commencer par lire [PHILOSOPHY.fr.md](doc/PHILOSOPHY.fr.md).*
+----
+*Les lecteurs francophones peuvent commencer par lire [PHILOSOPHY.fr](doc/PHILOSOPHY.fr.md).*
 
 ## Overview
 
