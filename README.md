@@ -170,7 +170,7 @@ Open issues and PRs welcome. Known items:
 - Genetic Programing (on the way)
 - Graphical representions of transformers' net  
 - Extend explicitely `rmlp` to support Jordan-style recurrence alongside Elman
-- Investigate GPU optimization under modern CUDA (previous attempts hit platform limits)
+- Investigate GPU optimization under modern CUDA (previous attempts hit platform limits - outdated Nvidia GPU on good old ROG laptop)
 
 ## Contributors
 
