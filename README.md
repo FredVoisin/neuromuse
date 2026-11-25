@@ -166,7 +166,8 @@ For a full walkthrough and more examples, see [EXAMPLES.md](doc/EXAMPLES.md).
 
 Open issues and PRs welcome. Known items:
 
-- High level hulman like grammar (on the way)
+- Adapt spiking models
+- High level human like grammar for designing (on the way)
 - Genetic Programing (on the way)
 - Graphical representions of transformers' net  
 - Extend explicitely `rmlp` to support Jordan-style recurrence alongside Elman
