@@ -124,7 +124,7 @@ A selection of images spanning 25 years of development, artistic applications, a
     </td>
     <td align="center" width="50%">
       <img src="https://fredvoisin.com/images/gallery/neuromuse-avatit-arms.jpg" alt="Avatit robot control" width="360"><br>
-      <sub>Night party at IRCAM (photo 2015).</sub>
+      <sub>Night party with Arduino Mega 2560 driving a 3-servo arm at IRCAM (photo 2015).</sub>
     </td>
   </tr>
 </table>
