@@ -26,21 +26,21 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
 
 ## Principes
 
-### 1. L'art est le processus, non pas le produit
+### 1. L'art est non pas le produit mais le processus.
 L'apprentissage participe de l'œuvre : il est produit, entendu, vu et suivi en temps réel.
 
 ### 2. La connaissance peut être implicite, intuitive, contradictoire**.
 L'intuition harmonique est en partie consciente, en partie ressentie, fondée sur l'expérience, voire le contrôle, d'un *temps réel* éventuellement multimodal.
 De même le vocabulaire d'un chorégraphe n'est pas seulement articulé, il est incarné.
 
-### 3. L'auto-adaptation au cœur
+### 3. L'auto-adaptation au cœur.
 On crée les conditions d'un comportement qui émerge, à l'échelle de dizaines ou centaines de neurones — bien assez pour créer du chaos :
 - L'apprentissage se fait en direct, **en interaction** avec l'utilisateur. Une architecture neuromimétique choisie peut s'adapter et évoluer en même temps qu'elle apprend et joue.
 - Le système reste interprétable — on peut **comprendre** pourquoi tel choix a été fait ou telle évolution suivie, notamment du fait d'un nombre minimaliste de "paramètres".
 - L'échelle est de l'ordre du neurone — les systèmes nécessitent des **dizaines ou centaines** de neurones — seulement, que l'on peut *multi-plier*.
 - Le système est **(multi-)agentique**, décrit dans un language "haut-niveau", fondé sur la programmation "objet" et le temps-réel. Chaque neurone, (sous-)réseau ou agent neuromimétique peut être contrôlé individuellement, en temps-réel.
 
-### 4. Le code participe de l'art
+### 4. Le code participe de l'art.
 Il est aussi *écrit pour être lu*. Par exemple, une méthode de src/mlp.lisp est un petit essai pédagogique sur la rétropropagation, écrit en Lisp éventuellement commenté.
 Il permet :
 - **transparence** :l'artiste peut entendre le système apprendre en temps réel, voir ce qu'il « pense » et réagir en conséquence.
