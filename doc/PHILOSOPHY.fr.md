@@ -47,6 +47,9 @@ Il permet :
 - **dialogue** : le système *apprend en même temps qu'il fait* avec l'artiste qui peut l'adapter *au fur et à mesure*.
 - **incarnation** : en fonctionnant sur du matériel même modeste (iPhone 5s, Raspberry, etc), le réseau peut habiter un espace physique — un bras robotisé, un ensemble de haut-parleurs... et y *exister*.
 
+### 5. Principe de simplicité
+Rester simple, sans dépendance, exécutable sur du matériel modeste (small is beautiful).
+
 ---
 
 ## Contexte historique
