@@ -2,6 +2,8 @@
 
 **Artificial neural networks for music and artistic production with real-time applications** (since 1999)
 
+*Lecteurs francophones : vous pouvez commencer par lire [PHILOSOPHY.fr.md](doc/PHILOSOPHY.fr.md).*
+
 ## Overview
 
 Neuromuse is a Common Lisp library for designing and training artificial neural networks tailored to creative and research contexts. Originally developed by Fred Voisin at IRCAM to explore how symbolic neural systems could serve contemporary music composition, the project combines rigorous machine learning fundamentals with an artist's sensibility for real-time applications.
