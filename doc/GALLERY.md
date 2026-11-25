@@ -124,7 +124,7 @@ A selection of images spanning 25 years of development, artistic applications, a
     </td>
     <td align="center" width="50%">
       <img src="https://fredvoisin.com/images/gallery/neuromuse-avatit-arms.jpg" alt="Avatit robot control" width="360"><br>
-      <sub>Avatit agent controlling a robot arm at IRCAM (photo 2025).</sub>
+      <sub>Night party at IRCAM (photo 2015).</sub>
     </td>
   </tr>
 </table>
