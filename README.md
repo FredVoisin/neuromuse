@@ -5,8 +5,6 @@
 ----
 *Les lecteurs francophones peuvent commencer par lire [PHILOSOPHY.fr](doc/PHILOSOPHY.fr.md).*
 
-<img src="img/lisplogo_fancy_256.png" alt="Caution: made with secret alien technology (Lisp logo by Conrad Barski, public domain)" width="96" align="right">
-
 ## Overview
 
 Neuromuse is a Common Lisp library for designing and training artificial neural networks tailored to creative and research contexts. Originally developed by Fred Voisin at IRCAM to explore how symbolic neural systems could serve contemporary music composition, the project combines rigorous machine learning fundamentals with an artist's sensibility for real-time applications.
@@ -22,6 +20,8 @@ Traditional AI frameworks treat neural networks as black boxes to be optimized. 
 - Remain interpretable—understand *why* a network makes a decision, or not
 - Run on modest hardware (historically, a 68030 or PowerPC laptop; today - in 2026, even an iPhone 5s via neuromuse-ios)
 - It's opensource, no dependencies, diy
+
+<img src="img/lisplogo_fancy_256.png" alt="Caution: made with secret alien technology (Lisp logo by Conrad Barski, public domain)" width="96" align="center">
 
 ## Table of Contents
 
