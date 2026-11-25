@@ -16,53 +16,50 @@ It was within the framework of choreographic research, in 2000, that I came to w
 
 **Frédéric Voisin, Nice, May 2005**
 
+<p align="center">
+  <img src="../img/wwwneuromuse2005.png" alt="Home page of the neuromuse.net website in 2005" width="500"><br>
+  <sub>Home page of the <a href="https://neuromuse.net">neuromuse.net</a> website in 2005, hosted at CIRM (Nice).</sub>
+</p>
+
 ---
 
-## Core Principles
+*Author's note: what follows is a revised and corrected version of the text generated in English during a discussion with Claude.ai in Sept. 2026, translated from the revised [French version](PHILOSOPHY.fr.md). It still needs correcting. The original LLM-generated draft is kept as a trace of what an LLM could infer — or paraphrase — of the "code philosophy" from the code and the presentation above: see [the September 2026 draft](https://github.com/FredVoisin/neuromuse/blob/1c683e76327471f07f7a007218f2d7ca724273b1/doc/PHILOSOPHY.md).*
 
-**Note to the reader:**
+## Principles
 
-*The following has been generated in English by Claude.ia - sonnet 5, in Sept. 2026, as a draft to be amended by the author.* 
-*We take it here as is, to keep a trace of what a LLM could infer - or paraphrase - the 'code philosophy' from the code and the presentation above translated from the legacy [French version](PHILOSOPHY.fr.md)*
+### 1. Art is not the product but the process
+Learning is part of the work: it is produced, heard, seen and followed in real time. So are the (im)pertinent errors.
 
-### 1. **Art is the Process, Not Just the Product**
+### 2. Knowledge can be implicit, intuitive, contradictory
+Harmonic intuition may be conscious, or at least felt, grounded in the experience, even the control, of a possibly multimodal *real time*.
+Likewise, a choreographer's vocabulary is not only articulated, it is embodied.
 
-Traditional AI frameworks treat networks as tools: you feed in data, extract predictions, move on. Neuromuse inverts this. The act of learning—neurons firing, weights adjusting, error curves falling—*is* the artwork. This matters because:
+### 3. Self-adaptation at the core
+We create the conditions for behaviour to emerge, at the scale of dozens or hundreds of neurons — which is quite enough to create chaos:
+- Learning happens live, *in interaction* with the user. A chosen neuromimetic architecture can adapt and evolve while it learns and plays.
+- The system remains interpretable — one can *understand* why a given choice was made or a given evolution followed, thanks to a minimal number of "parameters".
+- The scale is that of the neuron — the systems only need *dozens or hundreds* of neurons, which can be *multi-plied*.
+- The system is (multi-)agentic — described in a "high-level" language, *organological* or even *organic*, based on object-oriented programming and *real time*. Each neuron, (sub-)network or neuromimetic agent can be controlled individually, locally or remotely.
 
-- **Transparency:** An artist can watch the network learn in real time, see what it "thinks," and respond.
-- **Dialogue:** The artist doesn't just *make* the system; the system *makes* with the artist.
-- **Embodiment:** Since neuromuse runs on modest hardware (even an iPhone 5s), the network can inhabit a physical space—a robot arm, a speaker array—and truly *exist* there.
-
-### 2. **Knowledge Can Be Implicit, Intuitive, Contradictory**
-
-Logic-based systems demand perfect formalization: every rule, every input, perfectly labeled. Real artistic and scientific knowledge isn't like that. A choreographer's movement vocabulary is embodied, never fully articulated. A musician's intuition about harmony is partly conscious, partly felt.
-
-Neuromuse accepts this messiness. Networks learn from *examples* (implicit knowledge) rather than rules. They adapt to ambiguity, contradiction, and incompleteness—the very conditions under which artists and researchers actually work.
-
-### 3. **Self-Adaptation is the Heart of It**
-
-Rather than asking "How do I program the behavior I want?", neuromuse asks "How do I set up the conditions for adaptive behavior to emerge?" This shift is profound:
-
-- **Learning happens live,** in dialogue with the user.
-- **The system remains interpretable**—you can always ask why it made a choice.
-- **Scale is measured in neurons, not parameters.** Neuromuse networks run on dozens or hundreds of neurons, not billions.
-
-### 4. **Code Is Art, Too**
-
-Neuromuse code is written to be *read*—by artists, by researchers, by students. A method in `src/mlp.lisp` is a mini-essay on how backpropagation works. The Lisp language itself, with its homoiconic structure (code-as-data), mirrors the self-reflective nature of learning systems.
+### 4. Code is part of the art
+The code, too, is *written to be read*. For example, a method defined in `src/mlp.lisp` is a short teaching essay on backpropagation, written in simple Lisp expressions that anyone can easily understand and modify.
+It allows:
+- **transparency**: one can hear the system learn in real time, see what it "thinks", and react accordingly.
+- **dialogue**: the system *learns while it does*, with the artist, who can adapt it *as it goes*.
+- **embodiment**: running on even modest hardware (iPhone 5s, Raspberry Pi, etc.), the network can inhabit a physical space — a robot arm, a speaker array... — and *exist* there.
 
 ---
 
 ## Historical Context
 
-Neuromuse emerged in 1999–2001, when:
+The Neuromuse project was started between 1999 and 2001, when:
 
-- GPUs didn't exist (CUDA launched in 2006).
-- Neural networks were scientifically interesting but seemed impractical for real-time creative work.
-- Lisp was still a serious environment for AI research (IRCAM, CNMAT, Symbolic Technologies).
-- The question "Can a network learn choreography?" was genuinely novel.
+- GPUs didn't exist yet (CUDA launched in 2006);
+- neural networks were scientifically interesting but seemed impractical for real-time creative work;
+- Lisp was still a serious environment for AI research (Ircam, CNMAT, Symbolic Technologies);
+- the question "Can a network learn choreography?" was genuinely novel.
 
-Today, the landscape has shifted. Deep learning dominates. But neuromuse *still* serves a purpose that modern frameworks don't: it's a space where artists and researchers can **think with neural systems**, not just use them.
+In 2026, the landscape has shifted. Deep learning and LLMs dominate by sheer force of GPUs. In this context, Neuromuse offers a space where anyone can **think with** neuromimetic systems, **freely**.
 
 ---
 
@@ -78,13 +75,13 @@ If you're a choreographer, musician, visual artist, or sound designer:
 
 If you're studying:
 
-- **Music information retrieval**, **gesture recognition**, **creative AI**, or **embodied cognition**: Neuromuse is a lab for small-scale, interpretable experiments.
-- The codebase is compact enough to understand end-to-end, but complete enough for real work.
-- You can extend it, combine it with ethnomusicological fieldwork, or use it as a teaching tool.
+- *music information retrieval*, *gesture recognition*, *creative AI*, or *embodied cognition*: Neuromuse is a lab for small- or large-scale experiments.
+- The codebase is compact enough to understand end-to-end, and complete enough for productive work in a few simple lines of code, easily generated by an LLM such as ChatGPT, Claude, Mistral, etc.
+- The code can easily be extended, adapted, and used as a teaching tool.
 
 ---
 
-## Reference
+## References
 
 - Voisin, F., Meier, R. (2004). "Playing Integrated Music Knowledges with Artificial Neural Networks." *Journées d'Informatique Musicale*, Ircam/Centre Pompidou, Paris.
 - Voisin, F., Meier, R. (2009). "On Analytical vs. Schizophrenic Procedures for Computing Music." *Contemporary Music Review*, 28(2), pp. 205–219. [DOI](https://doi.org/10.1080/07494460903322489)

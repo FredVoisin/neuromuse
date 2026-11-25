@@ -1,5 +1,7 @@
 # Philosophie du projet neuromuse
 
+*[English version](PHILOSOPHY.md)*
+
 ## Présentation (Nice, mai 2005)
 
 ### neuromuse — Études et applications musicales des réseaux neuromimétiques
@@ -16,7 +18,7 @@ C'est dans le cadre d'une recherche chorégraphique, en 2000, que j'ai été ame
 
 <p align="center">
   <img src="../img/wwwneuromuse2005.png" alt="Page d'accueil du site neuromuse.net en 2005" width="500"><br>
-  <sub>Page d'accueil du site <a href="https://euromuse.net">neuromuse.net</a> en 2005, hébergé au CIRM (Nice).</sub>
+  <sub>Page d'accueil du site <a href="https://neuromuse.net">neuromuse.net</a> en 2005, hébergé au CIRM (Nice).</sub>
 </p>
 
 ---
@@ -36,7 +38,7 @@ On crée les conditions d'un comportement qui émerge, à l'échelle de dizaines
 - L'apprentissage se fait en direct, *en interaction* avec l'utilisateur. Une architecture neuromimétique choisie peut s'adapter et évoluer en même temps qu'elle apprend et joue.
 - Le système reste interprétable — on peut *comprendre* pourquoi tel choix a été fait ou telle évolution suivie, du fait d'un nombre minimaliste de "paramètres".
 - L'échelle est de l'ordre du neurone — les systèmes nécessitent des *dizaines ou centaines* de neurones — seulement, que l'on peut *multi-plier*.
-- Le système est (multi-)agentique — décrit dans un language "haut-niveau", *organologique* voire *organique*, Fondé sur la programmation "objet" et le *temps réel*. Chaque neurone, (sous-)réseau ou agent neuromimétique peut être contrôlé individuellement, localement ou à distance.
+- Le système est (multi-)agentique — décrit dans un langage "haut-niveau", *organologique* voire *organique*, fondé sur la programmation "objet" et le *temps réel*. Chaque neurone, (sous-)réseau ou agent neuromimétique peut être contrôlé individuellement, localement ou à distance.
 
 ### 4. Le code participe de l'art
 Le code est aussi *écrit pour être lu*. Par exemple, une méthode définie dans le fichier src/mlp.lisp est un petit essai pédagogique sur la rétropropagation, en expressions Lisp simples facilement compréhensibles et modificables par tout un chacun.
@@ -72,7 +74,7 @@ Si vous êtes chorégraphe, musicien, plasticien ou designer sonore :
 
 Si vous étudiez :
 
-- la *recherche d'information musicale*, la *reconnaissance gestuelle*, l'*IA créative* ou la **ognition incarnée* : neuromuse est un laboratoire pour des expériences à petite ou grande échelle.
+- la *recherche d'information musicale*, la *reconnaissance gestuelle*, l'*IA créative* ou la *cognition incarnée* : neuromuse est un laboratoire pour des expériences à petite ou grande échelle.
 - Le code est assez compact pour être compris de bout en bout, et assez complet pour un travail productif en quelques simples lignes de code, facilement générables par une IA-LLM type chatGPT, Claude, Mistral, etc.
 - Le code peut facilement être étendu, adapté et utilisé comme outil pédagogique.
 
