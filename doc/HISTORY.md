@@ -101,7 +101,7 @@ bringing neuromuse's historical sources online is acknowledged in [`legacy/READM
 | 2001 | "Taire" & "L'Écarlate" premieres |
 | 2003 | neurOMuse v1, OpenMusic library (CIRM) |
 | 2004–2005 | Max/Pd ports; CIRM residencies; Ars Electronica talk |
-| 2006–2008 | Multi-agent systems; "Symphonie des machines"; ARM cluster work |
+| 2006–2008 | Multi-agent systems; "Symphonie des machines"; ARM cluster work; "Last Manoeuvres in the Dark" at Palais de Tokyo |
 | 2007+ | Teaching at Conservatoire de Montbéliard |
 | 2012+ | Deep learning emerges elsewhere; neuromuse goes quiet but persistent |
 | 2015 | Avatit robot control at IRCAM (night sessions, -2nd floor) |
