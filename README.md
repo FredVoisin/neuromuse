@@ -174,9 +174,18 @@ Open issues and PRs welcome. Known items:
 
 ## Contributors
 
-Bringing neuromuse's [historical sources](legacy/) online owes a great deal to
-Florian Iochem, [musician and researcher](https://accra-recherche.unistra.fr/laccra/membres/doctorants/florian-iochem/).
-Many thanks to him.
+neuromuse was written by Fred Voisin, together with collaborators over the years
+(details in [HISTORY.md](doc/HISTORY.md#key-collaborators)):
+
+- **Robin Meier** — [composer](https://robinmeier.net), Max/MSP specialist, co-author of foundational papers and pieces of code
+- **Arshia Cont** — [real-time music systems researcher](https://forum.ircam.fr/article/metronaut-arshia-cont/) (Ircam, Antescofo); with Robin Meier and Ali Momeni, ported the MLP and SOM to Max/MSP and Pure Data (around 2004)
+- **Ali Momeni** — [music technology developer](https://alimomeni.net)
+- **John MacCallum** — [composer at CNMAT](https://cnmat.berkeley.edu/node/7608), C and Java implementations of the ROSOM agent (2008)
+- **Cyrille Henry** — [chdh](https://chdh.net); inspiration and some Pd patches
+- **Myriam Gourfink** — [choreographer](https://www.myriam-gourfink.com), first major artistic collaborator
+- **Kasper T. Toeplitz** — [composer](https://www.sleazeart.com), co-author of "Taire" and "L'Écarlate"
+- **Jean-Luc Hervé** — [composer](https://jeanlucherve.com), "Effet Lisière" collaboration
+- **Florian Iochem** — [musician and researcher](https://accra-recherche.unistra.fr/laccra/membres/doctorants/florian-iochem/); bringing neuromuse's [historical sources](legacy/) online owes a great deal to him (2026). Many thanks to him.
 
 ## License
 

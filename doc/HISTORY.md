@@ -81,7 +81,7 @@ bringing neuromuse's historical sources online is acknowledged in the [Contribut
 - **John MacCallum** — [composer at CNMAT](https://cnmat.berkeley.edu/node/7608), C and Java implementations of the ROSOM agent on the distributed ARM (Calao) boards of "Last Manoeuvres in the Dark" (2008)
 - **Jean-Luc Hervé** — [composer](https://jeanlucherve.com), "Effet Lisière" collaboration
 - **Cyrille Henry** — [chdh](https://chdh.net); inspiration and some Pd patches
-- **Florian Iochem** — [musician and researcher](https://accra-recherche.unistra.fr/laccra/membres/doctorants/florian-iochem/), ACCRA, Université de Strasbourg; bringing neuromuse's historical sources online (2026, see [`legacy/README.md`](../legacy/README.md))
+- **Florian Iochem** — [musician and researcher](https://accra-recherche.unistra.fr/laccra/membres/doctorants/florian-iochem/), ACCRA, Université de Strasbourg; bringing neuromuse's historical sources online (2026)
 
 ---
 
