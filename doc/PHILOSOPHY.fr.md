@@ -84,5 +84,6 @@ Si vous étudiez :
 
 - Voisin, F., Meier, R. (2004). « Playing Integrated Music Knowledges with Artificial Neural Networks. » *Journées d'Informatique Musicale*, Ircam/Centre Pompidou, Paris.
 - Voisin, F., Meier, R. (2009). « On Analytical vs. Schizophrenic Procedures for Computing Music. » *Contemporary Music Review*, 28(2), pp. 205–219. [DOI](https://doi.org/10.1080/07494460903322489)
+- Voisin, F. (2015). « De la brousse dans les synthés. » In P. Criton & J.-M. Chouvel (dir.), *Gilles Deleuze : la pensée-musique*. [HAL-01611947](https://hal.science/hal-01611947v1)
 
 
