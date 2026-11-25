@@ -73,7 +73,7 @@ bringing neuromuse's historical sources online is acknowledged in [`legacy/READM
 
 ## Key Collaborators
 
-- **Robin Meier** — composer, Max/MSP specialist, co-author of foundational papers
+- **Robin Meier** — composer, Max/MSP specialist, co-author of foundational papers and pieces of code
 - **Myriam Gourfink** — choreographer, first major artistic collaborator
 - **Kasper T. Toeplitz** — composer, co-author of "Taire" and "L'Écarlate"
 - **Arshia Cont** — real-time music systems researcher
