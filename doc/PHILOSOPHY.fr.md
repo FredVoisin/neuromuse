@@ -58,8 +58,8 @@ Le projet Neuromuse a été initié entre 1999 et 2001, à une époque où :
 
 - les GPU n'existaient pas encore (CUDA a été lancé en 2006) ;
 - les réseaux de neurones étaient scientifiquement intéressants mais semblaient peu praticables pour un travail créatif en temps réel ;
-- Lisp restait un environnement sérieux pour la recherche en IA (Ircam, CNMAT, Symbolic Technologies) ;
-- la question « un réseau peut-il apprendre une chorégraphie ? » était véritablement inédite.
+- Lisp était un environnement sérieux pour la recherche en IA (Ircam, CNMAT, Symbolic Technologies) ;
+- la question « un réseau peut-il apprendre une chorégraphie ? » était plutôt inédite.
 
 En 2026, le paysage a changé. "Deep learning" et LLM dominent à force de GPUs. Dans ce contexte, Neuromuse offre un espace où chacun peut **penser avec** des systèmes neuromimétiques, **librement**.
 
@@ -69,9 +69,9 @@ En 2026, le paysage a changé. "Deep learning" et LLM dominent à force de GPUs.
 
 Si vous êtes chorégraphe, musicien, plasticien ou designer sonore :
 
-- neuromuse permet de construire des systèmes qui *apprennent de votre pratique* — vos gestes, vos improvisations, vos partitions.
+- neuromuse permet de concevoir des systèmes qui *apprennent de votre pratique* — vos gestes, vos improvisations, vos partitions.
 - Vous pouvez entraîner un réseau à interpoler entre deux de vos vocabulaires gestuels, ou à générer des variations sur un thème.
-- Le système reste à vous : à comprendre, à modifier. Pas de boîte noire. Pas de cloud propriétaire.
+- Le système est vôtre : pas de boîte noire. pas de cloud propriétaire.
 
 ## Pour les chercheurs
 
