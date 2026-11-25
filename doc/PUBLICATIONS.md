@@ -116,6 +116,13 @@ Neuromuse emerges from Fred Voisin's training in ethnomusicology and fieldwork w
 
 ---
 
+## Acknowledgements
+
+- **John MacCallum** (CNMAT, UC Berkeley) — for the C and Java implementations of the ROSOM agent listening over UDP, run on the distributed ARM (Calao) boards of "Last Manoeuvres in the Dark" (2008).
+- **Cyrille Henry** — for his help and contributions.
+
+---
+
 ## How to Cite neuromuse
 
 If you use neuromuse in research, cite it as:
@@ -145,4 +152,4 @@ Or in plain text:
 
 ---
 
-**Last updated:** July 2026
+**Last updated:** November 2026
