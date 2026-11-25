@@ -1,4 +1,4 @@
-<img src="img/lisplogo_fancy_256.png" alt="Caution: made with secret alien technology (Lisp logo by Conrad Barski, public domain)" width="128" align="right">
+<img src="img/lisplogo_fancy_256.png" alt="Caution: made with secret alien technology (Lisp logo by Conrad Barski, public domain)" width="96" align="right">
 
 # neuromuse
 
