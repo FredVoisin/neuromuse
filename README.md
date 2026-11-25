@@ -165,11 +165,10 @@ For a full walkthrough and more examples, see [EXAMPLES.md](doc/EXAMPLES.md).
 
 Open issues and PRs welcome. Known items:
 
+- High level hulman like grammar (on the way)
+- Genetic Programing (on the way)
 - Graphical representions of transformers' net  
-- Port graphical network rendering (originally built on Macintosh Common Lisp's CLOS toolbox) to SBCL —
-  **en cours**: a first Ltk-based version lives in `src/gui.lisp` (heatmap and neuron-graph views, live activity)
-- Extend `rmlp` to support Jordan-style recurrence alongside Elman
-- Complete the `perceptron.lisp` implementation
+- Extend explicitely `rmlp` to support Jordan-style recurrence alongside Elman
 - Investigate GPU optimization under modern CUDA (previous attempts hit platform limits)
 
 ## License
